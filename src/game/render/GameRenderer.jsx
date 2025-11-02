@@ -501,12 +501,12 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
       {trail.length > 1 && (() => {
         const ballRadius = config.physics.mascot.radius;
         const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
+        const maxOpacity = config.physics.mascot.trail.maxOpacity;
+        const layers = config.physics.mascot.trail.gradientLayers;
         const currentTime = Date.now();
         
         // Render multiple overlapping paths with decreasing lengths for gradient effect
         // Each path starts from progressively newer points, creating fade-out at head
-        const layers = 5; // Number of gradient layers
-        
         return Array.from({ length: layers }).map((_, layerIndex) => {
           // Calculate what portion of trail to include in this layer
           const startIndex = Math.floor((trail.length - 1) * (layerIndex / layers));
@@ -532,14 +532,14 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
           }
           
           // Opacity decreases for shorter layers (creates fade at head)
-          const layerOpacity = (layerIndex + 1) / layers; // 0.2, 0.4, 0.6, 0.8, 1.0
+          const layerOpacity = (layerIndex + 1) / layers;
           
           return (
             <Path
               key={`trail-layer-${layerIndex}`}
               path={path}
               color="white"
-              opacity={layerOpacity * 0.3} // Gradient layers
+              opacity={layerOpacity * maxOpacity}
               style="stroke"
               strokeWidth={ballRadius * 2}
               strokeCap="round"

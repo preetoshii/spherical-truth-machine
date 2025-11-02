@@ -31,7 +31,9 @@ export const config = {
         fadeOutMs: 500,       // How long trail takes to fade out (milliseconds)
         sampleInterval: 16,   // Add trail point every N milliseconds (16ms = ~60fps sampling)
         maxPoints: 30,        // Maximum trail points to keep (prevents infinite growth)
-        activeAfterBounceMs: 2000,  // Trail only visible for X ms after hitting gelato (0 = always on)
+        activeAfterBounceMs: 200,  // Trail only visible for X ms after hitting gelato (0 = always on)
+        maxOpacity: 0.3,      // Maximum trail opacity (0.0 = invisible, 1.0 = solid)
+        gradientLayers: 5,    // Number of overlapping layers for gradient effect (more = smoother fade)
       },
     },
 
