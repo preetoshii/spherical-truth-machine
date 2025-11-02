@@ -1,0 +1,36 @@
+# Vercel Ignore - Exclude large folders from deployment
+
+# Node modules (Vercel installs these automatically)
+node_modules/
+api/node_modules/
+
+# iOS build artifacts
+ios/build/
+ios/Pods/
+ios/Podfile.lock
+
+# Android build artifacts
+android/app/build/
+android/build/
+android/.gradle/
+
+# Expo
+.expo/
+.expo-shared/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+
+# Cache directories
+.cache/
+
