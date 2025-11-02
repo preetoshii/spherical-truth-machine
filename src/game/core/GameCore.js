@@ -2,6 +2,7 @@ import Matter from 'matter-js';
 import { config } from '../../config';
 import { playSound } from '../../utils/audio';
 import { createAudioPlayer } from 'expo-audio';
+import { ParallaxManager } from '../parallax/ParallaxManager';
 
 /**
  * GameCore - Physics engine using Matter.js
@@ -77,6 +78,9 @@ export class GameCore {
 
     // Store current time scale for difficulty (time dilation approach)
     this.timeScale = 1.0;
+
+    // Initialize parallax background manager
+    this.parallaxManager = new ParallaxManager(width, height, config.parallax);
 
     // Create boundary walls using config
     const wallThickness = config.walls.thickness;
@@ -230,6 +234,9 @@ export class GameCore {
     // Apply time scale for difficulty progression (makes physics run faster)
     const scaledDelta = deltaMs * this.timeScale;
     Matter.Engine.update(this.engine, scaledDelta);
+
+    // Update parallax background based on ball's Y position
+    this.parallaxManager.update(this.mascot.position.y);
 
     // Apply velocity capping (safety valve) - scale caps with time dilation
     const velocity = this.mascot.velocity;
@@ -418,6 +425,13 @@ export class GameCore {
       height: body.bounds.max.y - body.bounds.min.y,
       angle: body.angle,
     }));
+  }
+
+  /**
+   * Get parallax stars for rendering
+   */
+  getParallaxStars() {
+    return this.parallaxManager.getStars();
   }
 
   /**

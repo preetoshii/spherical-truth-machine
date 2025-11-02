@@ -56,9 +56,9 @@ export const config = {
     //   - Bounce heights, trajectories, everything stays proportional
     //   - Pure speed increase without changing game feel
     speed: {
-      start: 1.0,            // Starting time multiplier (1.0 = normal time)
+      start: 1,            // Starting time multiplier (1.0 = normal time)
       end: 2.0,              // Ending time multiplier (2.0 = 2x speed, like fast-forward)
-      bouncesUntilMax: 30,   // Number of bounces to reach maximum difficulty
+      bouncesUntilMax: 60,   // Number of bounces to reach maximum difficulty
     },
 
     // Example progression:
@@ -151,6 +151,57 @@ export const config = {
     voiceVolume: 1.0,         // Voice playback volume for word narration (0 = mute, 1 = full)
     sfxVolume: 0.3,           // Sound effects volume for bounces (0 = mute, 1 = full)
     duckingSfx: true,         // Whether to lower SFX volume when voice plays
+  },
+
+  // === PARALLAX STARFIELD ===
+  // Multi-layer scrolling background that creates illusion of climbing through space
+  // Stars move downward as ball travels upward (cumulative upward distance only)
+  parallax: {
+    enabled: false,                // Toggle parallax background on/off
+    density: 0.5,                 // Density multiplier (0.5 = half as many stars, 1.0 = default, 2.0 = double)
+    opacity: 0.5,                 // Global opacity multiplier (0.3 = subtle, 0.5 = half brightness, 1.0 = full)
+
+    // Multiple layers for depth effect (back to front)
+    // Each layer moves at different speed relative to ball's upward movement
+    // Base star counts will be multiplied by density setting above
+    // All layers use the same opacity (set globally above)
+    layers: [
+      // Background layer - slow, small (distant stars)
+      {
+        speed: 0.15,              // 15% of ball's upward speed (slow parallax)
+        starCount: 20,            // Base number of stars (multiplied by density)
+        sizeMin: 1,               // Minimum star radius in pixels
+        sizeMax: 1.5,             // Maximum star radius in pixels
+      },
+      // Middle layer - medium speed
+      {
+        speed: 0.4,               // 40% of ball's upward speed
+        starCount: 30,            // Base number of stars (multiplied by density)
+        sizeMin: 1.5,
+        sizeMax: 2.5,
+      },
+      // Foreground layer - fast, large (close stars)
+      {
+        speed: 0.8,               // 80% of ball's upward speed (fast parallax)
+        starCount: 25,            // Base number of stars (multiplied by density)
+        sizeMin: 2.5,
+        sizeMax: 4,
+      },
+    ],
+
+    wrapPadding: 150,             // Extra space above/below screen for smooth wrapping (pixels)
+    color: '#FFFFFF',             // Star color (white)
+    
+    // Star shape configuration
+    starShape: 'plus',            // Shape: 'plus' (4-pointed cross) or 'diamond' (4-pointed diamond)
+    armThickness: 0.25,           // Thickness of star arms relative to size (0.25 = 25% of size)
+    
+    // Twinkle animation (subtle opacity pulsing)
+    twinkle: {
+      enabled: true,              // Enable/disable twinkling animation
+      speed: 1.0,                 // Speed multiplier (1.0 = default, 2.0 = twice as fast, 0.5 = half speed)
+      intensity: .8,             // Opacity variation (0.3 = ±30% opacity change, 0.5 = ±50%)
+    },
   },
 
   // === VISUALS ===

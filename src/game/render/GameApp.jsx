@@ -35,6 +35,7 @@ export function GameApp() {
   const currentWord = useRef(null); // Current word being displayed
   const mascotVelocityY = useRef(0); // Current Y velocity of mascot
   const squashStretch = useRef({ scaleX: 1, scaleY: 1 }); // Squash/stretch for ball deformation
+  const parallaxStars = useRef([]); // Parallax background stars
 
   // Simple line drawing state
   const [lines, setLines] = useState([]);
@@ -130,6 +131,7 @@ export function GameApp() {
       currentWord.current = gameCore.current.getCurrentWord();
       mascotVelocityY.current = gameCore.current.getMascotVelocityY();
       squashStretch.current = gameCore.current.getSquashStretch();
+      parallaxStars.current = gameCore.current.getParallaxStars();
 
       // Sync lines with GameCore (updates when gelato destroyed after fade)
       const currentGelatoData = gameCore.current.getGelatoLineData();
@@ -396,6 +398,7 @@ export function GameApp() {
             currentWord={currentWord.current}
             mascotVelocityY={mascotVelocityY.current}
             squashStretch={squashStretch.current}
+            parallaxStars={parallaxStars.current}
           />
 
           {/* Admin Button - Feather Icon */}

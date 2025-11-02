@@ -12,6 +12,62 @@ if (typeof document !== 'undefined') {
 }
 
 /**
+ * StarShape - Renders a 4-pointed star
+ * @param {number} cx - Center X position
+ * @param {number} cy - Center Y position
+ * @param {number} size - Size of the star (radius from center to point)
+ * @param {string} color - Star color
+ * @param {number} opacity - Star opacity
+ */
+function StarShape({ cx, cy, size, color, opacity }) {
+  const path = Skia.Path.Make();
+  const { starShape, armThickness } = config.parallax;
+  
+  if (starShape === 'diamond') {
+    // 4-pointed diamond star (classic star shape)
+    const outerLength = size;
+    const innerLength = size * armThickness;
+    
+    // Draw diamond with 4 points (top, right, bottom, left)
+    path.moveTo(cx, cy - outerLength);              // Top point
+    path.lineTo(cx + innerLength, cy - innerLength); // Top-right corner
+    path.lineTo(cx + outerLength, cy);              // Right point
+    path.lineTo(cx + innerLength, cy + innerLength); // Bottom-right corner
+    path.lineTo(cx, cy + outerLength);              // Bottom point
+    path.lineTo(cx - innerLength, cy + innerLength); // Bottom-left corner
+    path.lineTo(cx - outerLength, cy);              // Left point
+    path.lineTo(cx - innerLength, cy - innerLength); // Top-left corner
+    path.close();
+  } else {
+    // Plus/cross shape (default)
+    const outerLength = size;
+    const innerWidth = size * armThickness;
+    
+    // Vertical bar
+    path.moveTo(cx - innerWidth, cy - outerLength);
+    path.lineTo(cx + innerWidth, cy - outerLength);
+    path.lineTo(cx + innerWidth, cy + outerLength);
+    path.lineTo(cx - innerWidth, cy + outerLength);
+    path.close();
+    
+    // Horizontal bar
+    path.moveTo(cx - outerLength, cy - innerWidth);
+    path.lineTo(cx + outerLength, cy - innerWidth);
+    path.lineTo(cx + outerLength, cy + innerWidth);
+    path.lineTo(cx - outerLength, cy + innerWidth);
+    path.close();
+  }
+  
+  return (
+    <Path
+      path={path}
+      color={color}
+      opacity={opacity}
+    />
+  );
+}
+
+/**
  * WaveText - Mexican wave effect where each letter waves in sequence
  */
 function WaveText({ text, opacity }) {
@@ -98,7 +154,7 @@ function WaveLetter({ letter, index, totalLetters }) {
  * This same code works on Web, iOS, and Android
  * Touch events pass through the Canvas to allow line drawing
  */
-export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, squashStretch = { scaleX: 1, scaleY: 1 } }) {
+export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, squashStretch = { scaleX: 1, scaleY: 1 }, parallaxStars = [] }) {
   // Calculate word opacity based on configured fade mode
   let wordOpacity = 0;
 
@@ -158,6 +214,39 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
       <Canvas style={{ width, height }} pointerEvents="none">
         {/* Background */}
         <Fill color={config.visuals.backgroundColor} />
+
+        {/* Parallax starfield background */}
+        {parallaxStars.map((star, index) => {
+          // Calculate twinkle effect (subtle opacity pulsing)
+          let twinkledOpacity = star.opacity;
+          if (config.parallax.twinkle.enabled) {
+            const time = Date.now() / 1000; // Current time in seconds
+            const { speed, intensity } = config.parallax.twinkle;
+            
+            // Each star twinkles at its own rate with unique phase offset
+            const twinklePhase = star.twinklePhase || 0;
+            const twinkleSpeedMultiplier = star.twinkleSpeed || 1.0;
+            const sineWave = Math.sin(time * speed * twinkleSpeedMultiplier + twinklePhase);
+            
+            // Apply opacity variation: baseOpacity * (1 + intensity * sineWave)
+            // sineWave ranges from -1 to 1, so this gives opacity variation of ±intensity
+            twinkledOpacity = star.opacity * (1 + intensity * sineWave);
+            
+            // Clamp to valid opacity range (0 to 1)
+            twinkledOpacity = Math.max(0, Math.min(1, twinkledOpacity));
+          }
+          
+          return (
+            <StarShape
+              key={`star-${index}`}
+              cx={star.x}
+              cy={star.y}
+              size={star.size}
+              color={star.color}
+              opacity={twinkledOpacity}
+            />
+          );
+        })}
 
       {/* Draw obstacles (walls/ground) if visible in config */}
       {config.walls.visible && obstacles.map((obstacle, index) => (
