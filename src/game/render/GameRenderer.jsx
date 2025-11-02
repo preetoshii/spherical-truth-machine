@@ -526,42 +526,11 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
 
       {/* Draw current path being drawn (dotted curved preview) */}
       {currentPath && currentPath.length >= 2 && (() => {
-        // Simplify and smooth the preview path for less hand-drawn look
-        const samplingRate = Math.max(1, Math.floor(currentPath.length / 12)); // ~12 points
-        const sampledPath = currentPath.filter((_, i) => 
-          i === 0 || 
-          i === currentPath.length - 1 || 
-          i % samplingRate === 0
-        );
-
         const path = Skia.Path.Make();
-        path.moveTo(sampledPath[0].x, sampledPath[0].y);
-        
-        // Use smooth curves instead of straight lines
-        if (sampledPath.length === 2) {
-          path.lineTo(sampledPath[1].x, sampledPath[1].y);
-        } else if (sampledPath.length === 3) {
-          path.quadTo(
-            sampledPath[1].x, sampledPath[1].y,
-            sampledPath[2].x, sampledPath[2].y
-          );
-        } else {
-          // Cubic curves for smooth preview
-          for (let i = 0; i < sampledPath.length - 1; i++) {
-            const p0 = sampledPath[Math.max(0, i - 1)];
-            const p1 = sampledPath[i];
-            const p2 = sampledPath[i + 1];
-            const p3 = sampledPath[Math.min(sampledPath.length - 1, i + 2)];
-            
-            const cp1x = p1.x + (p2.x - p0.x) / 6;
-            const cp1y = p1.y + (p2.y - p0.y) / 6;
-            const cp2x = p2.x - (p3.x - p1.x) / 6;
-            const cp2y = p2.y - (p3.y - p1.y) / 6;
-            
-            path.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
-          }
+        path.moveTo(currentPath[0].x, currentPath[0].y);
+        for (let i = 1; i < currentPath.length; i++) {
+          path.lineTo(currentPath[i].x, currentPath[i].y);
         }
-
         return (
           <Path
             path={path}
