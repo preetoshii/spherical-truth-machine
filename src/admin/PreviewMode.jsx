@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   editTextButton: {
     position: 'absolute',
     top: 50,
-    left: 50,
+    right: 50,
     width: 50,
     height: 50,
     borderRadius: 25,
