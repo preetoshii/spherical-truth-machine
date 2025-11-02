@@ -77,7 +77,8 @@ export const config = {
     color: '#FFFFFF',         // Line color (hex or rgba)
     
     // Visual rendering mode
-    renderMode: 'curved',     // 'curved' = honor drawn shape (50% blend), 'straight' = simple A→B line
+    renderMode: 'curved',     // 'curved' = honor drawn shape (with blend), 'straight' = simple A→B line
+    curveBlend: 0.5,          // How much to honor drawn shape (0.0 = straight line, 1.0 = exact drawing, 0.5 = 50/50)
 
     // Visual deformation (trampoline effect on bounce)
     deformation: {

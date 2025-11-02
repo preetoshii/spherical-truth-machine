@@ -264,13 +264,17 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
       {lines.map((line, index) => {
         // Render curved path if enabled and path exists
         if (config.gelato.renderMode === 'curved' && line.originalPath && line.originalPath.length > 1) {
-          // Base blend: Interpolate each point 50% toward straight line (keep all points)
+          // Base blend: Interpolate each point toward straight line using curveBlend
+          const blendAmount = config.gelato.curveBlend; // 0.0 to 1.0
           const blendedPoints = line.originalPath.map((point, i) => {
             const t = i / (line.originalPath.length - 1);
             const straightX = line.startX + (line.endX - line.startX) * t;
             const straightY = line.startY + (line.endY - line.startY) * t;
-            const blendedX = point.x * 0.5 + straightX * 0.5;
-            const blendedY = point.y * 0.5 + straightY * 0.5;
+            // blendAmount = 0.0 → use straight line (straightX)
+            // blendAmount = 1.0 → use original drawing (point.x)
+            // blendAmount = 0.5 → 50/50 mix
+            const blendedX = point.x * blendAmount + straightX * (1 - blendAmount);
+            const blendedY = point.y * blendAmount + straightY * (1 - blendAmount);
             return { x: blendedX, y: blendedY };
           });
 
