@@ -75,6 +75,9 @@ export const config = {
     springBoost: 1.25,        // Trampoline bounce multiplier (1.0 = normal physics, 1.25 = 125% bounce back)
     maxActiveGelatos: 1,      // How many Gelatos can exist simultaneously (currently: 1)
     color: '#FFFFFF',         // Line color (hex or rgba)
+    
+    // Visual rendering mode
+    renderMode: 'curved',     // 'curved' = honor drawn shape (50% blend), 'straight' = simple A→B line
 
     // Visual deformation (trampoline effect on bounce)
     deformation: {
