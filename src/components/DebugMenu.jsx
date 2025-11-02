@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Pressable, ScrollView, Platform } from 'react-n
 import { config } from '../config';
 import { triggerHaptic } from '../utils/haptics';
 
-export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, fpsCap, setFpsCap, showFps, setShowFps }) {
+export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, fpsCap, setFpsCap, showFps, setShowFps, primaryColor = '#FFFFFF' }) {
   if (!visible) return null;
 
   const fpsCapOptions = [null, 10, 20, 30, 40, 50, 60, 70, 80, 90, 120];
@@ -26,16 +26,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Debug Menu</Text>
+          <Text style={[styles.title, { color: primaryColor }]}>Debug Menu</Text>
           <Pressable onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>✕</Text>
+            <Text style={[styles.closeButtonText, { color: primaryColor }]}>✕</Text>
           </Pressable>
         </View>
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {/* FPS Cap Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>FPS Cap</Text>
+            <Text style={[styles.sectionTitle, { color: primaryColor }]}>FPS Cap</Text>
             <View style={styles.fpsGrid}>
               {fpsCapOptions.map(option => (
                 <Pressable
@@ -48,7 +48,7 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                 >
                   <Text style={[
                     styles.fpsOptionText,
-                    fpsCap === option && styles.fpsOptionTextActive
+                    fpsCap === option && { color: primaryColor }
                   ]}>
                     {option || 'Off'}
                   </Text>
@@ -77,13 +77,13 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
 
           {/* Haptics Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Haptics (Android)</Text>
+            <Text style={[styles.sectionTitle, { color: primaryColor }]}>Haptics (Android)</Text>
             <Text style={styles.sectionSubtitle}>Duration: 1-1000ms | Amplitude: 1-255</Text>
 
             {/* Drawing Haptic */}
             <View style={styles.hapticItem}>
               <View style={styles.hapticHeader}>
-                <Text style={styles.hapticLabel}>Drawing</Text>
+                <Text style={[styles.hapticLabel, { color: primaryColor }]}>Drawing</Text>
                 <Text style={styles.hapticValue}>
                   {hapticsConfig.drawing.android?.durationMs || 10}ms / {hapticsConfig.drawing.android?.amplitude || 20}
                 </Text>
@@ -93,16 +93,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   <Text style={styles.controlLabel}>Duration</Text>
                   <View style={styles.buttonRow}>
                     <Pressable onPress={() => updateHapticConfig('drawing', 'durationMs', -5)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-5</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-5</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('drawing', 'durationMs', -1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('drawing', 'durationMs', 1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('drawing', 'durationMs', 5)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+5</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+5</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -110,16 +110,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   <Text style={styles.controlLabel}>Amplitude</Text>
                   <View style={styles.buttonRow}>
                     <Pressable onPress={() => updateHapticConfig('drawing', 'amplitude', -10)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-10</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-10</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('drawing', 'amplitude', -1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('drawing', 'amplitude', 1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('drawing', 'amplitude', 10)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+10</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+10</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -135,7 +135,7 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
             {/* Gelato Creation Haptic */}
             <View style={styles.hapticItem}>
               <View style={styles.hapticHeader}>
-                <Text style={styles.hapticLabel}>Gelato Creation</Text>
+                <Text style={[styles.hapticLabel, { color: primaryColor }]}>Gelato Creation</Text>
                 <Text style={styles.hapticValue}>
                   {hapticsConfig.gelatoCreation.android?.durationMs || 20}ms / {hapticsConfig.gelatoCreation.android?.amplitude || 50}
                 </Text>
@@ -145,16 +145,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   <Text style={styles.controlLabel}>Duration</Text>
                   <View style={styles.buttonRow}>
                     <Pressable onPress={() => updateHapticConfig('gelatoCreation', 'durationMs', -5)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-5</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-5</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoCreation', 'durationMs', -1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoCreation', 'durationMs', 1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoCreation', 'durationMs', 5)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+5</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+5</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -162,16 +162,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   <Text style={styles.controlLabel}>Amplitude</Text>
                   <View style={styles.buttonRow}>
                     <Pressable onPress={() => updateHapticConfig('gelatoCreation', 'amplitude', -10)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-10</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-10</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoCreation', 'amplitude', -1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoCreation', 'amplitude', 1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoCreation', 'amplitude', 10)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+10</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+10</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -187,7 +187,7 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
             {/* Gelato Bounce Haptic */}
             <View style={styles.hapticItem}>
               <View style={styles.hapticHeader}>
-                <Text style={styles.hapticLabel}>Gelato Bounce</Text>
+                <Text style={[styles.hapticLabel, { color: primaryColor }]}>Gelato Bounce</Text>
                 <Text style={styles.hapticValue}>
                   {hapticsConfig.gelatoBounce.android?.durationMs || 15}ms / {hapticsConfig.gelatoBounce.android?.amplitude || 30}
                 </Text>
@@ -197,16 +197,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   <Text style={styles.controlLabel}>Duration</Text>
                   <View style={styles.buttonRow}>
                     <Pressable onPress={() => updateHapticConfig('gelatoBounce', 'durationMs', -5)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-5</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-5</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoBounce', 'durationMs', -1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoBounce', 'durationMs', 1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoBounce', 'durationMs', 5)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+5</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+5</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -214,16 +214,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   <Text style={styles.controlLabel}>Amplitude</Text>
                   <View style={styles.buttonRow}>
                     <Pressable onPress={() => updateHapticConfig('gelatoBounce', 'amplitude', -10)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-10</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-10</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoBounce', 'amplitude', -1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoBounce', 'amplitude', 1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('gelatoBounce', 'amplitude', 10)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+10</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+10</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -239,7 +239,7 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
             {/* Wall Bump Haptic */}
             <View style={styles.hapticItem}>
               <View style={styles.hapticHeader}>
-                <Text style={styles.hapticLabel}>Wall Bump</Text>
+                <Text style={[styles.hapticLabel, { color: primaryColor }]}>Wall Bump</Text>
                 <Text style={styles.hapticValue}>
                   {hapticsConfig.wallBump.android?.durationMs || 20}ms / {hapticsConfig.wallBump.android?.amplitude || 40}
                 </Text>
@@ -249,16 +249,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   <Text style={styles.controlLabel}>Duration</Text>
                   <View style={styles.buttonRow}>
                     <Pressable onPress={() => updateHapticConfig('wallBump', 'durationMs', -5)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-5</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-5</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('wallBump', 'durationMs', -1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('wallBump', 'durationMs', 1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('wallBump', 'durationMs', 5)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+5</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+5</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -266,16 +266,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   <Text style={styles.controlLabel}>Amplitude</Text>
                   <View style={styles.buttonRow}>
                     <Pressable onPress={() => updateHapticConfig('wallBump', 'amplitude', -10)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-10</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-10</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('wallBump', 'amplitude', -1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('wallBump', 'amplitude', 1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('wallBump', 'amplitude', 10)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+10</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+10</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -291,7 +291,7 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
             {/* Loss Haptic */}
             <View style={styles.hapticItem}>
               <View style={styles.hapticHeader}>
-                <Text style={styles.hapticLabel}>Loss</Text>
+                <Text style={[styles.hapticLabel, { color: primaryColor }]}>Loss</Text>
                 <Text style={styles.hapticValue}>
                   {hapticsConfig.loss.android?.durationMs || 50}ms / {hapticsConfig.loss.android?.amplitude || 100}
                 </Text>
@@ -301,16 +301,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   <Text style={styles.controlLabel}>Duration</Text>
                   <View style={styles.buttonRow}>
                     <Pressable onPress={() => updateHapticConfig('loss', 'durationMs', -5)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-5</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-5</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('loss', 'durationMs', -1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('loss', 'durationMs', 1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('loss', 'durationMs', 5)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+5</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+5</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -318,16 +318,16 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   <Text style={styles.controlLabel}>Amplitude</Text>
                   <View style={styles.buttonRow}>
                     <Pressable onPress={() => updateHapticConfig('loss', 'amplitude', -10)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-10</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-10</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('loss', 'amplitude', -1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>-1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>-1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('loss', 'amplitude', 1)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+1</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+1</Text>
                     </Pressable>
                     <Pressable onPress={() => updateHapticConfig('loss', 'amplitude', 10)} style={styles.smallBtn}>
-                      <Text style={styles.btnText}>+10</Text>
+                      <Text style={[styles.btnText, { color: primaryColor }]}>+10</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    // color set inline with primaryColor
   },
   closeButton: {
     width: 40,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 24,
-    color: '#fff',
+    // color set inline with primaryColor
   },
   scrollView: {
     flex: 1,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#fff',
+    // color set inline with primaryColor
     marginBottom: 8,
   },
   sectionSubtitle: {
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   fpsOptionTextActive: {
-    color: '#fff',
+    // color set inline with primaryColor
   },
   hapticItem: {
     backgroundColor: '#111',
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   hapticLabel: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    // color set inline with primaryColor
   },
   hapticValue: {
     fontSize: 16,
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
   },
   btnText: {
     fontSize: 14,
-    color: '#fff',
+    // color set inline with primaryColor
     fontWeight: '600',
   },
   testButton: {
@@ -499,6 +499,7 @@ const styles = StyleSheet.create({
   },
   testButtonText: {
     fontSize: 16,
+    // color: stays white on blue button
     color: '#fff',
     fontWeight: '600',
   },
@@ -514,6 +515,7 @@ const styles = StyleSheet.create({
   },
   bottomCloseButtonText: {
     fontSize: 18,
+    // color: stays white on blue button
     color: '#fff',
     fontWeight: 'bold',
   },
@@ -536,6 +538,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   toggleButtonTextActive: {
+    // color: stays white on blue button
     color: '#fff',
   },
 });

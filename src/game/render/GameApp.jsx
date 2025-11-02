@@ -435,6 +435,7 @@ export function GameApp() {
             setFpsCap={setFpsCap}
             showFps={showFps}
             setShowFps={setShowFps}
+            primaryColor={primaryColor.current}
           />
         </View>
       )}
