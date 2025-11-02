@@ -417,14 +417,12 @@ export function GameApp() {
             <Feather name="feather" size={20} color={primaryColor.current} style={{ opacity: 0.6 }} />
           </Pressable>
 
-          {/* FPS Counter + Debug Button (show only if enabled in config) */}
-          {config.performance.showFps && (
-            <Pressable onPress={() => setShowDebugMenu(true)} style={styles.debugButton}>
-              <Text style={[styles.debugButtonText, { color: primaryColor.current }]}>
-                ⚙️ {fps} FPS
-              </Text>
-            </Pressable>
-          )}
+          {/* Debug Button (always visible) with optional FPS Counter */}
+          <Pressable onPress={() => setShowDebugMenu(true)} style={styles.debugButton}>
+            <Text style={[styles.debugButtonText, { color: primaryColor.current }]}>
+              {config.performance.showFps ? `⚙️ ${fps} FPS` : '⚙️'}
+            </Text>
+          </Pressable>
 
           {/* Debug Menu Overlay */}
           <DebugMenu
