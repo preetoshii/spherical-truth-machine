@@ -104,7 +104,7 @@ export const config = {
   // === WALLS (Screen Boundaries) ===
   walls: {
     behavior: 'bounce',       // Boundary behavior: 'bounce' (reflect) or 'wrap' (teleport to other side)
-    restitution: 0.8,         // Wall bounciness (0 = absorbs all energy, 0.5 = loses half, 1 = perfect bounce)
+    restitution: 1.2,         // Wall bounciness (0 = absorbs all energy, 0.5 = loses half, 1 = perfect bounce)
     thickness: 5,             // Thickness of boundary walls in pixels (affects physics collision edge)
     visible: false,           // Whether to render walls visually (false = invisible boundaries at screen edges)
   },
