@@ -262,66 +262,43 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
 
       {/* Draw all completed lines (Gelatos) with deformation effect */}
       {lines.map((line, index) => {
-        // Check for morphing animation (drawn path → straight line transition)
-        // This happens FIRST when gelato is created, before any other animations
-        if (config.gelato.morphing.enabled && line.originalPath && gelatoCreationTime) {
-          const timeSinceCreation = Date.now() - gelatoCreationTime;
-          const morphConfig = config.gelato.morphing;
-
-          if (timeSinceCreation < morphConfig.duration) {
-            // Calculate progress through morphing animation (0 to 1)
-            const progress = timeSinceCreation / morphConfig.duration;
-
-            // Apply elastic oscillation with exponential decay
-            const frequency = morphConfig.frequency * Math.PI * 2;
-            const dampingFactor = Math.exp(-morphConfig.damping * progress * 5);
-            const oscillation = Math.sin(frequency * progress) * dampingFactor;
-
-            // Interpolate each point from original position to straight line position
-            const interpolatedPoints = line.originalPath.map((point, i) => {
-              // Calculate where this point should be on the straight line
-              const t = i / (line.originalPath.length - 1); // 0 to 1 along the line
-              const straightX = line.startX + (line.endX - line.startX) * t;
-              const straightY = line.startY + (line.endY - line.startY) * t;
-
-              // Apply elastic spring effect with overshoot
-              // Base progress moves from 0 to 1
-              // Oscillation adds bouncy overshoot that decays over time
-              const elasticProgress = progress + oscillation * 0.4; // Stronger oscillation (0.4 instead of 0.3)
-
-              const currentX = point.x + (straightX - point.x) * elasticProgress;
-              const currentY = point.y + (straightY - point.y) * elasticProgress;
-
-              return { x: currentX, y: currentY };
-            });
-
-            // Render smooth curved path through interpolated points
-            const path = Skia.Path.Make();
-            path.moveTo(interpolatedPoints[0].x, interpolatedPoints[0].y);
-            
-            for (let i = 1; i < interpolatedPoints.length - 1; i++) {
-              const midX = (interpolatedPoints[i].x + interpolatedPoints[i + 1].x) / 2;
-              const midY = (interpolatedPoints[i].y + interpolatedPoints[i + 1].y) / 2;
-              path.quadTo(interpolatedPoints[i].x, interpolatedPoints[i].y, midX, midY);
-            }
-            
-            if (interpolatedPoints.length > 1) {
-              path.lineTo(
-                interpolatedPoints[interpolatedPoints.length - 1].x,
-                interpolatedPoints[interpolatedPoints.length - 1].y
-              );
-            }
-
-            return (
-              <Path
-                key={index}
-                path={path}
-                color="white"
-                style="stroke"
-                strokeWidth={config.gelato.thickness}
-              />
+        // Render original drawn path if available (experimental - no morphing)
+        if (line.originalPath && line.originalPath.length > 1) {
+          // Render smooth curved path through original drawn points
+          const path = Skia.Path.Make();
+          path.moveTo(line.originalPath[0].x, line.originalPath[0].y);
+          
+          for (let i = 1; i < line.originalPath.length - 1; i++) {
+            const midX = (line.originalPath[i].x + line.originalPath[i + 1].x) / 2;
+            const midY = (line.originalPath[i].y + line.originalPath[i + 1].y) / 2;
+            path.quadTo(line.originalPath[i].x, line.originalPath[i].y, midX, midY);
+          }
+          
+          if (line.originalPath.length > 1) {
+            path.lineTo(
+              line.originalPath[line.originalPath.length - 1].x,
+              line.originalPath[line.originalPath.length - 1].y
             );
           }
+
+          // Check if still fading after bounce
+          let opacity = 1;
+          if (bounceImpact && bounceImpact.timestamp) {
+            const timeSinceBounce = Date.now() - bounceImpact.timestamp;
+            const fadeOutDuration = config.gelato.fadeOutDuration;
+            const fadeProgress = Math.min(timeSinceBounce / fadeOutDuration, 1);
+            opacity = 1 - fadeProgress;
+          }
+
+          return (
+            <Path
+              key={index}
+              path={path}
+              color={`rgba(255, 255, 255, ${opacity})`}
+              style="stroke"
+              strokeWidth={config.gelato.thickness}
+            />
+          );
         }
 
         // Check if we should apply deformation or fade to this line
