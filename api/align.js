@@ -184,7 +184,7 @@ async function transcribeAudio(audioBuffer, sampleRate) {
  * @param {string} voiceId - ElevenLabs voice ID
  * @returns {Promise<Buffer>} Transformed audio buffer
  */
-async function transformVoice(audioBuffer, voiceId) {
+async function transformVoiceWithElevenLabs(audioBuffer, voiceId) {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
     throw new Error('ELEVENLABS_API_KEY environment variable is not set');
@@ -321,7 +321,7 @@ export default async function handler(req, res) {
     
     if (transformVoice && voiceId) {
       console.log('[Transform] Starting voice transformation...');
-      const transformedBuffer = await transformVoice(file, voiceId);
+      const transformedBuffer = await transformVoiceWithElevenLabs(file, voiceId);
       audioToProcess = transformedBuffer;
       transformedAudioBase64 = transformedBuffer.toString('base64');
       console.log('[Transform] Voice transformation complete');
