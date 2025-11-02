@@ -70,7 +70,7 @@ export const config = {
 
   // === GELATO (SPRINGBOARDS) ===
   gelato: {
-    maxLength: 500,           // Maximum line length in pixels (enforced during drawing)
+    maxLength:,           // Maximum line length in pixels (enforced during drawing)
     thickness: 4,             // Visual line thickness in pixels
     springBoost: 1.25,        // Trampoline bounce multiplier (1.0 = normal physics, 1.25 = 125% bounce back)
     maxActiveGelatos: 1,      // How many Gelatos can exist simultaneously (currently: 1)
@@ -78,8 +78,7 @@ export const config = {
     
     // Visual rendering mode
     renderMode: 'curved',     // 'curved' = honor drawn shape (with blend), 'straight' = simple A→B line
-    curveBlend: .5,          // How much to honor drawn shape (0.0 = straight line, 1.0 = exact drawing, 0.5 = 50/50)
-    collisionShape: 'path',   // 'line' = straight A→B physics, 'path' = curved physics matching blended visual
+    curveBlend: 0.5,          // How much to honor drawn shape (0.0 = straight line, 1.0 = exact drawing, 0.5 = 50/50)
 
     // Visual deformation (trampoline effect on bounce)
     deformation: {
