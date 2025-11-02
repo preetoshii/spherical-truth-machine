@@ -497,43 +497,50 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         );
       })}
 
-      {/* Motion trail behind ball - single continuous path */}
+      {/* Motion trail behind ball - gradient fade from old to new */}
       {trail.length > 1 && (() => {
         const ballRadius = config.physics.mascot.radius;
         const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
         const currentTime = Date.now();
         
-        // Calculate average opacity for the entire trail
-        const avgAge = trail.reduce((sum, p) => sum + (currentTime - p.timestamp), 0) / trail.length;
-        const trailOpacity = Math.max(0, 1 - (avgAge / fadeOutMs));
-        
-        // Create single smooth path through all trail points
-        const path = Skia.Path.Make();
-        path.moveTo(trail[0].x, trail[0].y);
-        
-        // Use quadratic curves for smooth flowing trail
-        for (let i = 1; i < trail.length - 1; i++) {
-          const midX = (trail[i].x + trail[i + 1].x) / 2;
-          const midY = (trail[i].y + trail[i + 1].y) / 2;
-          path.quadTo(trail[i].x, trail[i].y, midX, midY);
-        }
-        
-        // Final point
-        if (trail.length > 1) {
-          path.lineTo(trail[trail.length - 1].x, trail[trail.length - 1].y);
-        }
-        
-        return (
-          <Path
-            path={path}
-            color="white"
-            opacity={trailOpacity * 0.3} // Subtle trail
-            style="stroke"
-            strokeWidth={ballRadius * 2} // Full ball diameter
-            strokeCap="round"
-            strokeJoin="round"
-          />
-        );
+        // Render trail as multiple segments with individual opacity
+        // This creates gradient fade from oldest (transparent) to newest (opaque)
+        return trail.map((point, index) => {
+          if (index === trail.length - 1) return null; // Skip last point
+          
+          const nextPoint = trail[index + 1];
+          
+          // Use opacity of the OLDER point (front of segment)
+          // This creates smooth fade-out toward the trail head
+          const age = currentTime - point.timestamp;
+          const opacity = Math.max(0, 1 - (age / fadeOutMs));
+          
+          // Create smooth curve segment
+          const segmentPath = Skia.Path.Make();
+          segmentPath.moveTo(point.x, point.y);
+          
+          // If there's a point after next, use quadratic curve, else straight line
+          if (index < trail.length - 2) {
+            const midX = (nextPoint.x + trail[index + 2].x) / 2;
+            const midY = (nextPoint.y + trail[index + 2].y) / 2;
+            segmentPath.quadTo(nextPoint.x, nextPoint.y, midX, midY);
+          } else {
+            segmentPath.lineTo(nextPoint.x, nextPoint.y);
+          }
+          
+          return (
+            <Path
+              key={`trail-${index}`}
+              path={segmentPath}
+              color="white"
+              opacity={opacity * 0.3} // Gradient fade based on age
+              style="stroke"
+              strokeWidth={ballRadius * 2}
+              strokeCap="round"
+              strokeJoin="round"
+            />
+          );
+        }).filter(Boolean);
       })()}
 
       {/* Draw current path being drawn (dotted curved preview) */}
