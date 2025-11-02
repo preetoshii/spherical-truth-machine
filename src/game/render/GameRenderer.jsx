@@ -262,6 +262,67 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
 
       {/* Draw all completed lines (Gelatos) with deformation effect */}
       {lines.map((line, index) => {
+        // Check for morphing animation (drawn path → straight line transition)
+        // This happens FIRST when gelato is created, before any other animations
+        if (config.gelato.morphing.enabled && line.originalPath && gelatoCreationTime) {
+          const timeSinceCreation = Date.now() - gelatoCreationTime;
+          const morphConfig = config.gelato.morphing;
+
+          if (timeSinceCreation < morphConfig.duration) {
+            // Calculate progress through morphing animation (0 to 1)
+            const progress = timeSinceCreation / morphConfig.duration;
+
+            // Apply elastic oscillation with exponential decay
+            const frequency = morphConfig.frequency * Math.PI * 2;
+            const dampingFactor = Math.exp(-morphConfig.damping * progress * 5);
+            const oscillation = Math.sin(frequency * progress) * dampingFactor;
+
+            // Interpolate each point from original position to straight line position
+            const interpolatedPoints = line.originalPath.map((point, i) => {
+              // Calculate where this point should be on the straight line
+              const t = i / (line.originalPath.length - 1); // 0 to 1 along the line
+              const straightX = line.startX + (line.endX - line.startX) * t;
+              const straightY = line.startY + (line.endY - line.startY) * t;
+
+              // Apply elastic interpolation with oscillation (can overshoot/undershoot)
+              const elasticProgress = progress + oscillation * (1 - progress) * 0.3;
+              const clampedProgress = Math.max(0, Math.min(1.2, elasticProgress)); // Allow slight overshoot
+
+              const currentX = point.x + (straightX - point.x) * clampedProgress;
+              const currentY = point.y + (straightY - point.y) * clampedProgress;
+
+              return { x: currentX, y: currentY };
+            });
+
+            // Render smooth curved path through interpolated points
+            const path = Skia.Path.Make();
+            path.moveTo(interpolatedPoints[0].x, interpolatedPoints[0].y);
+            
+            for (let i = 1; i < interpolatedPoints.length - 1; i++) {
+              const midX = (interpolatedPoints[i].x + interpolatedPoints[i + 1].x) / 2;
+              const midY = (interpolatedPoints[i].y + interpolatedPoints[i + 1].y) / 2;
+              path.quadTo(interpolatedPoints[i].x, interpolatedPoints[i].y, midX, midY);
+            }
+            
+            if (interpolatedPoints.length > 1) {
+              path.lineTo(
+                interpolatedPoints[interpolatedPoints.length - 1].x,
+                interpolatedPoints[interpolatedPoints.length - 1].y
+              );
+            }
+
+            return (
+              <Path
+                key={index}
+                path={path}
+                color="white"
+                style="stroke"
+                strokeWidth={config.gelato.thickness}
+              />
+            );
+          }
+        }
+
         // Check if we should apply deformation or fade to this line
         if (bounceImpact && bounceImpact.timestamp) {
           const timeSinceBounce = Date.now() - bounceImpact.timestamp;

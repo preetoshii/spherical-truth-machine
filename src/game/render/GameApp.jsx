@@ -336,7 +336,8 @@ export function GameApp() {
         startPoint.x,
         startPoint.y,
         endPoint.x,
-        endPoint.y
+        endPoint.y,
+        currentPath // Pass the full drawn path for morphing animation
       );
 
       // Store the clamped line for visual rendering

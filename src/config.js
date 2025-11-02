@@ -94,6 +94,14 @@ export const config = {
 
     // Destruction animation (fade-out on bounce)
     fadeOutDuration: 500,     // How long Gelato takes to fade out after bounce in milliseconds
+    
+    // Morphing animation (drawn path → straight line transition)
+    morphing: {
+      enabled: true,          // Enable/disable shape morphing animation
+      duration: 400,          // Animation duration in milliseconds (quick/snappy)
+      frequency: 2.5,         // Oscillation frequency (higher = more bouncy)
+      damping: 0.6,           // Spring damping (how quickly it settles)
+    },
   },
 
   // === BOUNCING ===

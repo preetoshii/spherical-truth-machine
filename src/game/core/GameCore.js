@@ -437,8 +437,13 @@ export class GameCore {
   /**
    * Create a Gelato (springboard) from a drawn line
    * Returns the line data if created, null if max length exceeded
+   * @param {number} startX - Start X position
+   * @param {number} startY - Start Y position
+   * @param {number} endX - End X position
+   * @param {number} endY - End Y position
+   * @param {Array} originalPath - Original drawn path array of {x, y} points (optional)
    */
-  createGelato(startX, startY, endX, endY) {
+  createGelato(startX, startY, endX, endY, originalPath = null) {
     // Start the game on first gelato creation
     if (!this.gameStarted) {
       this.gameStarted = true;
@@ -487,10 +492,16 @@ export class GameCore {
     // Play gelato creation sound
     playSound('gelato-create');
 
-    // Store line data for rendering
-    this.gelatoLineData = { startX, startY, endX, endY };
+    // Store line data for rendering (including original path for morphing animation)
+    this.gelatoLineData = { 
+      startX, 
+      startY, 
+      endX, 
+      endY,
+      originalPath: originalPath || null, // Store original drawn path
+    };
 
-    // Track creation time for pop-in animation
+    // Track creation time for pop-in and morphing animations
     this.gelatoCreationTime = Date.now();
 
     // Return line data for rendering

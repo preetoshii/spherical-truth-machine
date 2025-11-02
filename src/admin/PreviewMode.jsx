@@ -157,7 +157,8 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
         startPoint.x,
         startPoint.y,
         endPoint.x,
-        endPoint.y
+        endPoint.y,
+        currentPath // Pass the full drawn path for morphing animation
       );
 
       if (gelatoLine) {
