@@ -35,6 +35,7 @@ export const config = {
         endFadeDurationMs: 800,     // Duration of fade-out when trail expires (0 = instant disappear)
         maxOpacity: 0.3,      // Maximum trail opacity (0.0 = invisible, 1.0 = solid)
         gradientLayers: 1,    // Number of overlapping layers for gradient effect (more = smoother fade)
+        taperAmount: 0.2,     // How thin the trail gets at the back (0.0 = vanishes, 1.0 = no taper)
       },
     },
 
