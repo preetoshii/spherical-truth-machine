@@ -262,22 +262,36 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
 
       {/* Draw all completed lines (Gelatos) with deformation effect */}
       {lines.map((line, index) => {
-        // Render original drawn path if available (experimental - no morphing)
+        // Render path averaged between drawn shape and straight line (50% blend)
         if (line.originalPath && line.originalPath.length > 1) {
-          // Render smooth curved path through original drawn points
+          // Interpolate each point 50% toward straight line
+          const blendedPoints = line.originalPath.map((point, i) => {
+            // Calculate where this point should be on the straight line
+            const t = i / (line.originalPath.length - 1); // 0 to 1 along the line
+            const straightX = line.startX + (line.endX - line.startX) * t;
+            const straightY = line.startY + (line.endY - line.startY) * t;
+
+            // Blend 50/50 between original and straight
+            const blendedX = point.x * 0.5 + straightX * 0.5;
+            const blendedY = point.y * 0.5 + straightY * 0.5;
+
+            return { x: blendedX, y: blendedY };
+          });
+
+          // Render smooth curved path through blended points
           const path = Skia.Path.Make();
-          path.moveTo(line.originalPath[0].x, line.originalPath[0].y);
+          path.moveTo(blendedPoints[0].x, blendedPoints[0].y);
           
-          for (let i = 1; i < line.originalPath.length - 1; i++) {
-            const midX = (line.originalPath[i].x + line.originalPath[i + 1].x) / 2;
-            const midY = (line.originalPath[i].y + line.originalPath[i + 1].y) / 2;
-            path.quadTo(line.originalPath[i].x, line.originalPath[i].y, midX, midY);
+          for (let i = 1; i < blendedPoints.length - 1; i++) {
+            const midX = (blendedPoints[i].x + blendedPoints[i + 1].x) / 2;
+            const midY = (blendedPoints[i].y + blendedPoints[i + 1].y) / 2;
+            path.quadTo(blendedPoints[i].x, blendedPoints[i].y, midX, midY);
           }
           
-          if (line.originalPath.length > 1) {
+          if (blendedPoints.length > 1) {
             path.lineTo(
-              line.originalPath[line.originalPath.length - 1].x,
-              line.originalPath[line.originalPath.length - 1].y
+              blendedPoints[blendedPoints.length - 1].x,
+              blendedPoints[blendedPoints.length - 1].y
             );
           }
 
