@@ -33,6 +33,17 @@ export const config = {
         decayTimeMs: 100,     // Time to decay back to circle after hold (ms)
       },
       
+      // Face (eyes and mouth)
+      face: {
+        enabled: true,         // Show face on ball
+        eyeSize: 3,            // Eye radius
+        eyeSpacing: 14,        // Distance between eyes
+        eyeOffsetY: -6,        // Eyes Y position (negative = above center)
+        mouthWidth: 14,        // Mouth width
+        mouthHeight: 6,        // Mouth height (for smile curve)
+        mouthOffsetY: 8,       // Mouth Y position (positive = below center)
+      },
+      
       // Motion trail effect
       trail: {
         enabled: true,        // Enable/disable trail effect

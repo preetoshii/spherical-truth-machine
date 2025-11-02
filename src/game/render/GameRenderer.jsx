@@ -595,6 +595,57 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
           style="stroke"
           strokeWidth={2}
         />
+        
+        {/* Face (eyes and mouth) */}
+        {config.physics.mascot.face.enabled && (
+          <Group>
+            {/* Left eye */}
+            <Circle
+              cx={mascotX - config.physics.mascot.face.eyeSpacing / 2}
+              cy={mascotY + config.physics.mascot.face.eyeOffsetY}
+              r={config.physics.mascot.face.eyeSize}
+              color={primaryColor}
+              style="fill"
+            />
+            
+            {/* Right eye */}
+            <Circle
+              cx={mascotX + config.physics.mascot.face.eyeSpacing / 2}
+              cy={mascotY + config.physics.mascot.face.eyeOffsetY}
+              r={config.physics.mascot.face.eyeSize}
+              color={primaryColor}
+              style="fill"
+            />
+            
+            {/* Mouth (simple smile curve) */}
+            {(() => {
+              const mouthPath = Skia.Path.Make();
+              const mouthCenterX = mascotX;
+              const mouthCenterY = mascotY + config.physics.mascot.face.mouthOffsetY;
+              const mouthWidth = config.physics.mascot.face.mouthWidth;
+              const mouthHeight = config.physics.mascot.face.mouthHeight;
+              
+              // Smile curve (quadratic bezier)
+              mouthPath.moveTo(mouthCenterX - mouthWidth / 2, mouthCenterY);
+              mouthPath.quadTo(
+                mouthCenterX, 
+                mouthCenterY + mouthHeight,
+                mouthCenterX + mouthWidth / 2, 
+                mouthCenterY
+              );
+              
+              return (
+                <Path
+                  path={mouthPath}
+                  color={primaryColor}
+                  style="stroke"
+                  strokeWidth={2}
+                  strokeCap="round"
+                />
+              );
+            })()}
+          </Group>
+        )}
       </Group>
 
       </Canvas>
