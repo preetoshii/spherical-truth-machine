@@ -79,6 +79,7 @@ export const config = {
     // Visual rendering mode
     renderMode: 'curved',     // 'curved' = honor drawn shape (with blend), 'straight' = simple A→B line
     curveBlend: 0.5,          // How much to honor drawn shape (0.0 = straight line, 1.0 = exact drawing, 0.5 = 50/50)
+    collisionShape: 'line',   // 'line' = straight A→B physics, 'path' = curved physics matching blended visual
 
     // Visual deformation (trampoline effect on bounce)
     deformation: {
