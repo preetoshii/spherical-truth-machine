@@ -292,6 +292,7 @@ export const config = {
   // === PERFORMANCE ===
   performance: {
     defaultFpsCap: null,          // Default FPS cap for components without their own FPS UI (null = uncapped, or 30/60/etc)
+    showFps: false,               // Show FPS counter in corner (false = hidden by default)
   },
 
   // === VOICE TRANSFORMATION ===
