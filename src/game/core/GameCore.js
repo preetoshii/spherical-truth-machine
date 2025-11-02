@@ -386,10 +386,30 @@ export class GameCore {
 
         this.lastBounceTime = currentTime;
 
-        // Apply spring boost perpendicular to Gelato
-        const angle = gelatoBody.angle;
-        const normalX = -Math.sin(angle); // Perpendicular to line
-        const normalY = Math.cos(angle);
+        // Get collision normal (works for both straight and curved bodies)
+        // For curved bodies (fromVertices), Matter.js provides the actual surface normal at impact point
+        // For straight bodies (rectangle), provides the rectangle's normal based on angle
+        const collision = pair.collision;
+        let normalX, normalY;
+        
+        if (collision && collision.normal) {
+          // Use collision normal (accurate for curved surfaces)
+          normalX = collision.normal.x;
+          normalY = collision.normal.y;
+          
+          // Flip normal if it's pointing the wrong way (into the gelato instead of out)
+          // Dot product with velocity should be negative (ball moving toward surface)
+          const dotProduct = mascotBody.velocity.x * normalX + mascotBody.velocity.y * normalY;
+          if (dotProduct > 0) {
+            normalX = -normalX;
+            normalY = -normalY;
+          }
+        } else {
+          // Fallback: use body angle for simple rectangles
+          const angle = gelatoBody.angle;
+          normalX = -Math.sin(angle);
+          normalY = Math.cos(angle);
+        }
 
         // Calculate how hard the ball is hitting the Gelato (dot product)
         const currentVelocity = mascotBody.velocity;
