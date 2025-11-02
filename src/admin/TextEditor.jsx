@@ -89,11 +89,6 @@ export function TextEditor({ wordTimings, onSave, onCancel }) {
           })}
         </ScrollView>
 
-        {/* Word count */}
-        <Text style={styles.wordCount}>
-          {editedWords.filter(w => w.word !== '*').length} words
-        </Text>
-
         {/* Action buttons */}
         <View style={styles.actions}>
           <Pressable style={styles.cancelButton} onPress={handleCancel}>
@@ -183,12 +178,6 @@ const styles = StyleSheet.create({
     minWidth: 60,
     fontWeight: '400',
   },
-  wordCount: {
-    fontSize: 12,
-    color: '#666666',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -209,7 +198,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   saveButton: {
-    flex: 2,
+    flex: 1,
     backgroundColor: '#ffffff',
     paddingVertical: 16,
     borderRadius: 999,
