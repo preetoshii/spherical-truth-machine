@@ -28,7 +28,7 @@ export const config = {
       // Squash/stretch deformation on bounce
       squashStretch: {
         enabled: true,        // Enable/disable bounce deformation
-        amount: 0.15,         // Deformation intensity (0.0-0.5, higher = more stretch)
+        amount: 0.30,         // Deformation intensity (0.0-0.5, higher = more stretch)
         holdTimeMs: 100,      // Time to hold stretched shape before relaxing (ms)
         decayTimeMs: 300,     // Time to decay back to circle after hold (ms)
       },
