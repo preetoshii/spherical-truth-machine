@@ -274,6 +274,7 @@ export const config = {
     
     // Color palette (used when mode is 'bounce' or 'time')
     palette: [
+      '#FFFFFF',  // White
       '#4ECDC4',  // Cyan
       '#FF6B6B',  // Red
       '#A8E6CF',  // Mint

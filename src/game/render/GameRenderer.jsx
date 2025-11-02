@@ -596,47 +596,70 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
           strokeWidth={2}
         />
         
-        {/* Face (eyes and mouth) */}
+        {/* Face (eyes and mustache) */}
         {config.physics.mascot.face.enabled && (
           <Group>
-            {/* Left eye */}
-            <Circle
-              cx={mascotX - config.physics.mascot.face.eyeSpacing / 2}
-              cy={mascotY + config.physics.mascot.face.eyeOffsetY}
-              r={config.physics.mascot.face.eyeSize}
+            {/* Left eye (horizontal line) */}
+            <Line
+              p1={vec(
+                mascotX - config.physics.mascot.face.eyeSpacing / 2 - config.physics.mascot.face.eyeSize,
+                mascotY + config.physics.mascot.face.eyeOffsetY
+              )}
+              p2={vec(
+                mascotX - config.physics.mascot.face.eyeSpacing / 2 + config.physics.mascot.face.eyeSize,
+                mascotY + config.physics.mascot.face.eyeOffsetY
+              )}
               color={primaryColor}
-              style="fill"
+              style="stroke"
+              strokeWidth={2}
+              strokeCap="round"
             />
             
-            {/* Right eye */}
-            <Circle
-              cx={mascotX + config.physics.mascot.face.eyeSpacing / 2}
-              cy={mascotY + config.physics.mascot.face.eyeOffsetY}
-              r={config.physics.mascot.face.eyeSize}
+            {/* Right eye (horizontal line) */}
+            <Line
+              p1={vec(
+                mascotX + config.physics.mascot.face.eyeSpacing / 2 - config.physics.mascot.face.eyeSize,
+                mascotY + config.physics.mascot.face.eyeOffsetY
+              )}
+              p2={vec(
+                mascotX + config.physics.mascot.face.eyeSpacing / 2 + config.physics.mascot.face.eyeSize,
+                mascotY + config.physics.mascot.face.eyeOffsetY
+              )}
               color={primaryColor}
-              style="fill"
+              style="stroke"
+              strokeWidth={2}
+              strokeCap="round"
             />
             
-            {/* Mouth (simple smile curve) */}
+            {/* Mustache (two curved sections) */}
             {(() => {
-              const mouthPath = Skia.Path.Make();
-              const mouthCenterX = mascotX;
-              const mouthCenterY = mascotY + config.physics.mascot.face.mouthOffsetY;
-              const mouthWidth = config.physics.mascot.face.mouthWidth;
-              const mouthHeight = config.physics.mascot.face.mouthHeight;
+              const mustachePath = Skia.Path.Make();
+              const mustacheCenterX = mascotX;
+              const mustacheCenterY = mascotY + config.physics.mascot.face.mouthOffsetY;
+              const mustacheWidth = config.physics.mascot.face.mouthWidth;
+              const mustacheHeight = config.physics.mascot.face.mouthHeight;
               
-              // Smile curve (quadratic bezier)
-              mouthPath.moveTo(mouthCenterX - mouthWidth / 2, mouthCenterY);
-              mouthPath.quadTo(
-                mouthCenterX, 
-                mouthCenterY + mouthHeight,
-                mouthCenterX + mouthWidth / 2, 
-                mouthCenterY
+              // Left side of mustache (curves up and left)
+              mustachePath.moveTo(mustacheCenterX, mustacheCenterY);
+              mustachePath.quadTo(
+                mustacheCenterX - mustacheWidth / 3,
+                mustacheCenterY - mustacheHeight,
+                mustacheCenterX - mustacheWidth / 2,
+                mustacheCenterY - mustacheHeight / 2
+              );
+              
+              // Right side of mustache (curves up and right)
+              mustachePath.moveTo(mustacheCenterX, mustacheCenterY);
+              mustachePath.quadTo(
+                mustacheCenterX + mustacheWidth / 3,
+                mustacheCenterY - mustacheHeight,
+                mustacheCenterX + mustacheWidth / 2,
+                mustacheCenterY - mustacheHeight / 2
               );
               
               return (
                 <Path
-                  path={mouthPath}
+                  path={mustachePath}
                   color={primaryColor}
                   style="stroke"
                   strokeWidth={2}
