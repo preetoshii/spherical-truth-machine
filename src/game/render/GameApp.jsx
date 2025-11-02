@@ -70,6 +70,7 @@ export function GameApp() {
 
   // Debug menu (DEV ONLY)
   const [showDebugMenu, setShowDebugMenu] = useState(false);
+  const [showFps, setShowFps] = useState(config.performance.showFps);
   const [hapticsConfig, setHapticsConfig] = useState({
     gelatoCreation: config.haptics.gelatoCreation,
     gelatoBounce: config.haptics.gelatoBounce,
@@ -432,6 +433,8 @@ export function GameApp() {
             setHapticsConfig={setHapticsConfig}
             fpsCap={fpsCap}
             setFpsCap={setFpsCap}
+            showFps={showFps}
+            setShowFps={setShowFps}
           />
         </View>
       )}

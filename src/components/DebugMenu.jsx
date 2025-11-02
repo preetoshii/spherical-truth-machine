@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Pressable, ScrollView, Platform } from 'react-n
 import { config } from '../config';
 import { triggerHaptic } from '../utils/haptics';
 
-export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, fpsCap, setFpsCap }) {
+export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, fpsCap, setFpsCap, showFps, setShowFps }) {
   if (!visible) return null;
 
   const fpsCapOptions = [null, 10, 20, 30, 40, 50, 60, 70, 80, 90, 120];
@@ -54,6 +54,24 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
                   </Text>
                 </Pressable>
               ))}
+            </View>
+            
+            {/* Show FPS Toggle */}
+            <View style={{ marginTop: 16 }}>
+              <Pressable
+                onPress={() => setShowFps(!showFps)}
+                style={[
+                  styles.toggleButton,
+                  showFps && styles.toggleButtonActive
+                ]}
+              >
+                <Text style={[
+                  styles.toggleButtonText,
+                  showFps && styles.toggleButtonTextActive
+                ]}>
+                  {showFps ? '👁️ Show FPS: ON' : '👁️ Show FPS: OFF'}
+                </Text>
+              </Pressable>
             </View>
           </View>
 
@@ -498,5 +516,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
     fontWeight: 'bold',
+  },
+  toggleButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: '#222',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#333',
+    alignItems: 'center',
+  },
+  toggleButtonActive: {
+    backgroundColor: '#007AFF',
+    borderColor: '#0056b3',
+  },
+  toggleButtonText: {
+    fontSize: 16,
+    color: '#888',
+    fontWeight: '600',
+  },
+  toggleButtonTextActive: {
+    color: '#fff',
   },
 });
