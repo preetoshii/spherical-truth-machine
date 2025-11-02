@@ -580,6 +580,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         transform={[
           { translateX: mascotX },
           { translateY: mascotY },
+          { rotate: squashStretch.rotation || 0 },
           { scaleX: squashStretch.scaleX },
           { scaleY: squashStretch.scaleY },
           { translateX: -mascotX },
