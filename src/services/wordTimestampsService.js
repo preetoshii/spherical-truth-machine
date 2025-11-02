@@ -35,6 +35,9 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = [], transform
       if (voiceId) {
         formData.append('voiceId', voiceId);
       }
+      console.log('[Frontend] Sending voice transform request. voiceId:', voiceId, 'transformVoice: true');
+    } else {
+      console.log('[Frontend] Voice transform disabled');
     }
 
     // Call the API

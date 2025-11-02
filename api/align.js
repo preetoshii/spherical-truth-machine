@@ -313,7 +313,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'only .m4a accepted' });
     }
 
-    console.log('[Transform] transformVoice:', transformVoice, 'voiceId:', voiceId);
+    console.log('[API] Received file:', filename);
+    console.log('[API] transformVoice:', transformVoice, 'type:', typeof transformVoice);
+    console.log('[API] voiceId:', voiceId, 'type:', typeof voiceId);
+    console.log('[API] Full formData:', JSON.stringify({
+      hasFile: !!file,
+      filename,
+      transformVoice,
+      voiceId
+    }));
 
     // 2) Transform voice if requested (BEFORE word detection)
     let audioToProcess = file;
