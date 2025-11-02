@@ -100,7 +100,6 @@ export function TextEditor({ wordTimings, onSave, onCancel }) {
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </Pressable>
           <Pressable style={styles.saveButton} onPress={handleSave}>
-            <Feather name="check" size={20} color="#ffffff" style={{ marginRight: 8 }} />
             <Text style={styles.saveButtonText}>Save Changes</Text>
           </Pressable>
         </View>
@@ -122,8 +121,10 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   content: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0a0a0a',
     borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     padding: 30,
     width: '100%',
     maxWidth: 800,
@@ -195,11 +196,11 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#0a0a0a',
     paddingVertical: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#3a3a3a',
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: '#ffffff',
     alignItems: 'center',
   },
   cancelButtonText: {
@@ -209,17 +210,19 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 2,
-    backgroundColor: '#0066ff',
+    backgroundColor: '#ffffff',
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: '#0a0a0a',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
   saveButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
+    fontWeight: '500',
+    color: '#0a0a0a',
   },
 });
 
