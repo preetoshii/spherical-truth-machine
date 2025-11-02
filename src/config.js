@@ -251,11 +251,10 @@ export const config = {
   // === COLOR SYSTEM ===
   // Monochromatic design: single primary color used throughout (ball, trail, gelato, UI, text)
   colors: {
-    mode: 'static',          // 'static' = fixed color, 'bounce' = change per bounce, 'time' = gradual fade
+    mode: 'bounce',          // 'static' = fixed color, 'bounce' = change per bounce, 'time' = gradual fade
     
     // Color palette (used when mode is 'bounce' or 'time')
     palette: [
-      '#FFFFFF',  // White
       '#FF6B6B',  // Red
       '#4ECDC4',  // Cyan
       '#FFE66D',  // Yellow

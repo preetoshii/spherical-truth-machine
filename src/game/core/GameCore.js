@@ -140,6 +140,7 @@ export class GameCore {
       ? config.colors.staticColor 
       : config.colors.palette[0];
     this.colorTransitionStart = Date.now();
+    this.bouncesSinceColorChange = 0; // Track bounces for color change timing
 
     // Message system (Milestone 3)
     // Use custom message if provided (for preview mode), otherwise use default
@@ -373,6 +374,12 @@ export class GameCore {
     // Reset word index to start message from beginning
     this.wordIndex = 0;
     this.currentWord = null;
+    
+    // Change color on quote restart if mode is 'bounce' and bouncesPerColorChange is 'quote'
+    if (config.colors.mode === 'bounce' && config.colors.bouncesPerColorChange === 'quote') {
+      this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
+      this.primaryColor = config.colors.palette[this.currentColorIndex];
+    }
 
     // Remove any existing gelato
     if (this.gelato) {
@@ -436,8 +443,19 @@ export class GameCore {
         
         // Change color on bounce if mode is 'bounce'
         if (config.colors.mode === 'bounce') {
-          this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
-          this.primaryColor = config.colors.palette[this.currentColorIndex];
+          const bouncesPerChange = config.colors.bouncesPerColorChange;
+          
+          // Only change if bouncesPerColorChange is not 'quote' (quote mode changes on message restart)
+          if (bouncesPerChange !== 'quote') {
+            this.bouncesSinceColorChange++;
+            
+            // Check if enough bounces have occurred
+            if (this.bouncesSinceColorChange >= bouncesPerChange) {
+              this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
+              this.primaryColor = config.colors.palette[this.currentColorIndex];
+              this.bouncesSinceColorChange = 0; // Reset counter
+            }
+          }
         }
 
         // Apply spring boost perpendicular to Gelato
