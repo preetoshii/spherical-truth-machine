@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { GameRenderer } from '../game/render/GameRenderer';
 import { useGameLoop } from '../game/hooks/useGameLoop';
 import { config } from '../config';
 import { playSound } from '../utils/audio';
+import { TextEditor } from './TextEditor';
 
 /**
  * PreviewMode - Game preview with draft message and overlay controls
  */
 export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, wordAudioSegments }) {
+  // State for text editing
+  const [showTextEditor, setShowTextEditor] = useState(false);
+  const [editedWordTimings, setEditedWordTimings] = useState(wordTimings);
+
+  // Use edited word timings if available, otherwise use original
   const [dimensions] = useState(() => {
     const { width, height } = Dimensions.get('window');
     return { width, height };
@@ -16,6 +23,8 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
 
   // Use shared game loop hook - ensures identical physics to main game
   // Pass null for fpsCap (uncapped in preview mode)
+  // Use editedWordTimings instead of original wordTimings
+  const activeWordTimings = editedWordTimings || wordTimings;
   const {
     gameCore,
     mascotPos,
@@ -24,9 +33,13 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
     gelatoCreationTime,
     currentWord,
     mascotVelocityY,
+    squashStretch,
     lines,
     setLines,
-  } = useGameLoop(dimensions, message, audioUri, wordTimings, wordAudioSegments, null);
+  } = useGameLoop(dimensions, message, audioUri, activeWordTimings, wordAudioSegments, null);
+
+  // Get parallax stars from game core
+  const parallaxStars = gameCore.current ? gameCore.current.getParallaxStars() : [];
 
   const [currentPath, setCurrentPath] = useState(null);
 
@@ -120,6 +133,8 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
           gelatoCreationTime={gelatoCreationTime.current}
           currentWord={currentWord.current}
           mascotVelocityY={mascotVelocityY.current}
+          squashStretch={squashStretch.current}
+          parallaxStars={parallaxStars}
         />
       </View>
 
@@ -127,6 +142,20 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
       <View style={styles.overlay}>
         {/* Preview label (top-right) */}
         <Text style={styles.previewLabel}>PREVIEW</Text>
+
+        {/* Edit Text button (top-left) - only show if we have word timings */}
+        {wordTimings && wordTimings.length > 0 && (
+          <Pressable
+            style={styles.editTextButton}
+            onPress={() => {
+              playSound('click');
+              setShowTextEditor(true);
+            }}
+            pointerEvents="auto"
+          >
+            <Feather name="type" size={24} color="#ffffff" />
+          </Pressable>
+        )}
 
         {/* Save/Send Now button (bottom-center) */}
         <View style={styles.saveButtonContainer} pointerEvents="auto">
@@ -143,6 +172,19 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
           </Pressable>
         </View>
       </View>
+
+      {/* Text Editor overlay */}
+      {showTextEditor && (
+        <TextEditor
+          wordTimings={activeWordTimings}
+          onSave={(updatedWordTimings) => {
+            setEditedWordTimings(updatedWordTimings);
+            setShowTextEditor(false);
+            playSound('click');
+          }}
+          onCancel={() => setShowTextEditor(false)}
+        />
+      )}
     </View>
   );
 }
@@ -198,5 +240,18 @@ const styles = StyleSheet.create({
     color: '#666666',
     letterSpacing: 2,
     padding: 30,
+  },
+  editTextButton: {
+    position: 'absolute',
+    top: 50,
+    left: 50,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
 });
