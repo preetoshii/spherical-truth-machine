@@ -497,48 +497,63 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         );
       })}
 
-      {/* Motion trail behind ball - tapered calligraphic stroke */}
+      {/* Motion trail behind ball - tapered continuous Skia path */}
       {trail.length > 1 && (() => {
         const ballRadius = config.physics.mascot.radius;
         const maxOpacity = config.physics.mascot.trail.maxOpacity;
         const taperAmount = config.physics.mascot.trail.taperAmount;
+        const layers = config.physics.mascot.trail.gradientLayers;
         const currentTime = Date.now();
         const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
         
         // Apply end fade (when trail expires after bounce window)
         const endFadeMultiplier = 1.0 - trailEndFade; // 1.0 = visible, 0.0 = faded
         
-        // Render trail as individual segments with varying width and opacity
-        // Each segment tapers from back (thin/faint) to front (thick/bright)
-        return trail.map((point, index) => {
-          if (index === trail.length - 1) return null; // Skip last point (no segment after it)
+        // Calculate average age-based opacity for entire trail
+        const avgAge = trail.reduce((sum, p) => sum + (currentTime - p.timestamp), 0) / trail.length;
+        const avgOpacity = Math.max(0, 1 - (avgAge / fadeOutMs));
+        
+        // Render multiple overlapping continuous paths with decreasing lengths AND widths
+        // Creates both opacity gradient (fade) and width taper (calligraphic effect)
+        return Array.from({ length: layers }).map((_, layerIndex) => {
+          // Calculate what portion of trail to include in this layer
+          const startIndex = Math.floor((trail.length - 1) * (layerIndex / layers));
+          const layerTrail = trail.slice(startIndex);
           
-          const nextPoint = trail[index + 1];
+          if (layerTrail.length < 2) return null;
           
-          // Calculate opacity based on age (older = more transparent)
-          const age = currentTime - point.timestamp;
-          const ageOpacity = Math.max(0, 1 - (age / fadeOutMs));
+          // Create smooth continuous path with quadTo curves
+          const path = Skia.Path.Make();
+          path.moveTo(layerTrail[0].x, layerTrail[0].y);
           
-          // Calculate width based on position in trail (older = thinner)
-          // Position 0 (oldest) = taperAmount (e.g., 0.0 = vanishes)
-          // Position N (newest) = 1.0 (full width)
-          const positionRatio = index / (trail.length - 1);
-          const widthMultiplier = taperAmount + (1 - taperAmount) * positionRatio;
-          const segmentWidth = ballRadius * 2 * widthMultiplier;
+          for (let i = 1; i < layerTrail.length - 1; i++) {
+            const midX = (layerTrail[i].x + layerTrail[i + 1].x) / 2;
+            const midY = (layerTrail[i].y + layerTrail[i + 1].y) / 2;
+            path.quadTo(layerTrail[i].x, layerTrail[i].y, midX, midY);
+          }
           
-          // Create segment path
-          const segmentPath = Skia.Path.Make();
-          segmentPath.moveTo(point.x, point.y);
-          segmentPath.lineTo(nextPoint.x, nextPoint.y);
+          if (layerTrail.length > 1) {
+            path.lineTo(
+              layerTrail[layerTrail.length - 1].x,
+              layerTrail[layerTrail.length - 1].y
+            );
+          }
+          
+          // Opacity decreases for shorter layers (fade at back)
+          const layerOpacity = (layerIndex + 1) / layers;
+          
+          // Width also decreases for shorter layers (taper at back)
+          const layerWidthMultiplier = taperAmount + (1 - taperAmount) * layerOpacity;
+          const strokeWidth = ballRadius * 2 * layerWidthMultiplier;
           
           return (
             <Path
-              key={`trail-${index}`}
-              path={segmentPath}
+              key={`trail-layer-${layerIndex}`}
+              path={path}
               color="white"
-              opacity={ageOpacity * maxOpacity * endFadeMultiplier}
+              opacity={avgOpacity * layerOpacity * maxOpacity * endFadeMultiplier}
               style="stroke"
-              strokeWidth={segmentWidth}
+              strokeWidth={strokeWidth}
               strokeCap="round"
               strokeJoin="round"
             />
