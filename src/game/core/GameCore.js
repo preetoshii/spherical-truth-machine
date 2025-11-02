@@ -789,28 +789,38 @@ export class GameCore {
 
   /**
    * Get squash and stretch values for mascot based on bounce impact
-   * Returns { scaleX, scaleY, rotation } that decays over time
+   * Returns { scaleX, scaleY, rotation } with hold + decay phases
    */
   getSquashStretch() {
-    if (!this.bounceStretch) {
+    if (!this.bounceStretch || !config.physics.mascot.squashStretch.enabled) {
       return { scaleX: 1, scaleY: 1, rotation: 0 };
     }
 
     const currentTime = Date.now();
     const timeSinceBounce = currentTime - this.bounceStretch.timestamp;
-    const decayDuration = 300; // Stretch fades back to circle over 300ms
+    const holdTime = config.physics.mascot.squashStretch.holdTimeMs;
+    const decayTime = config.physics.mascot.squashStretch.decayTimeMs;
+    const totalDuration = holdTime + decayTime;
 
-    // Decay multiplier (1.0 at bounce → 0.0 after 300ms)
-    const decay = Math.max(0, 1 - (timeSinceBounce / decayDuration));
-
-    if (decay <= 0) {
-      // Stretch has completely decayed
+    // Phase 1: Hold stretched shape (0ms to holdTimeMs)
+    // Phase 2: Decay to circle (holdTimeMs to holdTimeMs + decayTimeMs)
+    let stretchMultiplier = 1.0;
+    
+    if (timeSinceBounce < holdTime) {
+      // Phase 1: Hold at full stretch
+      stretchMultiplier = 1.0;
+    } else if (timeSinceBounce < totalDuration) {
+      // Phase 2: Decay from 1.0 to 0.0
+      const decayProgress = (timeSinceBounce - holdTime) / decayTime;
+      stretchMultiplier = 1.0 - decayProgress;
+    } else {
+      // Stretch has completely finished
       this.bounceStretch = null;
       return { scaleX: 1, scaleY: 1, rotation: 0 };
     }
 
-    // Apply stretch with decay
-    const stretchAmount = 0.15 * this.bounceStretch.intensity * decay;
+    // Apply stretch with multiplier
+    const stretchAmount = config.physics.mascot.squashStretch.amount * this.bounceStretch.intensity * stretchMultiplier;
     
     return {
       scaleX: 1 - stretchAmount * 0.7,  // Narrower (perpendicular to launch)

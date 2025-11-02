@@ -25,6 +25,14 @@ export const config = {
       frictionAir: 0.005,     // Air resistance affecting terminal velocity (lower = falls faster)
       mass: 1,                // Mass affects force calculations (default: 1)
       
+      // Squash/stretch deformation on bounce
+      squashStretch: {
+        enabled: true,        // Enable/disable bounce deformation
+        amount: 0.15,         // Deformation intensity (0.0-0.5, higher = more stretch)
+        holdTimeMs: 100,      // Time to hold stretched shape before relaxing (ms)
+        decayTimeMs: 300,     // Time to decay back to circle after hold (ms)
+      },
+      
       // Motion trail effect
       trail: {
         enabled: true,        // Enable/disable trail effect
