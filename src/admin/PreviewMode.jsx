@@ -140,10 +140,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
 
       {/* Overlay controls */}
       <View style={styles.overlay}>
-        {/* Preview label (top-right) */}
-        <Text style={styles.previewLabel}>PREVIEW</Text>
-
-        {/* Edit Text button (top-left) - only show if we have word timings */}
+        {/* Edit Text button (top-right) - only show if we have word timings */}
         {wordTimings && wordTimings.length > 0 && (
           <Pressable
             style={styles.editTextButton}
@@ -230,16 +227,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#0a0a0a',
-  },
-  previewLabel: {
-    position: 'absolute',
-    top: 30,
-    right: 30,
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#666666',
-    letterSpacing: 2,
-    padding: 30,
   },
   editTextButton: {
     position: 'absolute',
