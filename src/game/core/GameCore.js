@@ -132,6 +132,7 @@ export class GameCore {
     // Motion trail tracking
     this.trail = []; // Array of { x, y, timestamp }
     this.lastTrailTime = 0;
+    this.lastBounceForTrail = 0; // Timestamp of last gelato bounce (for trail activation)
 
     // Message system (Milestone 3)
     // Use custom message if provided (for preview mode), otherwise use default
@@ -245,27 +246,37 @@ export class GameCore {
     // Update motion trail
     if (config.physics.mascot.trail.enabled && this.gameStarted) {
       const currentTime = Date.now();
+      const activeAfterBounceMs = config.physics.mascot.trail.activeAfterBounceMs;
       
-      // Sample trail position at configured interval
-      if (currentTime - this.lastTrailTime >= config.physics.mascot.trail.sampleInterval) {
-        this.trail.push({
-          x: this.mascot.position.x,
-          y: this.mascot.position.y,
-          timestamp: currentTime,
-        });
-        this.lastTrailTime = currentTime;
-        
-        // Limit trail length
-        if (this.trail.length > config.physics.mascot.trail.maxPoints) {
-          this.trail.shift();
+      // Check if trail should be active (either always on, or within active window after bounce)
+      const trailIsActive = activeAfterBounceMs === 0 || 
+                           (currentTime - this.lastBounceForTrail < activeAfterBounceMs);
+      
+      if (trailIsActive) {
+        // Sample trail position at configured interval
+        if (currentTime - this.lastTrailTime >= config.physics.mascot.trail.sampleInterval) {
+          this.trail.push({
+            x: this.mascot.position.x,
+            y: this.mascot.position.y,
+            timestamp: currentTime,
+          });
+          this.lastTrailTime = currentTime;
+          
+          // Limit trail length
+          if (this.trail.length > config.physics.mascot.trail.maxPoints) {
+            this.trail.shift();
+          }
         }
+        
+        // Remove old trail points that have fully faded
+        const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
+        this.trail = this.trail.filter(point => 
+          currentTime - point.timestamp < fadeOutMs
+        );
+      } else {
+        // Trail inactive - clear it
+        this.trail = [];
       }
-      
-      // Remove old trail points that have fully faded
-      const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
-      this.trail = this.trail.filter(point => 
-        currentTime - point.timestamp < fadeOutMs
-      );
     }
 
     // Apply velocity capping (safety valve) - scale caps with time dilation
@@ -345,6 +356,7 @@ export class GameCore {
     // Clear motion trail
     this.trail = [];
     this.lastTrailTime = 0;
+    this.lastBounceForTrail = 0;
 
     // Reset ball to starting position (above screen)
     Matter.Body.setPosition(this.mascot, {
@@ -388,6 +400,9 @@ export class GameCore {
         }
 
         this.lastBounceTime = currentTime;
+        
+        // Activate trail on gelato bounce
+        this.lastBounceForTrail = currentTime;
 
         // Apply spring boost perpendicular to Gelato
         const angle = gelatoBody.angle;
