@@ -264,17 +264,9 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
       {lines.map((line, index) => {
         // Render path averaged between drawn shape and straight line (50% blend)
         if (line.originalPath && line.originalPath.length > 1) {
-          // Step 1: Simplify path - sample every Nth point for smoother curves
-          const samplingRate = Math.max(1, Math.floor(line.originalPath.length / 15)); // Target ~15 points max
-          const sampledPath = line.originalPath.filter((_, i) => 
-            i === 0 || // Always keep first
-            i === line.originalPath.length - 1 || // Always keep last
-            i % samplingRate === 0 // Sample every Nth point
-          );
-
-          // Step 2: Base blend - Interpolate each sampled point 50% toward straight line
-          const blendedPoints = sampledPath.map((point, i) => {
-            const t = i / (sampledPath.length - 1);
+          // Base blend: Interpolate each point 50% toward straight line (keep all points)
+          const blendedPoints = line.originalPath.map((point, i) => {
+            const t = i / (line.originalPath.length - 1);
             const straightX = line.startX + (line.endX - line.startX) * t;
             const straightY = line.startY + (line.endY - line.startY) * t;
             const blendedX = point.x * 0.5 + straightX * 0.5;
@@ -334,35 +326,12 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
             };
           });
 
-          // Render smooth curved path using Catmull-Rom style spline
+          // Render path as simple connected lines (no smoothing)
           const path = Skia.Path.Make();
           path.moveTo(deformedPoints[0].x, deformedPoints[0].y);
           
-          if (deformedPoints.length === 2) {
-            // Just two points - draw straight line
-            path.lineTo(deformedPoints[1].x, deformedPoints[1].y);
-          } else if (deformedPoints.length === 3) {
-            // Three points - simple quadratic curve through middle
-            path.quadTo(
-              deformedPoints[1].x, deformedPoints[1].y,
-              deformedPoints[2].x, deformedPoints[2].y
-            );
-          } else {
-            // Many points - use smooth cubic curves (Catmull-Rom approximation)
-            for (let i = 0; i < deformedPoints.length - 1; i++) {
-              const p0 = deformedPoints[Math.max(0, i - 1)];
-              const p1 = deformedPoints[i];
-              const p2 = deformedPoints[i + 1];
-              const p3 = deformedPoints[Math.min(deformedPoints.length - 1, i + 2)];
-              
-              // Calculate control points for smooth cubic curve
-              const cp1x = p1.x + (p2.x - p0.x) / 6;
-              const cp1y = p1.y + (p2.y - p0.y) / 6;
-              const cp2x = p2.x - (p3.x - p1.x) / 6;
-              const cp2y = p2.y - (p3.y - p1.y) / 6;
-              
-              path.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
-            }
+          for (let i = 1; i < deformedPoints.length; i++) {
+            path.lineTo(deformedPoints[i].x, deformedPoints[i].y);
           }
 
           // Calculate fade-out opacity after bounce
