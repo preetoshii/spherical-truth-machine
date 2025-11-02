@@ -284,12 +284,13 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
               const straightX = line.startX + (line.endX - line.startX) * t;
               const straightY = line.startY + (line.endY - line.startY) * t;
 
-              // Apply elastic interpolation with oscillation (can overshoot/undershoot)
-              const elasticProgress = progress + oscillation * (1 - progress) * 0.3;
-              const clampedProgress = Math.max(0, Math.min(1.2, elasticProgress)); // Allow slight overshoot
+              // Apply elastic spring effect with overshoot
+              // Base progress moves from 0 to 1
+              // Oscillation adds bouncy overshoot that decays over time
+              const elasticProgress = progress + oscillation * 0.4; // Stronger oscillation (0.4 instead of 0.3)
 
-              const currentX = point.x + (straightX - point.x) * clampedProgress;
-              const currentY = point.y + (straightY - point.y) * clampedProgress;
+              const currentX = point.x + (straightX - point.x) * elasticProgress;
+              const currentY = point.y + (straightY - point.y) * elasticProgress;
 
               return { x: currentX, y: currentY };
             });
