@@ -53,6 +53,10 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
   const parallaxStars = gameCore.current ? gameCore.current.getParallaxStars() : [];
 
   const [currentPath, setCurrentPath] = useState(null);
+  
+  // Track touch start for tap vs drag detection
+  const touchStartRef = React.useRef(null);
+  const touchStartTimeRef = React.useRef(0);
 
   // Helper: Calculate total path length
   const calculatePathLength = (points) => {
@@ -86,7 +90,14 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
   // Touch handlers for drawing
   const handleTouchStart = (event) => {
     const touch = event.nativeEvent.touches?.[0] || event.nativeEvent;
-    setCurrentPath([{ x: touch.pageX, y: touch.pageY }]);
+    const touchX = touch.pageX;
+    const touchY = touch.pageY;
+    
+    // Store touch start position and time for tap detection
+    touchStartRef.current = { x: touchX, y: touchY };
+    touchStartTimeRef.current = Date.now();
+    
+    setCurrentPath([{ x: touchX, y: touchY }]);
   };
 
   const handleTouchMove = (event) => {
@@ -103,10 +114,45 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
   };
 
   const handleTouchEnd = () => {
-    if (currentPath && currentPath.length >= 2 && gameCore.current) {
-      const startPoint = currentPath[0];
-      const endPoint = currentPath[currentPath.length - 1];
-
+    if (!currentPath || currentPath.length === 0) return;
+    
+    const touchEndTime = Date.now();
+    const touchDuration = touchEndTime - touchStartTimeRef.current;
+    const startPoint = currentPath[0];
+    const endPoint = currentPath[currentPath.length - 1];
+    
+    // Calculate distance moved
+    const dx = endPoint.x - startPoint.x;
+    const dy = endPoint.y - startPoint.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // If it's a quick tap with minimal movement, check if tapping the ball
+    const isTap = touchDuration < 200 && distance < 10;
+    
+    if (isTap && hasTransformedVoices && mascotPos.current) {
+      // Check if tap is on the ball
+      const ballX = mascotPos.current.x;
+      const ballY = mascotPos.current.y;
+      const ballRadius = config.physics.mascot.radius;
+      
+      const distToBall = Math.sqrt(
+        (startPoint.x - ballX) ** 2 + 
+        (startPoint.y - ballY) ** 2
+      );
+      
+      if (distToBall <= ballRadius + 20) {
+        // Tapped the ball! Switch voice
+        const newVoice = selectedVoice === 'reboundhi' ? 'reboundhita' : 'reboundhi';
+        setSelectedVoice(newVoice);
+        playSound('click');
+        console.log('🎭 Tapped ball - switched to voice:', newVoice);
+        setCurrentPath(null);
+        return;
+      }
+    }
+    
+    // Otherwise, draw gelato
+    if (currentPath.length >= 2 && gameCore.current) {
       const gelatoLine = gameCore.current.createGelato(
         startPoint.x,
         startPoint.y,
@@ -117,9 +163,9 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
       if (gelatoLine) {
         setLines([gelatoLine]);
       }
-
-      setCurrentPath(null);
     }
+
+    setCurrentPath(null);
   };
 
   return (
@@ -151,42 +197,29 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
 
       {/* Overlay controls */}
       <View style={styles.overlay}>
-        {/* Top-right buttons */}
-        <View style={styles.topRightButtons}>
-          {/* Voice toggle - only show if we have transformed voices */}
-          {hasTransformedVoices && (
-            <Pressable
-              style={styles.voiceToggleButton}
-              onPress={() => {
-                const newVoice = selectedVoice === 'reboundhi' ? 'reboundhita' : 'reboundhi';
-                setSelectedVoice(newVoice);
-                playSound('click');
-                console.log('Switched to voice:', newVoice);
-              }}
-              pointerEvents="auto"
-            >
-              <Feather name="user" size={20} color="#ffffff" />
-              <Text style={styles.voiceToggleText}>
-                {selectedVoice === 'reboundhi' ? 'Reboundhi' : 'Reboundhita'}
-              </Text>
-            </Pressable>
-          )}
-          
-          {/* Edit Text button - only show if we have word timings */}
-          {wordTimings && wordTimings.length > 0 && (
-            <Pressable
-              style={styles.editTextButton}
-              onPress={() => {
-                playSound('click');
-                setShowTextEditor(true);
-                onTextEditorChange?.(true);
-              }}
-              pointerEvents="auto"
-            >
-              <Feather name="type" size={24} color="#ffffff" />
-            </Pressable>
-          )}
-        </View>
+        {/* Edit Text button (top-right) - only show if we have word timings */}
+        {wordTimings && wordTimings.length > 0 && (
+          <Pressable
+            style={styles.editTextButton}
+            onPress={() => {
+              playSound('click');
+              setShowTextEditor(true);
+              onTextEditorChange?.(true);
+            }}
+            pointerEvents="auto"
+          >
+            <Feather name="type" size={24} color="#ffffff" />
+          </Pressable>
+        )}
+        
+        {/* Voice indicator (top-right, below text button) - show current voice */}
+        {hasTransformedVoices && (
+          <View style={styles.voiceIndicator} pointerEvents="none">
+            <Text style={styles.voiceIndicatorText}>
+              {selectedVoice === 'reboundhi' ? 'Reboundhi' : 'Reboundhita'}
+            </Text>
+          </View>
+        )}
 
         {/* Save/Send Now button (bottom-center) */}
         <View style={styles.saveButtonContainer} pointerEvents="auto">
@@ -266,30 +299,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#0a0a0a',
   },
-  topRightButtons: {
+  editTextButton: {
     position: 'absolute',
     top: 50,
     right: 50,
-    flexDirection: 'row',
-    gap: 12,
-  },
-  voiceToggleButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  voiceToggleText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  editTextButton: {
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -298,5 +311,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  voiceIndicator: {
+    position: 'absolute',
+    top: 110,
+    right: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  voiceIndicatorText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#ffffff',
+    opacity: 0.8,
   },
 });
