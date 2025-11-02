@@ -75,6 +75,9 @@ export class GameCore {
     // Track bounce count for difficulty progression
     this.bounceCount = 0;
 
+    // Store current time scale for difficulty (time dilation approach)
+    this.timeScale = 1.0;
+
     // Create boundary walls using config
     const wallThickness = config.walls.thickness;
     const halfThickness = wallThickness / 2;
@@ -224,20 +227,25 @@ export class GameCore {
       });
     }
 
-    Matter.Engine.update(this.engine, deltaMs);
+    // Apply time scale for difficulty progression (makes physics run faster)
+    const scaledDelta = deltaMs * this.timeScale;
+    Matter.Engine.update(this.engine, scaledDelta);
 
-    // Apply velocity capping (safety valve)
+    // Apply velocity capping (safety valve) - scale caps with time dilation
     const velocity = this.mascot.velocity;
-    if (Math.abs(velocity.x) > config.physics.maxVelocityX) {
+    const maxVelX = config.physics.maxVelocityX * this.timeScale;
+    const maxVelY = config.physics.maxVelocityY * this.timeScale;
+
+    if (Math.abs(velocity.x) > maxVelX) {
       Matter.Body.setVelocity(this.mascot, {
-        x: Math.sign(velocity.x) * config.physics.maxVelocityX,
+        x: Math.sign(velocity.x) * maxVelX,
         y: velocity.y,
       });
     }
-    if (Math.abs(velocity.y) > config.physics.maxVelocityY) {
+    if (Math.abs(velocity.y) > maxVelY) {
       Matter.Body.setVelocity(this.mascot, {
         x: velocity.x,
-        y: Math.sign(velocity.y) * config.physics.maxVelocityY,
+        y: Math.sign(velocity.y) * maxVelY,
       });
     }
 
@@ -258,54 +266,22 @@ export class GameCore {
 
   /**
    * Update difficulty based on bounce count
-   * Uses a single "speed" multiplier that proportionally adjusts gravity and restitution
-   * Higher speed = faster falls (↑ gravity) + lower bounces (↓ restitution) = balanced difficulty
+   * Uses time dilation approach: makes physics simulation run faster
+   * This creates a natural "fast-forward" effect where everything speeds up proportionally
    */
   updateDifficulty() {
     if (!config.difficulty.enabled) {
       return;
     }
 
-    // Safety check: ensure mascot exists
-    if (!this.mascot) {
-      console.warn('updateDifficulty called before mascot created');
-      return;
-    }
-
     const { start, end, bouncesUntilMax } = config.difficulty.speed;
-    const damping = config.difficulty.restitutionDamping;
 
-    // Calculate current speed multiplier (linear interpolation)
+    // Calculate current time scale (linear interpolation)
     const progress = Math.min(this.bounceCount / bouncesUntilMax, 1);
-    const speedMultiplier = start + (end - start) * progress;
-
-    // Base values (from config)
-    const baseGravity = config.physics.gravityY;
-    const baseRestitution = config.physics.mascot.restitution;
-
-    // Apply speed multiplier proportionally
-    const newGravity = baseGravity * speedMultiplier;
-
-    // Apply restitution damping: higher damping = restitution drops faster
-    // damping = 1.0: linear (restitution / speed)
-    // damping < 1.0: gentler (restitution stays higher)
-    // damping > 1.0: more aggressive (restitution drops faster)
-    const newRestitution = baseRestitution / Math.pow(speedMultiplier, damping);
-
-    // Validate values before applying
-    if (isNaN(newGravity) || isNaN(newRestitution)) {
-      console.error('Invalid difficulty values:', { newGravity, newRestitution, speedMultiplier, damping });
-      return;
-    }
-
-    // Update engine's gravity
-    this.engine.gravity.y = newGravity;
-
-    // Update mascot's restitution
-    this.mascot.restitution = newRestitution;
+    this.timeScale = start + (end - start) * progress;
 
     // Log difficulty changes for debugging
-    console.log(`Bounce ${this.bounceCount}: speed = ${speedMultiplier.toFixed(2)}x (gravity = ${newGravity.toFixed(2)}, restitution = ${newRestitution.toFixed(2)})`);
+    console.log(`Bounce ${this.bounceCount}: timeScale = ${this.timeScale.toFixed(2)}x (${(this.timeScale * 100).toFixed(0)}% speed)`);
   }
 
   /**
@@ -381,9 +357,13 @@ export class GameCore {
         const currentVelocity = mascotBody.velocity;
         const impactSpeed = currentVelocity.x * normalX + currentVelocity.y * normalY;
 
+        // Scale springBoost inversely with timeScale to maintain consistent bounce height
+        // When time runs faster, ball hits harder, so we need less boost to reach same height
+        const effectiveSpringBoost = config.gelato.springBoost / this.timeScale;
+
         // Apply trampoline effect: reflect velocity across normal and amplify
         // Remove the component moving INTO the gelato and add it back multiplied
-        const boostVelocity = -impactSpeed * (1 + config.gelato.springBoost);
+        const boostVelocity = -impactSpeed * (1 + effectiveSpringBoost);
 
         Matter.Body.setVelocity(mascotBody, {
           x: currentVelocity.x + normalX * boostVelocity,
@@ -484,7 +464,7 @@ export class GameCore {
         isStatic: true,
         angle: angle,
         label: 'gelato',
-        restitution: 0.1, // Low restitution - we handle bounce in collision handler
+        restitution: 0.1, // Low restitution - we handle bounce manually
       }
     );
 

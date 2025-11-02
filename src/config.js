@@ -20,7 +20,7 @@ export const config = {
     // Mascot (ball) physics properties
     mascot: {
       radius: 30,             // Ball radius in pixels
-      restitution: 0.6,       // Bounciness on collision (0 = no bounce, 1 = perfect bounce)
+      restitution: 0.6,       // Bounciness on collision with walls (0 = no bounce, 1 = perfect bounce)
       friction: 0.01,         // Surface friction when sliding (0 = frictionless, 1 = sticky)
       frictionAir: 0.005,     // Air resistance affecting terminal velocity (lower = falls faster)
       mass: 1,                // Mass affects force calculations (default: 1)
@@ -47,38 +47,32 @@ export const config = {
   difficulty: {
     enabled: true,            // Toggle difficulty ramping on/off
 
-    // Single "speed" parameter that controls both gravity and restitution proportionally
-    // Higher speed = higher gravity (faster falls) + lower restitution (lower bounces)
-    // This keeps the game balanced - faster falls but less hang time
+    // Time dilation approach: Scale physics simulation speed
+    // Instead of changing individual physics parameters, we make time pass faster
+    // This creates a natural "fast-forward" effect where everything speeds up proportionally
+    //
+    // Implementation: Multiply delta time passed to Matter.Engine.update()
+    //   - All physics (gravity, velocity, collisions) speed up together
+    //   - Bounce heights, trajectories, everything stays proportional
+    //   - Pure speed increase without changing game feel
     speed: {
-      start: 1.0,            // Starting speed multiplier (1.0 = default physics)
-      end: 10.0,              // Ending speed multiplier (2.0 = 2x faster gameplay)
-      bouncesUntilMax: 50,   // Number of bounces to reach maximum difficulty
+      start: 1.0,            // Starting time multiplier (1.0 = normal time)
+      end: 2.0,              // Ending time multiplier (2.0 = 2x speed, like fast-forward)
+      bouncesUntilMax: 30,   // Number of bounces to reach maximum difficulty
     },
 
-    // Restitution damping: controls how aggressively bounce height decreases with speed
-    // Higher values = restitution drops faster = lower bounces = more intense difficulty curve
-    // Lower values = restitution stays higher = more forgiving = gentler difficulty curve
-    restitutionDamping: 5,  // 1.0 = linear (restitution = base / speed)
-                              // 0.5 = gentle (restitution drops slower)
-                              // 1.5 = aggressive (restitution drops faster)
-
-    // Internal formulas:
-    // gravity = baseGravity * speed
-    // restitution = baseRestitution / (speed ^ restitutionDamping)
-    //
-    // Example progression (restitutionDamping = 1.0):
-    //   Bounce 0:  speed = 1.0  →  gravity = 1.0,  restitution = 0.60 (baseline)
-    //   Bounce 7:  speed = 1.35 →  gravity = 1.35, restitution = 0.44 (getting faster)
-    //   Bounce 13: speed = 1.65 →  gravity = 1.65, restitution = 0.36 (intense)
-    //   Bounce 20+: speed = 2.0  →  gravity = 2.0,  restitution = 0.30 (max speed)
+    // Example progression:
+    //   Bounce 0:  timeScale = 1.0  →  normal speed
+    //   Bounce 10: timeScale = 1.33 →  33% faster
+    //   Bounce 20: timeScale = 1.67 →  67% faster
+    //   Bounce 30+: timeScale = 2.0  →  2x speed (everything runs at double speed)
   },
 
   // === GELATO (SPRINGBOARDS) ===
   gelato: {
     maxLength: 230,           // Maximum line length in pixels (enforced during drawing)
     thickness: 4,             // Visual line thickness in pixels
-    springBoost: 1.25,        // Trampoline bounce multiplier (1.0 = normal physics, 1.75 = 175% bounce back)
+    springBoost: 1.25,        // Trampoline bounce multiplier (1.0 = normal physics, 1.25 = 125% bounce back)
     maxActiveGelatos: 1,      // How many Gelatos can exist simultaneously (currently: 1)
     color: '#FFFFFF',         // Line color (hex or rgba)
 

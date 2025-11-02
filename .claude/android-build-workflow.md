@@ -1,5 +1,14 @@
 # Android Build & Install Workflow
 
+## IMPORTANT: When User Says "Install APK"
+
+**ALWAYS uninstall first, then install.** This means:
+1. Uninstall the existing app from the device
+2. Build the APK (if needed)
+3. Install the new APK
+
+Never just run `adb install` alone - it causes cached/stale app state.
+
 ## Why Uninstall First?
 
 Apps often appear cached after installing a new build because:
@@ -11,13 +20,21 @@ Apps often appear cached after installing a new build because:
 
 ## Recommended Workflow (Fast + Fresh)
 
-### Standard Build & Install
+### Standard Build & Install (USE THIS BY DEFAULT)
 ```bash
-# 1. Build (uses incremental cache - fast)
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" && cd android && ./gradlew assembleRelease
+# Step 1: Uninstall existing app
+~/Library/Android/sdk/platform-tools/adb uninstall com.preetoshi.bounsight
 
-# 2. Uninstall + Install (ensures fresh app state)
-~/Library/Android/sdk/platform-tools/adb uninstall com.preetoshi.bounsight && ~/Library/Android/sdk/platform-tools/adb install /Users/preetoshi/bounsight/android/app/build/outputs/apk/release/app-release.apk
+# Step 2: Build new APK (uses incremental cache - fast)
+export ANDROID_HOME=~/Library/Android/sdk && export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" && cd /Users/preetoshi/bounsight/android && ./gradlew assembleRelease
+
+# Step 3: Install new APK
+~/Library/Android/sdk/platform-tools/adb install /Users/preetoshi/bounsight/android/app/build/outputs/apk/release/app-release.apk
+```
+
+**One-liner version:**
+```bash
+~/Library/Android/sdk/platform-tools/adb uninstall com.preetoshi.bounsight && export ANDROID_HOME=~/Library/Android/sdk && export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" && cd /Users/preetoshi/bounsight/android && ./gradlew assembleRelease && cd .. && ~/Library/Android/sdk/platform-tools/adb install android/app/build/outputs/apk/release/app-release.apk
 ```
 
 **Why this works:**
