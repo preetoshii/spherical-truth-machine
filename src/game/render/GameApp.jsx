@@ -414,7 +414,7 @@ export function GameApp() {
 
           {/* Admin Button - Feather Icon */}
           <Pressable onPress={openAdmin} style={styles.adminButton}>
-            <Feather name="feather" size={20} color="#ffffff" style={{ opacity: 0.6 }} />
+            <Feather name="feather" size={20} color={primaryColor.current} style={{ opacity: 0.6 }} />
           </Pressable>
 
           {/* FPS Counter + Debug Button (DEV ONLY) */}

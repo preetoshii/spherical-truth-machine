@@ -70,14 +70,14 @@ function StarShape({ cx, cy, size, color, opacity }) {
 /**
  * WaveText - Mexican wave effect where each letter waves in sequence
  */
-function WaveText({ text, opacity }) {
+function WaveText({ text, opacity, color }) {
   const letters = text.split('');
   const totalLetters = letters.length;
 
   return (
     <View style={{ flexDirection: 'row', opacity }}>
       {letters.map((letter, index) => (
-        <WaveLetter key={`${text}-${index}`} letter={letter} index={index} totalLetters={totalLetters} />
+        <WaveLetter key={`${text}-${index}`} letter={letter} index={index} totalLetters={totalLetters} color={color} />
       ))}
     </View>
   );
@@ -86,7 +86,7 @@ function WaveText({ text, opacity }) {
 /**
  * WaveLetter - Individual letter with wave animation
  */
-function WaveLetter({ letter, index, totalLetters }) {
+function WaveLetter({ letter, index, totalLetters, color }) {
   const translateY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -137,6 +137,7 @@ function WaveLetter({ letter, index, totalLetters }) {
       style={[
         styles.word,
         {
+          color: color,
           transform: [
             { translateY },
             { scale },
@@ -606,7 +607,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
           ]}
           pointerEvents="none"
         >
-          <WaveText text={currentWord.text} opacity={wordOpacity} />
+          <WaveText text={currentWord.text} opacity={wordOpacity} color={primaryColor} />
         </View>
       )}
     </View>
