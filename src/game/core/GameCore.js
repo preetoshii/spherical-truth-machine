@@ -249,10 +249,7 @@ export class GameCore {
       const activeAfterBounceMs = config.physics.mascot.trail.activeAfterBounceMs;
       const endFadeDurationMs = config.physics.mascot.trail.endFadeDurationMs;
       
-      // Check if trail should be sampling (within active window)
       const timeSinceBounce = currentTime - this.lastBounceForTrail;
-      const isInActiveWindow = activeAfterBounceMs === 0 || 
-                              (timeSinceBounce < activeAfterBounceMs);
       
       // Check if trail should be completely removed (past active + fade windows)
       const isFullyExpired = activeAfterBounceMs > 0 && 
@@ -261,8 +258,8 @@ export class GameCore {
       if (isFullyExpired) {
         // Trail has completely faded - clear it
         this.trail = [];
-      } else if (isInActiveWindow) {
-        // Trail is active - sample new points
+      } else {
+        // Trail is visible (either active or fading) - ALWAYS sample to follow ball
         if (currentTime - this.lastTrailTime >= config.physics.mascot.trail.sampleInterval) {
           this.trail.push({
             x: this.mascot.position.x,
@@ -283,7 +280,6 @@ export class GameCore {
           currentTime - point.timestamp < fadeOutMs
         );
       }
-      // else: in fade-out window - keep existing trail but don't add new points
     }
 
     // Apply velocity capping (safety valve) - scale caps with time dilation
