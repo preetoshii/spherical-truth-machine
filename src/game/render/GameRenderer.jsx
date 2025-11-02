@@ -631,42 +631,14 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
               strokeCap="round"
             />
             
-            {/* Mustache (two curved sections) */}
-            {(() => {
-              const mustachePath = Skia.Path.Make();
-              const mustacheCenterX = mascotX;
-              const mustacheCenterY = mascotY + config.physics.mascot.face.mouthOffsetY;
-              const mustacheWidth = config.physics.mascot.face.mouthWidth;
-              const mustacheHeight = config.physics.mascot.face.mouthHeight;
-              
-              // Left side of mustache (curves up and left)
-              mustachePath.moveTo(mustacheCenterX, mustacheCenterY);
-              mustachePath.quadTo(
-                mustacheCenterX - mustacheWidth / 3,
-                mustacheCenterY - mustacheHeight,
-                mustacheCenterX - mustacheWidth / 2,
-                mustacheCenterY - mustacheHeight / 2
-              );
-              
-              // Right side of mustache (curves up and right)
-              mustachePath.moveTo(mustacheCenterX, mustacheCenterY);
-              mustachePath.quadTo(
-                mustacheCenterX + mustacheWidth / 3,
-                mustacheCenterY - mustacheHeight,
-                mustacheCenterX + mustacheWidth / 2,
-                mustacheCenterY - mustacheHeight / 2
-              );
-              
-              return (
-                <Path
-                  path={mustachePath}
-                  color={primaryColor}
-                  style="stroke"
-                  strokeWidth={2}
-                  strokeCap="round"
-                />
-              );
-            })()}
+            {/* Mouth (simple dot) */}
+            <Circle
+              cx={mascotX}
+              cy={mascotY + config.physics.mascot.face.mouthOffsetY}
+              r={2}
+              color={primaryColor}
+              style="fill"
+            />
           </Group>
         )}
       </Group>
