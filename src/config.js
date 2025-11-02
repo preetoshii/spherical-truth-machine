@@ -268,6 +268,11 @@ export const config = {
     // Static mode: use this single color
     staticColor: '#FFFFFF',
     
+    // Bounce mode: control when color changes
+    // - Number (e.g., 1, 2, 5): Change every N bounces (1 = every bounce, 2 = every other bounce)
+    // - 'quote': Change only when message/quote completes and restarts
+    bouncesPerColorChange: 1,
+    
     // Time mode: how long to transition between colors (ms)
     timeFadeDuration: 5000,
   },
