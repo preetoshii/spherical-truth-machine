@@ -497,28 +497,41 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         );
       })}
 
-      {/* Motion trail behind ball */}
-      {trail.map((point, index) => {
-        // Calculate opacity based on age
-        const age = Date.now() - point.timestamp;
+      {/* Motion trail behind ball - continuous streak */}
+      {trail.length > 1 && (() => {
+        // Create continuous path through trail points
+        const path = Skia.Path.Make();
+        
+        // Build stroke path along trail with ball thickness
+        const ballRadius = config.physics.mascot.radius;
         const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
-        const opacity = Math.max(0, 1 - (age / fadeOutMs));
+        const currentTime = Date.now();
         
-        // Trail thickness = ball diameter
-        const trailRadius = config.physics.mascot.radius;
-        
-        return (
-          <Circle
-            key={`trail-${index}`}
-            cx={point.x}
-            cy={point.y}
-            r={trailRadius}
-            color="white"
-            opacity={opacity * 0.3} // Subtle trail (30% max opacity)
-            style="fill"
-          />
-        );
-      })}
+        // Draw trail segments with varying opacity
+        return trail.map((point, index) => {
+          if (index === trail.length - 1) return null; // Skip last point (no segment after it)
+          
+          const nextPoint = trail[index + 1];
+          
+          // Calculate opacity based on age (older = more transparent)
+          const age = currentTime - point.timestamp;
+          const opacity = Math.max(0, 1 - (age / fadeOutMs));
+          
+          // Draw line segment between this point and next
+          return (
+            <Line
+              key={`trail-${index}`}
+              p1={vec(point.x, point.y)}
+              p2={vec(nextPoint.x, nextPoint.y)}
+              color="white"
+              opacity={opacity * 0.3} // Subtle trail
+              style="stroke"
+              strokeWidth={ballRadius * 2} // Full ball diameter
+              strokeCap="round"
+            />
+          );
+        }).filter(Boolean);
+      })()}
 
       {/* Draw current path being drawn (dotted curved preview) */}
       {currentPath && currentPath.length >= 2 && (() => {
