@@ -379,6 +379,7 @@ export class GameCore {
     if (config.colors.mode === 'bounce' && config.colors.bouncesPerColorChange === 'quote') {
       this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
       this.primaryColor = config.colors.palette[this.currentColorIndex];
+      console.log('🎨 Quote complete - color changed to:', this.primaryColor, 'index:', this.currentColorIndex);
     }
 
     // Remove any existing gelato
