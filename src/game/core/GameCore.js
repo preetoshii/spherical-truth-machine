@@ -775,7 +775,7 @@ export class GameCore {
 
   /**
    * Get squash and stretch values for mascot based on velocity
-   * Returns { scaleX, scaleY } for animation
+   * Returns { scaleX, scaleY, rotation } for directional deformation
    */
   getSquashStretch() {
     const velocityY = this.mascot.velocity.y;
@@ -786,22 +786,27 @@ export class GameCore {
     const maxSpeed = 15; // Threshold for maximum squash/stretch
     const intensity = Math.min(speed / maxSpeed, 1); // 0 to 1
 
-    // Squash when moving fast vertically (down = positive velocity)
-    // Stretch when moving up or horizontally fast
-    const isMovingDown = velocityY > 2;
-    const isMovingUp = velocityY < -2;
-
-    if (isMovingUp) {
-      // Stretch: narrower and taller
-      const stretchAmount = 0.15 * intensity; // Max 15% stretch
-      return {
-        scaleX: 1 - stretchAmount * 0.7,
-        scaleY: 1 + stretchAmount,
-      };
+    // No deformation if moving too slowly
+    if (speed < 1) {
+      return { scaleX: 1, scaleY: 1, rotation: 0 };
     }
 
-    // No squash/stretch at low speeds
-    return { scaleX: 1, scaleY: 1 };
+    // Calculate angle of motion (in radians)
+    // atan2(y, x) gives angle from horizontal axis
+    // We want rotation where scaleY stretches along motion direction
+    const motionAngle = Math.atan2(velocityY, velocityX);
+    
+    // Convert to rotation for Skia (need to subtract π/2 to align Y-axis with motion)
+    const rotation = motionAngle - Math.PI / 2;
+
+    // Stretch along direction of motion
+    const stretchAmount = 0.15 * intensity; // Max 15% deformation
+    
+    return {
+      scaleX: 1 - stretchAmount * 0.7,  // Narrower (perpendicular to motion)
+      scaleY: 1 + stretchAmount,         // Longer (along motion direction)
+      rotation: rotation,                // Align with velocity
+    };
   }
 
   /**
