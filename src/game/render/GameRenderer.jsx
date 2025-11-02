@@ -497,40 +497,43 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         );
       })}
 
-      {/* Motion trail behind ball - continuous streak */}
+      {/* Motion trail behind ball - single continuous path */}
       {trail.length > 1 && (() => {
-        // Create continuous path through trail points
-        const path = Skia.Path.Make();
-        
-        // Build stroke path along trail with ball thickness
         const ballRadius = config.physics.mascot.radius;
         const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
         const currentTime = Date.now();
         
-        // Draw trail segments with varying opacity
-        return trail.map((point, index) => {
-          if (index === trail.length - 1) return null; // Skip last point (no segment after it)
-          
-          const nextPoint = trail[index + 1];
-          
-          // Calculate opacity based on age (older = more transparent)
-          const age = currentTime - point.timestamp;
-          const opacity = Math.max(0, 1 - (age / fadeOutMs));
-          
-          // Draw line segment between this point and next
-          return (
-            <Line
-              key={`trail-${index}`}
-              p1={vec(point.x, point.y)}
-              p2={vec(nextPoint.x, nextPoint.y)}
-              color="white"
-              opacity={opacity * 0.3} // Subtle trail
-              style="stroke"
-              strokeWidth={ballRadius * 2} // Full ball diameter
-              strokeCap="round"
-            />
-          );
-        }).filter(Boolean);
+        // Calculate average opacity for the entire trail
+        const avgAge = trail.reduce((sum, p) => sum + (currentTime - p.timestamp), 0) / trail.length;
+        const trailOpacity = Math.max(0, 1 - (avgAge / fadeOutMs));
+        
+        // Create single smooth path through all trail points
+        const path = Skia.Path.Make();
+        path.moveTo(trail[0].x, trail[0].y);
+        
+        // Use quadratic curves for smooth flowing trail
+        for (let i = 1; i < trail.length - 1; i++) {
+          const midX = (trail[i].x + trail[i + 1].x) / 2;
+          const midY = (trail[i].y + trail[i + 1].y) / 2;
+          path.quadTo(trail[i].x, trail[i].y, midX, midY);
+        }
+        
+        // Final point
+        if (trail.length > 1) {
+          path.lineTo(trail[trail.length - 1].x, trail[trail.length - 1].y);
+        }
+        
+        return (
+          <Path
+            path={path}
+            color="white"
+            opacity={trailOpacity * 0.3} // Subtle trail
+            style="stroke"
+            strokeWidth={ballRadius * 2} // Full ball diameter
+            strokeCap="round"
+            strokeJoin="round"
+          />
+        );
       })()}
 
       {/* Draw current path being drawn (dotted curved preview) */}
