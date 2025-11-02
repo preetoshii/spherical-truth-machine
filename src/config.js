@@ -239,4 +239,11 @@ export const config = {
   performance: {
     defaultFpsCap: null,          // Default FPS cap for components without their own FPS UI (null = uncapped, or 30/60/etc)
   },
+
+  // === VOICE TRANSFORMATION ===
+  voiceTransform: {
+    enabled: true,                          // Default state for toggle in AudioRecorder
+    voiceId: 'q6bhPxtykZeN8o4aUNuh',        // ElevenLabs voice ID for transformation
+    modelId: 'eleven_multilingual_sts_v2',  // ElevenLabs model
+  },
 };

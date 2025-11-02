@@ -11,9 +11,11 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
  * Analyze audio file and get precise word timestamps
  * @param {string} audioUri - URI to .m4a audio file
  * @param {Array} sentenceBreaks - Array of sentence break timestamps in ms (optional)
- * @returns {Promise<Object>} { text, words, wordTimings, wordAudioSegments }
+ * @param {boolean} transformVoice - Whether to transform voice using ElevenLabs (optional)
+ * @param {string} voiceId - ElevenLabs voice ID (optional, uses config default if not provided)
+ * @returns {Promise<Object>} { text, words, wordTimings, wordAudioSegments, transformedAudioUri }
  */
-export async function getWordTimestamps(audioUri, sentenceBreaks = []) {
+export async function getWordTimestamps(audioUri, sentenceBreaks = [], transformVoice = false, voiceId = null) {
   try {
     console.log('Calling word-timestamps API...');
     console.log('Audio URI:', audioUri);
@@ -26,6 +28,14 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = []) {
     // Create form data
     const formData = new FormData();
     formData.append('file', file);
+    
+    // Add voice transformation parameters if requested
+    if (transformVoice) {
+      formData.append('transformVoice', 'true');
+      if (voiceId) {
+        formData.append('voiceId', voiceId);
+      }
+    }
 
     // Call the API
     const apiResponse = await fetch(`${API_URL}/api/align`, {
@@ -64,6 +74,22 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = []) {
 
     console.log('Transformed word timings:', timingsWithBreaks);
 
+    // Convert transformed audio from base64 to blob URI (if present)
+    let transformedAudioUri = null;
+    if (data.transformedAudio) {
+      console.log('Converting transformed audio from base64...');
+      const base64Data = data.transformedAudio;
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const transformedBlob = new Blob([byteArray], { type: 'audio/mp3' });
+      transformedAudioUri = URL.createObjectURL(transformedBlob);
+      console.log('Transformed audio URI created:', transformedAudioUri);
+    }
+
     // Note: We don't slice audio anymore - the new approach uses precise timestamps
     // so GameCore can seek directly to the right positions
     return {
@@ -71,6 +97,7 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = []) {
       words: wordsArray,
       wordTimings: timingsWithBreaks,
       wordAudioSegments: null, // Not needed with new approach
+      transformedAudioUri: transformedAudioUri, // Transformed audio blob URI (if voice was transformed)
       meta: data.meta, // Include metadata for debugging
     };
   } catch (error) {

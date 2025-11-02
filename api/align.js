@@ -1,7 +1,8 @@
 import { spawn } from 'child_process';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { writeFile, unlink } from 'fs/promises';
+import { writeFile, unlink, readFile } from 'fs/promises';
+import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 
 // Tunable knobs:
 // Think of these like dials you can turn to make the detector more or less picky.
@@ -177,6 +178,45 @@ async function transcribeAudio(audioBuffer, sampleRate) {
   return await response.json();
 }
 
+/**
+ * Transform voice using ElevenLabs Speech-to-Speech API
+ * @param {Buffer} audioBuffer - Original audio file buffer
+ * @param {string} voiceId - ElevenLabs voice ID
+ * @returns {Promise<Buffer>} Transformed audio buffer
+ */
+async function transformVoice(audioBuffer, voiceId) {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    throw new Error('ELEVENLABS_API_KEY environment variable is not set');
+  }
+
+  console.log('[ElevenLabs] Transforming voice with ID:', voiceId);
+
+  const elevenlabs = new ElevenLabsClient({
+    apiKey: apiKey
+  });
+
+  // Convert buffer to Blob
+  const audioBlob = new Blob([audioBuffer], { type: 'audio/m4a' });
+
+  // Transform voice
+  const audioStream = await elevenlabs.speechToSpeech.convert(voiceId, {
+    audio: audioBlob,
+    modelId: "eleven_multilingual_sts_v2",
+    outputFormat: "mp3_44100_128",
+  });
+
+  // Collect stream into buffer
+  const chunks = [];
+  for await (const chunk of audioStream) {
+    chunks.push(chunk);
+  }
+  const transformedBuffer = Buffer.concat(chunks);
+
+  console.log('[ElevenLabs] Voice transformation complete:', transformedBuffer.length, 'bytes');
+  return transformedBuffer;
+}
+
 // Helper to parse multipart form data manually (Vercel Functions don't have built-in form parsing)
 async function parseFormData(req) {
   const contentType = req.headers['content-type'];
@@ -205,23 +245,46 @@ async function parseFormData(req) {
   const boundary = contentType.split('boundary=')[1];
   if (!boundary) return null;
 
+  const result = { file: null, filename: null, transformVoice: false, voiceId: null };
+
   const parts = body.toString('binary').split(`--${boundary}`);
   for (const part of parts) {
-    if (part.includes('Content-Disposition') && part.includes('filename')) {
-      const filenameMatch = part.match(/filename="([^"]+)"/);
-      if (!filenameMatch) continue;
+    if (part.includes('Content-Disposition')) {
+      // Extract filename if present
+      if (part.includes('filename')) {
+        const filenameMatch = part.match(/filename="([^"]+)"/);
+        if (!filenameMatch) continue;
 
-      const filename = filenameMatch[1];
-      const dataStart = part.indexOf('\r\n\r\n') + 4;
-      const dataEnd = part.lastIndexOf('\r\n');
-      if (dataStart >= 4 && dataEnd > dataStart) {
-        const fileData = Buffer.from(part.substring(dataStart, dataEnd), 'binary');
-        return { file: fileData, filename };
+        const filename = filenameMatch[1];
+        const dataStart = part.indexOf('\r\n\r\n') + 4;
+        const dataEnd = part.lastIndexOf('\r\n');
+        if (dataStart >= 4 && dataEnd > dataStart) {
+          const fileData = Buffer.from(part.substring(dataStart, dataEnd), 'binary');
+          result.file = fileData;
+          result.filename = filename;
+        }
+      } else {
+        // Extract form field value (transformVoice, voiceId, etc.)
+        const nameMatch = part.match(/name="([^"]+)"/);
+        if (nameMatch) {
+          const fieldName = nameMatch[1];
+          const dataStart = part.indexOf('\r\n\r\n') + 4;
+          const dataEnd = part.lastIndexOf('\r\n');
+          if (dataStart >= 4 && dataEnd > dataStart) {
+            const value = part.substring(dataStart, dataEnd).trim();
+            
+            if (fieldName === 'transformVoice') {
+              result.transformVoice = value === 'true';
+            } else if (fieldName === 'voiceId') {
+              result.voiceId = value;
+            }
+          }
+        }
       }
     }
   }
 
-  return null;
+  return result.file ? result : null;
 }
 
 export default async function handler(req, res) {
@@ -245,14 +308,28 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'missing file or invalid form data' });
     }
 
-    const { file, filename } = formData;
+    const { file, filename, transformVoice, voiceId } = formData;
     if (!filename.toLowerCase().endsWith('.m4a')) {
       return res.status(400).json({ error: 'only .m4a accepted' });
     }
 
-    // 2) Save it to a temp place so ffmpeg can read it
-    const tmpPath = join(tmpdir(), `${Date.now()}-${filename}`);
-    await writeFile(tmpPath, file);
+    console.log('[Transform] transformVoice:', transformVoice, 'voiceId:', voiceId);
+
+    // 2) Transform voice if requested (BEFORE word detection)
+    let audioToProcess = file;
+    let transformedAudioBase64 = null;
+    
+    if (transformVoice && voiceId) {
+      console.log('[Transform] Starting voice transformation...');
+      const transformedBuffer = await transformVoice(file, voiceId);
+      audioToProcess = transformedBuffer;
+      transformedAudioBase64 = transformedBuffer.toString('base64');
+      console.log('[Transform] Voice transformation complete');
+    }
+
+    // 3) Save audio to temp place so ffmpeg can read it
+    const tmpPath = join(tmpdir(), `${Date.now()}-${transformVoice ? 'transformed-' : ''}${filename}`);
+    await writeFile(tmpPath, audioToProcess);
 
     try {
       // 3) Turn .m4a into raw numbers (PCM) we can measure
@@ -306,7 +383,8 @@ export default async function handler(req, res) {
       })));
 
       const ffBin = resolveFfmpegBinary();
-      return res.status(200).json({
+      
+      const response = {
         words,
         meta: {
           hop_ms: hopMs,
@@ -318,9 +396,17 @@ export default async function handler(req, res) {
           envelope_frames: rms.length,
           envelope_hop_samples: hopSamples,
           segments_preview: segs,
-          min_segment_ms: MIN_SEG_MS
+          min_segment_ms: MIN_SEG_MS,
+          voiceTransformed: transformVoice || false,
         }
-      });
+      };
+      
+      // Include transformed audio if transformation was performed
+      if (transformedAudioBase64) {
+        response.transformedAudio = transformedAudioBase64;
+      }
+      
+      return res.status(200).json(response);
     } finally {
       // Clean up the temp file, even if something went wrong
       await unlink(tmpPath).catch(() => {});

@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { useAudioRecorder, useAudioRecorderState, RecordingPresets, useAudioPlayer } from 'expo-audio';
 import { startRecording, stopRecording, formatDuration } from '../services/audioRecordingService';
 import { getWordTimestamps } from '../services/wordTimestampsService';
+import { config } from '../config';
 
 /**
  * AudioRecorder Component
@@ -28,6 +29,9 @@ export function AudioRecorder({ onRecordingComplete }) {
   const [recordedUri, setRecordedUri] = useState(null);
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  
+  // Voice transformation toggle (initialized from config)
+  const [transformVoice, setTransformVoice] = useState(config.voiceTransform.enabled);
 
   // Audio player for playback
   const player = useAudioPlayer(recordedUri || '');
@@ -100,11 +104,18 @@ export function AudioRecorder({ onRecordingComplete }) {
   const handleComplete = async () => {
     // Start transcription process
     console.log('Complete: starting transcription...');
+    console.log('Transform voice:', transformVoice);
     setIsTranscribing(true);
 
     try {
       // Call word-timestamps API for precise word boundaries
-      const result = await getWordTimestamps(recordedUri, sentenceBreaks);
+      // Pass voice transformation flag and voice ID
+      const result = await getWordTimestamps(
+        recordedUri, 
+        sentenceBreaks, 
+        transformVoice,
+        config.voiceTransform.voiceId
+      );
 
       console.log('Word timestamps retrieved successfully!');
       console.log('Result:', result);
@@ -173,34 +184,57 @@ export function AudioRecorder({ onRecordingComplete }) {
           <Text style={styles.loadingText}>Transcribing...</Text>
         </View>
       ) : isReviewMode ? (
-        // Review mode: Redo (left) + Play (center) + Complete (right)
-        <View style={styles.reviewButtonsRow}>
-          <TouchableOpacity
-            style={[styles.reviewButton, styles.redoButton]}
-            onPress={handleRedo}
-            activeOpacity={0.7}
-          >
-            <Feather name="rotate-ccw" size={20} color="#fff" />
-            <Text style={styles.reviewButtonText}>Redo</Text>
-          </TouchableOpacity>
+        // Review mode: Redo + Play + Voice Toggle + Complete
+        <View style={styles.reviewContainer}>
+          <View style={styles.reviewButtonsRow}>
+            <TouchableOpacity
+              style={[styles.reviewButton, styles.redoButton]}
+              onPress={handleRedo}
+              activeOpacity={0.7}
+            >
+              <Feather name="rotate-ccw" size={20} color="#fff" />
+              <Text style={styles.reviewButtonText}>Redo</Text>
+            </TouchableOpacity>
 
-          {/* Center Play button */}
+            {/* Center Play button */}
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#4a9eff' }]}
+              onPress={handlePlayAudio}
+              activeOpacity={0.8}
+            >
+              <Feather name="play" size={32} color="#fff" style={styles.icon} />
+              <Text style={styles.buttonText}>Play</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.reviewButton, styles.completeButton]}
+              onPress={handleComplete}
+              activeOpacity={0.7}
+            >
+              <Feather name="check" size={20} color="#fff" />
+              <Text style={styles.reviewButtonText}>Complete</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Voice Transform Toggle */}
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#4a9eff' }]}
-            onPress={handlePlayAudio}
+            style={styles.voiceToggleContainer}
+            onPress={() => setTransformVoice(!transformVoice)}
             activeOpacity={0.8}
           >
-            <Feather name="play" size={32} color="#fff" style={styles.icon} />
-            <Text style={styles.buttonText}>Play</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.reviewButton, styles.completeButton]}
-            onPress={handleComplete}
-            activeOpacity={0.7}
-          >
-            <Feather name="check" size={20} color="#fff" />
-            <Text style={styles.reviewButtonText}>Complete</Text>
+            <View style={styles.voiceToggleRow}>
+              <Feather 
+                name="mic" 
+                size={16} 
+                color={transformVoice ? '#38a169' : '#666'} 
+              />
+              <Text style={[styles.voiceToggleText, transformVoice && styles.voiceToggleTextActive]}>
+                Voice Transform
+              </Text>
+              <View style={[styles.toggleSwitch, transformVoice && styles.toggleSwitchActive]}>
+                <View style={[styles.toggleKnob, transformVoice && styles.toggleKnobActive]} />
+              </View>
+            </View>
           </TouchableOpacity>
         </View>
       ) : (
@@ -349,7 +383,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // Review mode buttons
+  // Review mode container
+  reviewContainer: {
+    alignItems: 'center',
+    gap: 20,
+  },
   reviewButtonsRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -390,5 +428,51 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '500',
+  },
+
+  // Voice transform toggle
+  voiceToggleContainer: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#3a3a3a',
+  },
+  voiceToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  voiceToggleText: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  voiceToggleTextActive: {
+    color: '#fff',
+  },
+  toggleSwitch: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#3a3a3a',
+    padding: 2,
+    justifyContent: 'center',
+  },
+  toggleSwitchActive: {
+    backgroundColor: '#38a169',
+  },
+  toggleKnob: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#888',
+    transform: [{ translateX: 0 }],
+  },
+  toggleKnobActive: {
+    backgroundColor: '#fff',
+    transform: [{ translateX: 20 }],
   },
 });
