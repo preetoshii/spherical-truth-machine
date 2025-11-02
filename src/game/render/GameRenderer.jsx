@@ -264,38 +264,86 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
       {lines.map((line, index) => {
         // Render path averaged between drawn shape and straight line (50% blend)
         if (line.originalPath && line.originalPath.length > 1) {
-          // Interpolate each point 50% toward straight line
+          // Base blend: Interpolate each point 50% toward straight line
           const blendedPoints = line.originalPath.map((point, i) => {
-            // Calculate where this point should be on the straight line
-            const t = i / (line.originalPath.length - 1); // 0 to 1 along the line
+            const t = i / (line.originalPath.length - 1);
             const straightX = line.startX + (line.endX - line.startX) * t;
             const straightY = line.startY + (line.endY - line.startY) * t;
-
-            // Blend 50/50 between original and straight
             const blendedX = point.x * 0.5 + straightX * 0.5;
             const blendedY = point.y * 0.5 + straightY * 0.5;
-
             return { x: blendedX, y: blendedY };
           });
 
-          // Render smooth curved path through blended points
+          // Calculate perpendicular direction for deformations
+          const dx = line.endX - line.startX;
+          const dy = line.endY - line.startY;
+          const lineLength = Math.sqrt(dx * dx + dy * dy);
+          const perpX = -dy / lineLength;
+          const perpY = dx / lineLength;
+
+          // Apply creation pop-in oscillation
+          let creationBendAmount = 0;
+          if (gelatoCreationTime) {
+            const timeSinceCreation = Date.now() - gelatoCreationTime;
+            const creationConfig = config.gelato.creation;
+
+            if (timeSinceCreation < creationConfig.duration) {
+              const progress = timeSinceCreation / creationConfig.duration;
+              const frequency = creationConfig.frequency * Math.PI * 2;
+              const dampingFactor = Math.exp(-creationConfig.damping * progress * 5);
+              const oscillation = Math.sin(frequency * progress) * dampingFactor;
+              creationBendAmount = creationConfig.maxBendAmount * oscillation;
+            }
+          }
+
+          // Apply bounce deformation oscillation
+          let bounceBendAmount = 0;
+          if (bounceImpact && bounceImpact.timestamp) {
+            const timeSinceBounce = Date.now() - bounceImpact.timestamp;
+            const deformConfig = config.gelato.deformation;
+
+            if (timeSinceBounce < deformConfig.duration) {
+              const progress = timeSinceBounce / deformConfig.duration;
+              const frequency = deformConfig.frequency * Math.PI * 2;
+              const dampingFactor = Math.exp(-deformConfig.damping * progress * 5);
+              const oscillation = Math.sin(frequency * progress) * dampingFactor;
+              const impactStrength = Math.min(bounceImpact.strength / 10, 1);
+              bounceBendAmount = deformConfig.maxBendAmount * oscillation * impactStrength;
+            }
+          }
+
+          // Apply total deformation to blended points
+          const totalBend = creationBendAmount + bounceBendAmount;
+          const deformedPoints = blendedPoints.map((point, i) => {
+            // Apply bend perpendicular to straight line
+            // Stronger bend in the middle, weaker at endpoints
+            const t = i / (blendedPoints.length - 1);
+            const bendStrength = Math.sin(t * Math.PI); // 0 at ends, 1 in middle
+            
+            return {
+              x: point.x + perpX * totalBend * bendStrength,
+              y: point.y + perpY * totalBend * bendStrength,
+            };
+          });
+
+          // Render smooth curved path
           const path = Skia.Path.Make();
-          path.moveTo(blendedPoints[0].x, blendedPoints[0].y);
+          path.moveTo(deformedPoints[0].x, deformedPoints[0].y);
           
-          for (let i = 1; i < blendedPoints.length - 1; i++) {
-            const midX = (blendedPoints[i].x + blendedPoints[i + 1].x) / 2;
-            const midY = (blendedPoints[i].y + blendedPoints[i + 1].y) / 2;
-            path.quadTo(blendedPoints[i].x, blendedPoints[i].y, midX, midY);
+          for (let i = 1; i < deformedPoints.length - 1; i++) {
+            const midX = (deformedPoints[i].x + deformedPoints[i + 1].x) / 2;
+            const midY = (deformedPoints[i].y + deformedPoints[i + 1].y) / 2;
+            path.quadTo(deformedPoints[i].x, deformedPoints[i].y, midX, midY);
           }
           
-          if (blendedPoints.length > 1) {
+          if (deformedPoints.length > 1) {
             path.lineTo(
-              blendedPoints[blendedPoints.length - 1].x,
-              blendedPoints[blendedPoints.length - 1].y
+              deformedPoints[deformedPoints.length - 1].x,
+              deformedPoints[deformedPoints.length - 1].y
             );
           }
 
-          // Check if still fading after bounce
+          // Calculate fade-out opacity after bounce
           let opacity = 1;
           if (bounceImpact && bounceImpact.timestamp) {
             const timeSinceBounce = Date.now() - bounceImpact.timestamp;
