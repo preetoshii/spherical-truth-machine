@@ -25,6 +25,9 @@ export function AdminPortal({ onClose, preloadedData }) {
   const [draftWordTimings, setDraftWordTimings] = useState(null);
   const [draftWordAudioSegments, setDraftWordAudioSegments] = useState(null);
 
+  // Text editor state (for hiding back button)
+  const [isTextEditorOpen, setIsTextEditorOpen] = useState(false);
+
   // Load messages on mount (or use preloaded data)
   useEffect(() => {
     if (preloadedData) {
@@ -203,16 +206,18 @@ export function AdminPortal({ onClose, preloadedData }) {
 
   return (
     <View style={styles.container}>
-      {/* Single persistent back button */}
-      <Pressable
-        onPress={() => {
-          playSound('click');
-          handleBack();
-        }}
-        style={styles.backButton}
-      >
-        <Feather name="arrow-left" size={28} color="#ffffff" />
-      </Pressable>
+      {/* Single persistent back button - hide when text editor is open */}
+      {!isTextEditorOpen && (
+        <Pressable
+          onPress={() => {
+            playSound('click');
+            handleBack();
+          }}
+          style={styles.backButton}
+        >
+          <Feather name="arrow-left" size={28} color="#ffffff" />
+        </Pressable>
+      )}
       {/* Calendar View - only render when active */}
       {currentView === 'calendar' && (
         <CalendarView
@@ -235,6 +240,7 @@ export function AdminPortal({ onClose, preloadedData }) {
           audioUri={draftAudioUri}
           wordTimings={draftWordTimings}
           wordAudioSegments={draftWordAudioSegments}
+          onTextEditorChange={setIsTextEditorOpen}
         />
       )}
 

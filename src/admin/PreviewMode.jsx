@@ -10,7 +10,7 @@ import { TextEditor } from './TextEditor';
 /**
  * PreviewMode - Game preview with draft message and overlay controls
  */
-export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, wordAudioSegments }) {
+export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, wordAudioSegments, onTextEditorChange }) {
   // State for text editing
   const [showTextEditor, setShowTextEditor] = useState(false);
   const [editedWordTimings, setEditedWordTimings] = useState(wordTimings);
@@ -147,6 +147,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
             onPress={() => {
               playSound('click');
               setShowTextEditor(true);
+              onTextEditorChange?.(true);
             }}
             pointerEvents="auto"
           >
@@ -177,9 +178,13 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
           onSave={(updatedWordTimings) => {
             setEditedWordTimings(updatedWordTimings);
             setShowTextEditor(false);
+            onTextEditorChange?.(false);
             playSound('click');
           }}
-          onCancel={() => setShowTextEditor(false)}
+          onCancel={() => {
+            setShowTextEditor(false);
+            onTextEditorChange?.(false);
+          }}
         />
       )}
     </View>
