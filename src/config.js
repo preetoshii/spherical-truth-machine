@@ -255,9 +255,8 @@ export const config = {
     
     // Color palette (used when mode is 'bounce' or 'time')
     palette: [
-      '#FF6B6B',  // Red
       '#4ECDC4',  // Cyan
-      '#FFE66D',  // Yellow
+      '#FF6B6B',  // Red
       '#A8E6CF',  // Mint
       '#FF8B94',  // Pink
       '#95E1D3',  // Aqua
@@ -271,7 +270,7 @@ export const config = {
     // Bounce mode: control when color changes
     // - Number (e.g., 1, 2, 5): Change every N bounces (1 = every bounce, 2 = every other bounce)
     // - 'quote': Change only when message/quote completes and restarts
-    bouncesPerColorChange: 1,
+    bouncesPerColorChange: 'quote',
     
     // Time mode: how long to transition between colors (ms)
     timeFadeDuration: 5000,
