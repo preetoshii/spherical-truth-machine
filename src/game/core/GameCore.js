@@ -5,37 +5,6 @@ import { createAudioPlayer } from 'expo-audio';
 import { ParallaxManager } from '../parallax/ParallaxManager';
 
 /**
- * Simplify path by downsampling to target point count for physics
- */
-function simplifyPathForPhysics(path, targetPoints = 10) {
-  if (path.length <= targetPoints) return path;
-  
-  const samplingRate = Math.max(1, Math.floor(path.length / targetPoints));
-  const simplified = path.filter((_, i) => 
-    i === 0 || 
-    i === path.length - 1 || 
-    i % samplingRate === 0
-  );
-  
-  return simplified;
-}
-
-/**
- * Apply curve blend to path points (same blend as visual)
- */
-function applyBlendToPath(path, startX, startY, endX, endY, blendAmount) {
-  return path.map((point, i) => {
-    const t = i / (path.length - 1);
-    const straightX = startX + (endX - startX) * t;
-    const straightY = startY + (endY - startY) * t;
-    return {
-      x: point.x * blendAmount + straightX * (1 - blendAmount),
-      y: point.y * blendAmount + straightY * (1 - blendAmount),
-    };
-  });
-}
-
-/**
  * GameCore - Physics engine using Matter.js
  * Handles all physics simulation, collision detection, and game state
  */
@@ -386,30 +355,10 @@ export class GameCore {
 
         this.lastBounceTime = currentTime;
 
-        // Get collision normal (works for both straight and curved bodies)
-        // For curved bodies (fromVertices), Matter.js provides the actual surface normal at impact point
-        // For straight bodies (rectangle), provides the rectangle's normal based on angle
-        const collision = pair.collision;
-        let normalX, normalY;
-        
-        if (collision && collision.normal) {
-          // Use collision normal (accurate for curved surfaces)
-          normalX = collision.normal.x;
-          normalY = collision.normal.y;
-          
-          // Flip normal if it's pointing the wrong way (into the gelato instead of out)
-          // Dot product with velocity should be negative (ball moving toward surface)
-          const dotProduct = mascotBody.velocity.x * normalX + mascotBody.velocity.y * normalY;
-          if (dotProduct > 0) {
-            normalX = -normalX;
-            normalY = -normalY;
-          }
-        } else {
-          // Fallback: use body angle for simple rectangles
-          const angle = gelatoBody.angle;
-          normalX = -Math.sin(angle);
-          normalY = Math.cos(angle);
-        }
+        // Apply spring boost perpendicular to Gelato
+        const angle = gelatoBody.angle;
+        const normalX = -Math.sin(angle); // Perpendicular to line
+        const normalY = Math.cos(angle);
 
         // Calculate how hard the ball is hitting the Gelato (dot product)
         const currentVelocity = mascotBody.velocity;
@@ -524,72 +473,19 @@ export class GameCore {
     const angle = Math.atan2(endY - startY, endX - startX);
     const gelatoLength = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
 
-    // Create physics body based on collisionShape config
-    if (config.gelato.collisionShape === 'path' && originalPath && originalPath.length >= 3) {
-      try {
-        // Simplify path to ~10 points for physics performance
-        const simplifiedPath = simplifyPathForPhysics(originalPath, 10);
-        
-        // Apply same curve blend as visual
-        const blendedPath = applyBlendToPath(
-          simplifiedPath, 
-          startX, startY, endX, endY, 
-          config.gelato.curveBlend
-        );
-        
-        // Create vertices array for Matter.js
-        const vertices = blendedPath.map(p => ({ x: p.x, y: p.y }));
-        
-        console.log('Creating curved gelato with', vertices.length, 'vertices');
-        
-        // Create polygon body from curved path
-        this.gelato = Matter.Bodies.fromVertices(
-          centerX,
-          centerY,
-          vertices,
-          {
-            isStatic: true,
-            label: 'gelato',
-            restitution: 0.1,
-          }
-        );
-        
-        if (!this.gelato) {
-          throw new Error('fromVertices returned null');
-        }
-        
-        console.log('Curved gelato physics body created successfully');
-      } catch (error) {
-        console.warn('Curved physics failed, falling back to straight line:', error);
-        // Fallback to straight line rectangle
-        this.gelato = Matter.Bodies.rectangle(
-          centerX,
-          centerY,
-          gelatoLength,
-          config.gelato.thickness,
-          {
-            isStatic: true,
-            angle: angle,
-            label: 'gelato',
-            restitution: 0.1,
-          }
-        );
+    // Create static rectangular body for the Gelato
+    this.gelato = Matter.Bodies.rectangle(
+      centerX,
+      centerY,
+      gelatoLength,
+      config.gelato.thickness,
+      {
+        isStatic: true,
+        angle: angle,
+        label: 'gelato',
+        restitution: 0.1, // Low restitution - we handle bounce manually
       }
-    } else {
-      // Use straight line rectangle (default/simple mode)
-      this.gelato = Matter.Bodies.rectangle(
-        centerX,
-        centerY,
-        gelatoLength,
-        config.gelato.thickness,
-        {
-          isStatic: true,
-          angle: angle,
-          label: 'gelato',
-          restitution: 0.1,
-        }
-      );
-    }
+    );
 
     Matter.World.add(this.world, this.gelato);
 
