@@ -404,8 +404,9 @@ export class GameCore {
 
         this.lastBounceTime = currentTime;
         
-        // Activate trail on gelato bounce
+        // Activate trail on gelato bounce - clear old trail and start fresh
         this.lastBounceForTrail = currentTime;
+        this.trail = []; // Reset trail on each bounce
 
         // Apply spring boost perpendicular to Gelato
         const angle = gelatoBody.angle;
