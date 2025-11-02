@@ -195,6 +195,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
           squashStretch={squashStretch.current}
           parallaxStars={parallaxStars}
           trail={trail.current}
+          trailEndFade={0}
         />
       </View>
 

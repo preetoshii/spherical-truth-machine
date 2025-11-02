@@ -93,7 +93,8 @@ export function useGameLoop(dimensions, customMessage = null, audioUri = null, w
       currentWord.current = gameCore.current.getCurrentWord();
       mascotVelocityY.current = gameCore.current.getMascotVelocityY();
       squashStretch.current = gameCore.current.getSquashStretch();
-      trail.current = gameCore.current.getTrail();
+      const trailData = gameCore.current.getTrail();
+      trail.current = trailData.trail;
 
       // Sync lines with GameCore (updates when gelato destroyed after fade)
       const currentGelatoData = gameCore.current.getGelatoLineData();

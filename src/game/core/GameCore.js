@@ -247,13 +247,22 @@ export class GameCore {
     if (config.physics.mascot.trail.enabled && this.gameStarted) {
       const currentTime = Date.now();
       const activeAfterBounceMs = config.physics.mascot.trail.activeAfterBounceMs;
+      const endFadeDurationMs = config.physics.mascot.trail.endFadeDurationMs;
       
-      // Check if trail should be active (either always on, or within active window after bounce)
-      const trailIsActive = activeAfterBounceMs === 0 || 
-                           (currentTime - this.lastBounceForTrail < activeAfterBounceMs);
+      // Check if trail should be sampling (within active window)
+      const timeSinceBounce = currentTime - this.lastBounceForTrail;
+      const isInActiveWindow = activeAfterBounceMs === 0 || 
+                              (timeSinceBounce < activeAfterBounceMs);
       
-      if (trailIsActive) {
-        // Sample trail position at configured interval
+      // Check if trail should be completely removed (past active + fade windows)
+      const isFullyExpired = activeAfterBounceMs > 0 && 
+                            (timeSinceBounce > activeAfterBounceMs + endFadeDurationMs);
+      
+      if (isFullyExpired) {
+        // Trail has completely faded - clear it
+        this.trail = [];
+      } else if (isInActiveWindow) {
+        // Trail is active - sample new points
         if (currentTime - this.lastTrailTime >= config.physics.mascot.trail.sampleInterval) {
           this.trail.push({
             x: this.mascot.position.x,
@@ -273,10 +282,8 @@ export class GameCore {
         this.trail = this.trail.filter(point => 
           currentTime - point.timestamp < fadeOutMs
         );
-      } else {
-        // Trail inactive - clear it
-        this.trail = [];
       }
+      // else: in fade-out window - keep existing trail but don't add new points
     }
 
     // Apply velocity capping (safety valve) - scale caps with time dilation
@@ -485,10 +492,31 @@ export class GameCore {
 
   /**
    * Get motion trail for rendering
+   * Returns { trail: [...points], endFadeProgress: 0.0-1.0 }
    */
   getTrail() {
-    if (!config.physics.mascot.trail.enabled) return [];
-    return this.trail;
+    if (!config.physics.mascot.trail.enabled) return { trail: [], endFadeProgress: 0 };
+    
+    const currentTime = Date.now();
+    const activeAfterBounceMs = config.physics.mascot.trail.activeAfterBounceMs;
+    const endFadeDurationMs = config.physics.mascot.trail.endFadeDurationMs;
+    
+    if (activeAfterBounceMs === 0) {
+      // Always on - no end fade
+      return { trail: this.trail, endFadeProgress: 0 };
+    }
+    
+    const timeSinceBounce = currentTime - this.lastBounceForTrail;
+    
+    // Calculate end fade progress
+    // 0.0 = fully visible, 1.0 = fully faded
+    let endFadeProgress = 0;
+    if (timeSinceBounce > activeAfterBounceMs) {
+      const fadeTime = timeSinceBounce - activeAfterBounceMs;
+      endFadeProgress = Math.min(1.0, fadeTime / endFadeDurationMs);
+    }
+    
+    return { trail: this.trail, endFadeProgress };
   }
 
   /**

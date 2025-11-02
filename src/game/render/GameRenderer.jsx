@@ -154,7 +154,7 @@ function WaveLetter({ letter, index, totalLetters }) {
  * This same code works on Web, iOS, and Android
  * Touch events pass through the Canvas to allow line drawing
  */
-export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, squashStretch = { scaleX: 1, scaleY: 1 }, parallaxStars = [], trail = [] }) {
+export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, squashStretch = { scaleX: 1, scaleY: 1 }, parallaxStars = [], trail = [], trailEndFade = 0 }) {
   // Calculate word opacity based on configured fade mode
   let wordOpacity = 0;
 
@@ -500,10 +500,11 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
       {/* Motion trail behind ball - single path with gradient fade */}
       {trail.length > 1 && (() => {
         const ballRadius = config.physics.mascot.radius;
-        const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
         const maxOpacity = config.physics.mascot.trail.maxOpacity;
         const layers = config.physics.mascot.trail.gradientLayers;
-        const currentTime = Date.now();
+        
+        // Apply end fade (when trail expires after bounce window)
+        const endFadeMultiplier = 1.0 - trailEndFade; // 1.0 = visible, 0.0 = faded
         
         // Render multiple overlapping paths with decreasing lengths for gradient effect
         // Each path starts from progressively newer points, creating fade-out at head
@@ -532,6 +533,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
           }
           
           // Opacity decreases for shorter layers (creates fade at head)
+          // Also apply end fade multiplier
           const layerOpacity = (layerIndex + 1) / layers;
           
           return (
@@ -539,7 +541,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
               key={`trail-layer-${layerIndex}`}
               path={path}
               color="white"
-              opacity={layerOpacity * maxOpacity}
+              opacity={layerOpacity * maxOpacity * endFadeMultiplier}
               style="stroke"
               strokeWidth={ballRadius * 2}
               strokeCap="round"
