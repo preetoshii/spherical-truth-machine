@@ -28,13 +28,13 @@ export const config = {
       // Motion trail effect
       trail: {
         enabled: true,        // Enable/disable trail effect
-        fadeOutMs: 500,       // How long trail takes to fade out (milliseconds)
+        fadeOutMs: 800,       // How long trail takes to fade out (milliseconds)
         sampleInterval: 16,   // Add trail point every N milliseconds (16ms = ~60fps sampling)
         maxPoints: 30,        // Maximum trail points to keep (prevents infinite growth)
-        activeAfterBounceMs: 1000,  // Trail visible for X ms after hitting gelato (0 = always on)
-        endFadeDurationMs: 300,     // Duration of fade-out when trail expires (0 = instant disappear)
+        activeAfterBounceMs: 200,  // Trail visible for X ms after hitting gelato (0 = always on)
+        endFadeDurationMs: 800,     // Duration of fade-out when trail expires (0 = instant disappear)
         maxOpacity: 0.3,      // Maximum trail opacity (0.0 = invisible, 1.0 = solid)
-        gradientLayers: 5,    // Number of overlapping layers for gradient effect (more = smoother fade)
+        gradientLayers: 1,    // Number of overlapping layers for gradient effect (more = smoother fade)
       },
     },
 

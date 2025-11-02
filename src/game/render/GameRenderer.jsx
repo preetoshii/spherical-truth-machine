@@ -497,11 +497,12 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         );
       })}
 
-      {/* Motion trail behind ball - single path with gradient fade */}
+      {/* Motion trail behind ball - tapered gradient stroke */}
       {trail.length > 1 && (() => {
         const ballRadius = config.physics.mascot.radius;
         const maxOpacity = config.physics.mascot.trail.maxOpacity;
         const layers = config.physics.mascot.trail.gradientLayers;
+        const taperAmount = config.physics.mascot.trail.taperAmount;
         
         // Apply end fade (when trail expires after bounce window)
         const endFadeMultiplier = 1.0 - trailEndFade; // 1.0 = visible, 0.0 = faded
@@ -536,6 +537,12 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
           // Also apply end fade multiplier
           const layerOpacity = (layerIndex + 1) / layers;
           
+          // Stroke width tapers: older/shorter layers are thinner
+          // Layer 0 (oldest/shortest) = taperAmount * width
+          // Layer N (newest/longest) = 1.0 * width
+          const layerWidthMultiplier = taperAmount + (1 - taperAmount) * layerOpacity;
+          const strokeWidth = ballRadius * 2 * layerWidthMultiplier;
+          
           return (
             <Path
               key={`trail-layer-${layerIndex}`}
@@ -543,7 +550,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
               color="white"
               opacity={layerOpacity * maxOpacity * endFadeMultiplier}
               style="stroke"
-              strokeWidth={ballRadius * 2}
+              strokeWidth={strokeWidth}
               strokeCap="round"
               strokeJoin="round"
             />
