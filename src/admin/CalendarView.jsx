@@ -30,6 +30,7 @@ function CardItem({
   cardIndex,
   todayIndex,
   onRecordingComplete,
+  primaryColor = '#FFFFFF',
 }) {
   // Shared values for animations
   const scale = useSharedValue(1);
