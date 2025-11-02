@@ -497,43 +497,49 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         );
       })}
 
-      {/* Motion trail behind ball - gradient fade from old to new */}
+      {/* Motion trail behind ball - single path with gradient fade */}
       {trail.length > 1 && (() => {
         const ballRadius = config.physics.mascot.radius;
         const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
         const currentTime = Date.now();
         
-        // Render trail as multiple segments with individual opacity
-        // This creates gradient fade from oldest (transparent) to newest (opaque)
-        return trail.map((point, index) => {
-          if (index === trail.length - 1) return null; // Skip last point
+        // Render multiple overlapping paths with decreasing lengths for gradient effect
+        // Each path starts from progressively newer points, creating fade-out at head
+        const layers = 5; // Number of gradient layers
+        
+        return Array.from({ length: layers }).map((_, layerIndex) => {
+          // Calculate what portion of trail to include in this layer
+          const startIndex = Math.floor((trail.length - 1) * (layerIndex / layers));
+          const layerTrail = trail.slice(startIndex);
           
-          const nextPoint = trail[index + 1];
+          if (layerTrail.length < 2) return null;
           
-          // Use opacity of the OLDER point (front of segment)
-          // This creates smooth fade-out toward the trail head
-          const age = currentTime - point.timestamp;
-          const opacity = Math.max(0, 1 - (age / fadeOutMs));
+          // Create smooth path for this layer
+          const path = Skia.Path.Make();
+          path.moveTo(layerTrail[0].x, layerTrail[0].y);
           
-          // Create smooth curve segment
-          const segmentPath = Skia.Path.Make();
-          segmentPath.moveTo(point.x, point.y);
-          
-          // If there's a point after next, use quadratic curve, else straight line
-          if (index < trail.length - 2) {
-            const midX = (nextPoint.x + trail[index + 2].x) / 2;
-            const midY = (nextPoint.y + trail[index + 2].y) / 2;
-            segmentPath.quadTo(nextPoint.x, nextPoint.y, midX, midY);
-          } else {
-            segmentPath.lineTo(nextPoint.x, nextPoint.y);
+          for (let i = 1; i < layerTrail.length - 1; i++) {
+            const midX = (layerTrail[i].x + layerTrail[i + 1].x) / 2;
+            const midY = (layerTrail[i].y + layerTrail[i + 1].y) / 2;
+            path.quadTo(layerTrail[i].x, layerTrail[i].y, midX, midY);
           }
+          
+          if (layerTrail.length > 1) {
+            path.lineTo(
+              layerTrail[layerTrail.length - 1].x,
+              layerTrail[layerTrail.length - 1].y
+            );
+          }
+          
+          // Opacity decreases for shorter layers (creates fade at head)
+          const layerOpacity = (layerIndex + 1) / layers; // 0.2, 0.4, 0.6, 0.8, 1.0
           
           return (
             <Path
-              key={`trail-${index}`}
-              path={segmentPath}
+              key={`trail-layer-${layerIndex}`}
+              path={path}
               color="white"
-              opacity={opacity * 0.3} // Gradient fade based on age
+              opacity={layerOpacity * 0.3} // Gradient layers
               style="stroke"
               strokeWidth={ballRadius * 2}
               strokeCap="round"
