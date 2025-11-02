@@ -154,7 +154,7 @@ function WaveLetter({ letter, index, totalLetters }) {
  * This same code works on Web, iOS, and Android
  * Touch events pass through the Canvas to allow line drawing
  */
-export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, squashStretch = { scaleX: 1, scaleY: 1 }, parallaxStars = [] }) {
+export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, squashStretch = { scaleX: 1, scaleY: 1 }, parallaxStars = [], trail = [] }) {
   // Calculate word opacity based on configured fade mode
   let wordOpacity = 0;
 
@@ -493,6 +493,29 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
             color="white"
             style="stroke"
             strokeWidth={config.gelato.thickness}
+          />
+        );
+      })}
+
+      {/* Motion trail behind ball */}
+      {trail.map((point, index) => {
+        // Calculate opacity based on age
+        const age = Date.now() - point.timestamp;
+        const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
+        const opacity = Math.max(0, 1 - (age / fadeOutMs));
+        
+        // Trail thickness = ball diameter
+        const trailRadius = config.physics.mascot.radius;
+        
+        return (
+          <Circle
+            key={`trail-${index}`}
+            cx={point.x}
+            cy={point.y}
+            r={trailRadius}
+            color="white"
+            opacity={opacity * 0.3} // Subtle trail (30% max opacity)
+            style="fill"
           />
         );
       })}

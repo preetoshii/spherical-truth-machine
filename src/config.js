@@ -24,6 +24,14 @@ export const config = {
       friction: 0.01,         // Surface friction when sliding (0 = frictionless, 1 = sticky)
       frictionAir: 0.005,     // Air resistance affecting terminal velocity (lower = falls faster)
       mass: 1,                // Mass affects force calculations (default: 1)
+      
+      // Motion trail effect
+      trail: {
+        enabled: true,        // Enable/disable trail effect
+        fadeOutMs: 500,       // How long trail takes to fade out (milliseconds)
+        sampleInterval: 16,   // Add trail point every N milliseconds (16ms = ~60fps sampling)
+        maxPoints: 30,        // Maximum trail points to keep (prevents infinite growth)
+      },
     },
 
     // Entrance animation (ball dropping from top)
@@ -70,7 +78,7 @@ export const config = {
 
   // === GELATO (SPRINGBOARDS) ===
   gelato: {
-    maxLength:,           // Maximum line length in pixels (enforced during drawing)
+    maxLength: 275,           // Maximum line length in pixels (enforced during drawing)
     thickness: 4,             // Visual line thickness in pixels
     springBoost: 1.25,        // Trampoline bounce multiplier (1.0 = normal physics, 1.25 = 125% bounce back)
     maxActiveGelatos: 1,      // How many Gelatos can exist simultaneously (currently: 1)
@@ -78,7 +86,8 @@ export const config = {
     
     // Visual rendering mode
     renderMode: 'curved',     // 'curved' = honor drawn shape (with blend), 'straight' = simple A→B line
-    curveBlend: 0.5,          // How much to honor drawn shape (0.0 = straight line, 1.0 = exact drawing, 0.5 = 50/50)
+    curveBlend: .5,          // How much to honor drawn shape (0.0 = straight line, 1.0 = exact drawing, 0.5 = 50/50)
+    collisionShape: 'path',   // 'line' = straight A→B physics, 'path' = curved physics matching blended visual
 
     // Visual deformation (trampoline effect on bounce)
     deformation: {

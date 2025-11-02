@@ -128,6 +128,10 @@ export class GameCore {
 
     // Track creation time for pop-in animation
     this.gelatoCreationTime = null;
+    
+    // Motion trail tracking
+    this.trail = []; // Array of { x, y, timestamp }
+    this.lastTrailTime = 0;
 
     // Message system (Milestone 3)
     // Use custom message if provided (for preview mode), otherwise use default
@@ -237,6 +241,32 @@ export class GameCore {
 
     // Update parallax background based on ball's Y position
     this.parallaxManager.update(this.mascot.position.y);
+    
+    // Update motion trail
+    if (config.physics.mascot.trail.enabled && this.gameStarted) {
+      const currentTime = Date.now();
+      
+      // Sample trail position at configured interval
+      if (currentTime - this.lastTrailTime >= config.physics.mascot.trail.sampleInterval) {
+        this.trail.push({
+          x: this.mascot.position.x,
+          y: this.mascot.position.y,
+          timestamp: currentTime,
+        });
+        this.lastTrailTime = currentTime;
+        
+        // Limit trail length
+        if (this.trail.length > config.physics.mascot.trail.maxPoints) {
+          this.trail.shift();
+        }
+      }
+      
+      // Remove old trail points that have fully faded
+      const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
+      this.trail = this.trail.filter(point => 
+        currentTime - point.timestamp < fadeOutMs
+      );
+    }
 
     // Apply velocity capping (safety valve) - scale caps with time dilation
     const velocity = this.mascot.velocity;
@@ -311,6 +341,10 @@ export class GameCore {
       this.gelatoLineData = null;
       this.bounceImpact = null;
     }
+    
+    // Clear motion trail
+    this.trail = [];
+    this.lastTrailTime = 0;
 
     // Reset ball to starting position (above screen)
     Matter.Body.setPosition(this.mascot, {
@@ -432,6 +466,14 @@ export class GameCore {
    */
   getParallaxStars() {
     return this.parallaxManager.getStars();
+  }
+
+  /**
+   * Get motion trail for rendering
+   */
+  getTrail() {
+    if (!config.physics.mascot.trail.enabled) return [];
+    return this.trail;
   }
 
   /**

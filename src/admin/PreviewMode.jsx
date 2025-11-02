@@ -47,6 +47,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
     squashStretch,
     lines,
     setLines,
+    trail,
   } = useGameLoop(dimensions, message, activeAudioUri, activeWordTimings, null, null);
 
   // Get parallax stars from game core
@@ -193,6 +194,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
           mascotVelocityY={mascotVelocityY.current}
           squashStretch={squashStretch.current}
           parallaxStars={parallaxStars}
+          trail={trail.current}
         />
       </View>
 

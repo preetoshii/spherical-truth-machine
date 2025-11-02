@@ -36,6 +36,7 @@ export function GameApp() {
   const mascotVelocityY = useRef(0); // Current Y velocity of mascot
   const squashStretch = useRef({ scaleX: 1, scaleY: 1 }); // Squash/stretch for ball deformation
   const parallaxStars = useRef([]); // Parallax background stars
+  const trail = useRef([]); // Motion trail behind ball
 
   // Simple line drawing state
   const [lines, setLines] = useState([]);
@@ -132,6 +133,7 @@ export function GameApp() {
       mascotVelocityY.current = gameCore.current.getMascotVelocityY();
       squashStretch.current = gameCore.current.getSquashStretch();
       parallaxStars.current = gameCore.current.getParallaxStars();
+      trail.current = gameCore.current.getTrail();
 
       // Sync lines with GameCore (updates when gelato destroyed after fade)
       const currentGelatoData = gameCore.current.getGelatoLineData();
@@ -400,6 +402,7 @@ export function GameApp() {
             mascotVelocityY={mascotVelocityY.current}
             squashStretch={squashStretch.current}
             parallaxStars={parallaxStars.current}
+            trail={trail.current}
           />
 
           {/* Admin Button - Feather Icon */}
