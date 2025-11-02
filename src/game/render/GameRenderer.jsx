@@ -262,8 +262,8 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
 
       {/* Draw all completed lines (Gelatos) with deformation effect */}
       {lines.map((line, index) => {
-        // Render path averaged between drawn shape and straight line (50% blend)
-        if (line.originalPath && line.originalPath.length > 1) {
+        // Render curved path if enabled and path exists
+        if (config.gelato.renderMode === 'curved' && line.originalPath && line.originalPath.length > 1) {
           // Base blend: Interpolate each point 50% toward straight line (keep all points)
           const blendedPoints = line.originalPath.map((point, i) => {
             const t = i / (line.originalPath.length - 1);
