@@ -497,24 +497,17 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         );
       })}
 
-      {/* Motion trail behind ball - tapered continuous Skia path */}
+      {/* Motion trail behind ball - single path with gradient fade */}
       {trail.length > 1 && (() => {
         const ballRadius = config.physics.mascot.radius;
         const maxOpacity = config.physics.mascot.trail.maxOpacity;
-        const taperAmount = config.physics.mascot.trail.taperAmount;
         const layers = config.physics.mascot.trail.gradientLayers;
-        const currentTime = Date.now();
-        const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
         
         // Apply end fade (when trail expires after bounce window)
         const endFadeMultiplier = 1.0 - trailEndFade; // 1.0 = visible, 0.0 = faded
         
-        // Calculate average age-based opacity for entire trail
-        const avgAge = trail.reduce((sum, p) => sum + (currentTime - p.timestamp), 0) / trail.length;
-        const avgOpacity = Math.max(0, 1 - (avgAge / fadeOutMs));
-        
-        // Render multiple overlapping continuous paths with decreasing lengths AND widths
-        // Creates both opacity gradient (fade) and width taper (calligraphic effect)
+        // Render multiple overlapping paths with decreasing lengths for gradient effect
+        // Each path starts from progressively newer points, creating fade-out at head
         return Array.from({ length: layers }).map((_, layerIndex) => {
           // Calculate what portion of trail to include in this layer
           const startIndex = Math.floor((trail.length - 1) * (layerIndex / layers));
@@ -522,7 +515,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
           
           if (layerTrail.length < 2) return null;
           
-          // Create smooth continuous path with quadTo curves
+          // Create smooth path for this layer
           const path = Skia.Path.Make();
           path.moveTo(layerTrail[0].x, layerTrail[0].y);
           
@@ -539,21 +532,17 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
             );
           }
           
-          // Opacity decreases for shorter layers (fade at back)
+          // Opacity decreases for shorter layers (creates fade at head)
           const layerOpacity = (layerIndex + 1) / layers;
-          
-          // Width also decreases for shorter layers (taper at back)
-          const layerWidthMultiplier = taperAmount + (1 - taperAmount) * layerOpacity;
-          const strokeWidth = ballRadius * 2 * layerWidthMultiplier;
           
           return (
             <Path
               key={`trail-layer-${layerIndex}`}
               path={path}
               color="white"
-              opacity={avgOpacity * layerOpacity * maxOpacity * endFadeMultiplier}
+              opacity={layerOpacity * maxOpacity * endFadeMultiplier}
               style="stroke"
-              strokeWidth={strokeWidth}
+              strokeWidth={ballRadius * 2}
               strokeCap="round"
               strokeJoin="round"
             />
