@@ -11,7 +11,7 @@ import { playSound } from '../utils/audio';
  * AdminPortal - Root component for admin interface
  * Manages view state and transitions between calendar, preview, and confirmation views
  */
-export function AdminPortal({ onClose, preloadedData }) {
+export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }) {
   const [currentView, setCurrentView] = useState('calendar'); // 'calendar' | 'preview' | 'confirmation'
   const [editingDate, setEditingDate] = useState(null); // Date being edited (when set, card is in edit mode)
   const [draftMessage, setDraftMessage] = useState(''); // Message being composed
@@ -215,7 +215,7 @@ export function AdminPortal({ onClose, preloadedData }) {
           }}
           style={styles.backButton}
         >
-          <Feather name="arrow-left" size={28} color="#ffffff" />
+          <Feather name="arrow-left" size={28} color={primaryColor} />
         </Pressable>
       )}
       {/* Calendar View - only render when active */}
@@ -226,6 +226,7 @@ export function AdminPortal({ onClose, preloadedData }) {
           onPreview={openPreview}
           initialEditingDate={editingDate}
           initialEditingText={draftMessage}
+          primaryColor={primaryColor}
           scrollToDate={scrollToDate}
           onScrollComplete={() => setScrollToDate(null)}
         />
@@ -241,6 +242,7 @@ export function AdminPortal({ onClose, preloadedData }) {
           wordTimings={draftWordTimings}
           wordAudioSegments={draftWordAudioSegments}
           onTextEditorChange={setIsTextEditorOpen}
+          primaryColor={primaryColor}
         />
       )}
 

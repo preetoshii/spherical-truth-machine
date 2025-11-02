@@ -126,6 +126,7 @@ function CardItem({
               width: isEditing ? editCardWidth : cardSize,
               height: isEditing ? editCardHeight : cardSize,
               padding: isEditing ? 100 : 64, // More padding when expanded
+              borderColor: hasMessage && !isEditing ? '#0a0a0a' : primaryColor, // Dynamic border
             },
             slot.isPast && styles.cardPast,
             slot.isToday && styles.cardToday,
@@ -136,7 +137,8 @@ function CardItem({
           <Text style={[
             styles.cardDate,
             slot.isPast && styles.textMuted,
-            hasMessage && !isEditing && { color: '#0a0a0a' } // Black text for populated cards
+            hasMessage && !isEditing && { color: '#0a0a0a' }, // Black text for populated cards
+            !hasMessage && { color: primaryColor }, // Dynamic color for empty cards
           ]}>
             {formatDate(slot.date, slot.isToday)}
           </Text>
@@ -159,7 +161,8 @@ function CardItem({
             // Display mode: Show existing message
             <Text style={[
               styles.messageInput,
-              hasMessage && { color: '#0a0a0a' } // Black text for populated cards
+              hasMessage && { color: '#0a0a0a' }, // Black text for populated cards
+              !hasMessage && { color: primaryColor }, // Dynamic color for empty cards
             ]}>
               {message?.text || ''}
             </Text>
@@ -174,7 +177,7 @@ function CardItem({
 /**
  * CalendarView - Horizontal scrolling card-based calendar
  */
-export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initialEditingDate, initialEditingText, scrollToDate, onScrollComplete }) {
+export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initialEditingDate, initialEditingText, scrollToDate, onScrollComplete, primaryColor = '#FFFFFF' }) {
   const { width, height } = Dimensions.get('window');
   const scrollViewRef = useRef(null);
   useHorizontalScroll(scrollViewRef); // Hook for vertical-to-horizontal scroll translation
@@ -426,6 +429,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
                 cardIndex={index}
                 todayIndex={todayIndex}
                 onRecordingComplete={handleRecordingComplete}
+                primaryColor={primaryColor}
               />
             );
           })}
@@ -444,6 +448,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
           <Pressable
             style={[
               styles.previewButton,
+              { borderColor: primaryColor },
               !recordedAudioUri && styles.previewButtonDisabled
             ]}
             onPress={() => {
@@ -453,8 +458,8 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
             disabled={!recordedAudioUri}
           >
             <View style={styles.previewButtonContent}>
-              <Feather name="play" size={20} color="#ffffff" style={{ marginRight: 8 }} />
-              <Text style={styles.previewButtonText}>
+              <Feather name="play" size={20} color={primaryColor} style={{ marginRight: 8 }} />
+              <Text style={[styles.previewButtonText, { color: primaryColor }]}>
                 Preview
               </Text>
             </View>
@@ -491,7 +496,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#111',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#ffffff',
+    // borderColor set inline with primaryColor
     padding: 64,
     justifyContent: 'space-between',
   },
@@ -524,6 +529,7 @@ const styles = StyleSheet.create({
   activeBadgeText: {
     fontSize: 11,
     fontWeight: '600',
+    // color: white (stays white for active badge)
     color: '#ffffff',
     letterSpacing: 1,
   },
@@ -535,7 +541,7 @@ const styles = StyleSheet.create({
   messageInput: {
     fontSize: 32,
     lineHeight: 60,
-    color: '#ffffff',
+    // color set inline with primaryColor
     fontWeight: '300',
     width: '100%',
     textAlign: 'center',
@@ -557,7 +563,7 @@ const styles = StyleSheet.create({
   previewButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#ffffff',
+    // borderColor set inline with primaryColor
     paddingVertical: 20,
     paddingHorizontal: 40,
     borderRadius: 999,
@@ -573,7 +579,7 @@ const styles = StyleSheet.create({
   previewButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#ffffff',
+    // color set inline with primaryColor
   },
   previewButtonDisabled: {
     opacity: 0.3,

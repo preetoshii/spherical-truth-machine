@@ -10,7 +10,7 @@ import { TextEditor } from './TextEditor';
 /**
  * PreviewMode - Game preview with draft message and overlay controls
  */
-export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, wordAudioSegments, onTextEditorChange }) {
+export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, wordAudioSegments, onTextEditorChange, primaryColor: parentPrimaryColor = '#FFFFFF' }) {
   // State for text editing
   const [showTextEditor, setShowTextEditor] = useState(false);
   const [editedWordTimings, setEditedWordTimings] = useState(wordTimings);
@@ -214,7 +214,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
             }}
             pointerEvents="auto"
           >
-            <Feather name="type" size={24} color={primaryColor.current} />
+            <Feather name="type" size={24} color={parentPrimaryColor} />
           </Pressable>
         )}
         
@@ -257,6 +257,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
             setShowTextEditor(false);
             onTextEditorChange?.(false);
           }}
+          primaryColor={parentPrimaryColor}
         />
       )}
     </View>

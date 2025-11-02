@@ -442,7 +442,7 @@ export function GameApp() {
       {/* Admin portal - unmount when closed */}
       {showAdmin && (
         <View style={styles.fullScreen}>
-          <AdminPortal onClose={closeAdmin} preloadedData={preloadedMessagesData} />
+          <AdminPortal onClose={closeAdmin} preloadedData={preloadedMessagesData} primaryColor={primaryColor.current} />
         </View>
       )}
 

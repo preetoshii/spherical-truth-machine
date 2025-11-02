@@ -7,7 +7,7 @@ import { playSound } from '../utils/audio';
  * TextEditor - Overlay for editing transcribed text word by word
  * Allows correcting TTS errors before saving the message
  */
-export function TextEditor({ wordTimings, onSave, onCancel }) {
+export function TextEditor({ wordTimings, onSave, onCancel, primaryColor = '#FFFFFF' }) {
   // State for edited words (initialize from wordTimings)
   const [editedWords, setEditedWords] = useState(
     wordTimings ? wordTimings.map(w => ({ ...w })) : []
@@ -48,10 +48,10 @@ export function TextEditor({ wordTimings, onSave, onCancel }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
+      <View style={[styles.content, { borderColor: primaryColor }]}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Edit Transcription</Text>
+          <Text style={[styles.title, { color: primaryColor }]}>Edit Transcription</Text>
           <Text style={styles.subtitle}>Tap any word to edit</Text>
         </View>
 
@@ -81,7 +81,7 @@ export function TextEditor({ wordTimings, onSave, onCancel }) {
                     style={styles.wordBubble}
                     onPress={() => handleWordPress(index)}
                   >
-                    <Text style={styles.wordText}>{wordData.word}</Text>
+                    <Text style={[styles.wordText, { color: primaryColor }]}>{wordData.word}</Text>
                   </Pressable>
                 )}
               </View>
@@ -91,8 +91,8 @@ export function TextEditor({ wordTimings, onSave, onCancel }) {
 
         {/* Action buttons */}
         <View style={styles.actions}>
-          <Pressable style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Pressable style={[styles.cancelButton, { borderColor: primaryColor }]} onPress={handleCancel}>
+            <Text style={[styles.cancelButtonText, { color: primaryColor }]}>Cancel</Text>
           </Pressable>
           <Pressable style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveButtonText}>Save Changes</Text>
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#ffffff',
+    // color set inline with primaryColor
     marginBottom: 8,
   },
   subtitle: {
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   wordText: {
     fontSize: 16,
-    color: '#ffffff',
+    // color set inline with primaryColor
     fontWeight: '400',
   },
   editingContainer: {
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#ffffff',
+    // color set inline with primaryColor
   },
   saveButton: {
     flex: 1,
