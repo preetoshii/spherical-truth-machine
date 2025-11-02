@@ -32,6 +32,7 @@ export function useGameLoop(dimensions, customMessage = null, audioUri = null, w
   const squashStretch = useRef({ scaleX: 1, scaleY: 1 });
   const lastGelatoData = useRef(null);
   const trail = useRef([]);
+  const primaryColor = useRef('#FFFFFF');
 
   // Line drawing state
   const [lines, setLines] = useState([]);
@@ -95,6 +96,7 @@ export function useGameLoop(dimensions, customMessage = null, audioUri = null, w
       squashStretch.current = gameCore.current.getSquashStretch();
       const trailData = gameCore.current.getTrail();
       trail.current = trailData.trail;
+      primaryColor.current = gameCore.current.getPrimaryColor();
 
       // Sync lines with GameCore (updates when gelato destroyed after fade)
       const currentGelatoData = gameCore.current.getGelatoLineData();
@@ -132,5 +134,6 @@ export function useGameLoop(dimensions, customMessage = null, audioUri = null, w
     lines,
     setLines,
     trail,
+    primaryColor,
   };
 }

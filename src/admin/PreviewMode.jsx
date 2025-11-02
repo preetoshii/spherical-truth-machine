@@ -48,6 +48,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
     lines,
     setLines,
     trail,
+    primaryColor,
   } = useGameLoop(dimensions, message, activeAudioUri, activeWordTimings, null, null);
 
   // Get parallax stars from game core
@@ -196,6 +197,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
           parallaxStars={parallaxStars}
           trail={trail.current}
           trailEndFade={0}
+          primaryColor={primaryColor.current}
         />
       </View>
 

@@ -38,6 +38,7 @@ export function GameApp() {
   const parallaxStars = useRef([]); // Parallax background stars
   const trail = useRef([]); // Motion trail behind ball
   const trailEndFade = useRef(0); // End fade progress (0 = visible, 1 = faded)
+  const primaryColor = useRef('#FFFFFF'); // Current primary color
 
   // Simple line drawing state
   const [lines, setLines] = useState([]);
@@ -137,6 +138,7 @@ export function GameApp() {
       const trailData = gameCore.current.getTrail();
       trail.current = trailData.trail;
       trailEndFade.current = trailData.endFadeProgress;
+      primaryColor.current = gameCore.current.getPrimaryColor();
 
       // Sync lines with GameCore (updates when gelato destroyed after fade)
       const currentGelatoData = gameCore.current.getGelatoLineData();
@@ -407,6 +409,7 @@ export function GameApp() {
             parallaxStars={parallaxStars.current}
             trail={trail.current}
             trailEndFade={trailEndFade.current}
+            primaryColor={primaryColor.current}
           />
 
           {/* Admin Button - Feather Icon */}

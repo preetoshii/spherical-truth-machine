@@ -133,6 +133,13 @@ export class GameCore {
     this.trail = []; // Array of { x, y, timestamp }
     this.lastTrailTime = 0;
     this.lastBounceForTrail = 0; // Timestamp of last gelato bounce (for trail activation)
+    
+    // Color system
+    this.currentColorIndex = 0;
+    this.primaryColor = config.colors.mode === 'static' 
+      ? config.colors.staticColor 
+      : config.colors.palette[0];
+    this.colorTransitionStart = Date.now();
 
     // Message system (Milestone 3)
     // Use custom message if provided (for preview mode), otherwise use default
@@ -242,6 +249,25 @@ export class GameCore {
 
     // Update parallax background based on ball's Y position
     this.parallaxManager.update(this.mascot.position.y);
+    
+    // Update color if mode is 'time' (gradual fade)
+    if (config.colors.mode === 'time') {
+      const currentTime = Date.now();
+      const elapsed = currentTime - this.colorTransitionStart;
+      const duration = config.colors.timeFadeDuration;
+      
+      if (elapsed >= duration) {
+        // Move to next color
+        this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
+        this.colorTransitionStart = currentTime;
+      }
+      
+      // Interpolate between current and next color
+      const progress = (elapsed % duration) / duration;
+      const currentColor = config.colors.palette[this.currentColorIndex];
+      const nextColor = config.colors.palette[(this.currentColorIndex + 1) % config.colors.palette.length];
+      this.primaryColor = this.interpolateColor(currentColor, nextColor, progress);
+    }
     
     // Update motion trail
     if (config.physics.mascot.trail.enabled && this.gameStarted) {
@@ -407,6 +433,12 @@ export class GameCore {
         // Activate trail on gelato bounce - clear old trail and start fresh
         this.lastBounceForTrail = currentTime;
         this.trail = []; // Reset trail on each bounce
+        
+        // Change color on bounce if mode is 'bounce'
+        if (config.colors.mode === 'bounce') {
+          this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
+          this.primaryColor = config.colors.palette[this.currentColorIndex];
+        }
 
         // Apply spring boost perpendicular to Gelato
         const angle = gelatoBody.angle;
@@ -485,6 +517,35 @@ export class GameCore {
    */
   getParallaxStars() {
     return this.parallaxManager.getStars();
+  }
+
+  /**
+   * Interpolate between two hex colors
+   */
+  interpolateColor(color1, color2, progress) {
+    const c1 = parseInt(color1.substring(1), 16);
+    const c2 = parseInt(color2.substring(1), 16);
+    
+    const r1 = (c1 >> 16) & 255;
+    const g1 = (c1 >> 8) & 255;
+    const b1 = c1 & 255;
+    
+    const r2 = (c2 >> 16) & 255;
+    const g2 = (c2 >> 8) & 255;
+    const b2 = c2 & 255;
+    
+    const r = Math.round(r1 + (r2 - r1) * progress);
+    const g = Math.round(g1 + (g2 - g1) * progress);
+    const b = Math.round(b1 + (b2 - b1) * progress);
+    
+    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+  }
+
+  /**
+   * Get current primary color
+   */
+  getPrimaryColor() {
+    return this.primaryColor;
   }
 
   /**

@@ -248,6 +248,31 @@ export const config = {
     wordFadeOutMs: 1500,          // Phase 3: Fade-out duration from 100% → 0% opacity
   },
 
+  // === COLOR SYSTEM ===
+  // Monochromatic design: single primary color used throughout (ball, trail, gelato, UI, text)
+  colors: {
+    mode: 'static',          // 'static' = fixed color, 'bounce' = change per bounce, 'time' = gradual fade
+    
+    // Color palette (used when mode is 'bounce' or 'time')
+    palette: [
+      '#FFFFFF',  // White
+      '#FF6B6B',  // Red
+      '#4ECDC4',  // Cyan
+      '#FFE66D',  // Yellow
+      '#A8E6CF',  // Mint
+      '#FF8B94',  // Pink
+      '#95E1D3',  // Aqua
+      '#F3A683',  // Orange
+      '#786FA6',  // Purple
+    ],
+    
+    // Static mode: use this single color
+    staticColor: '#FFFFFF',
+    
+    // Time mode: how long to transition between colors (ms)
+    timeFadeDuration: 5000,
+  },
+
   // === DRAWING ===
   drawing: {
     approach: 'continuous',       // Drawing method: 'continuous' (smooth path) or 'segmented' (snap to grid)

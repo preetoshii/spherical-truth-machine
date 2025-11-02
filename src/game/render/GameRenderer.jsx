@@ -154,7 +154,7 @@ function WaveLetter({ letter, index, totalLetters }) {
  * This same code works on Web, iOS, and Android
  * Touch events pass through the Canvas to allow line drawing
  */
-export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, squashStretch = { scaleX: 1, scaleY: 1 }, parallaxStars = [], trail = [], trailEndFade = 0 }) {
+export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, squashStretch = { scaleX: 1, scaleY: 1 }, parallaxStars = [], trail = [], trailEndFade = 0, primaryColor = '#FFFFFF' }) {
   // Calculate word opacity based on configured fade mode
   let wordOpacity = 0;
 
@@ -242,7 +242,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
               cx={star.x}
               cy={star.y}
               size={star.size}
-              color={star.color}
+              color={primaryColor}
               opacity={twinkledOpacity}
             />
           );
@@ -351,7 +351,8 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
             <Path
               key={index}
               path={path}
-              color={`rgba(255, 255, 255, ${opacity})`}
+              color={primaryColor}
+              opacity={opacity}
               style="stroke"
               strokeWidth={config.gelato.thickness}
             />
@@ -413,7 +414,8 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
               <Path
                 key={index}
                 path={path}
-                color={`rgba(255, 255, 255, ${opacity})`}
+                color={primaryColor}
+                opacity={opacity}
                 style="stroke"
                 strokeWidth={config.gelato.thickness}
               />
@@ -426,7 +428,8 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
               key={index}
               p1={vec(line.startX, line.startY)}
               p2={vec(line.endX, line.endY)}
-              color={`rgba(255, 255, 255, ${opacity})`}
+              color={primaryColor}
+              opacity={opacity}
               style="stroke"
               strokeWidth={config.gelato.thickness}
             />
@@ -476,7 +479,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
               <Path
                 key={index}
                 path={path}
-                color="white"
+                color={primaryColor}
                 style="stroke"
                 strokeWidth={config.gelato.thickness}
               />
@@ -490,7 +493,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
             key={index}
             p1={vec(line.startX, line.startY)}
             p2={vec(line.endX, line.endY)}
-            color="white"
+            color={primaryColor}
             style="stroke"
             strokeWidth={config.gelato.thickness}
           />
@@ -539,7 +542,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
             <Path
               key={`trail-layer-${layerIndex}`}
               path={path}
-              color="white"
+              color={primaryColor}
               opacity={layerOpacity * maxOpacity * endFadeMultiplier}
               style="stroke"
               strokeWidth={ballRadius * 2}
@@ -560,7 +563,8 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         return (
           <Path
             path={path}
-            color="rgba(255, 255, 255, 0.6)"
+            color={primaryColor}
+            opacity={0.6}
             style="stroke"
             strokeWidth={config.gelato.thickness}
             strokeCap="round"
@@ -585,7 +589,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
           cx={mascotX}
           cy={mascotY}
           r={config.physics.mascot.radius}
-          color="white"
+          color={primaryColor}
           style="stroke"
           strokeWidth={2}
         />
