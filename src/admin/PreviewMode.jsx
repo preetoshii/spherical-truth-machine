@@ -14,6 +14,16 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
   // State for text editing
   const [showTextEditor, setShowTextEditor] = useState(false);
   const [editedWordTimings, setEditedWordTimings] = useState(wordTimings);
+  
+  // Voice toggle state (Reboundhi vs Reboundhita)
+  // wordAudioSegments now contains { reboundhi: uri, reboundhita: uri }
+  const hasTransformedVoices = wordAudioSegments && typeof wordAudioSegments === 'object' && wordAudioSegments.reboundhi;
+  const [selectedVoice, setSelectedVoice] = useState('reboundhi'); // Default to Reboundhi
+  
+  // Determine which audio URI to use
+  const activeAudioUri = hasTransformedVoices 
+    ? wordAudioSegments[selectedVoice] 
+    : audioUri;
 
   // Use edited word timings if available, otherwise use original
   const [dimensions] = useState(() => {
@@ -24,6 +34,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
   // Use shared game loop hook - ensures identical physics to main game
   // Pass null for fpsCap (uncapped in preview mode)
   // Use editedWordTimings instead of original wordTimings
+  // Use activeAudioUri (selected voice or original)
   const activeWordTimings = editedWordTimings || wordTimings;
   const {
     gameCore,
@@ -36,7 +47,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
     squashStretch,
     lines,
     setLines,
-  } = useGameLoop(dimensions, message, audioUri, activeWordTimings, wordAudioSegments, null);
+  } = useGameLoop(dimensions, message, activeAudioUri, activeWordTimings, null, null);
 
   // Get parallax stars from game core
   const parallaxStars = gameCore.current ? gameCore.current.getParallaxStars() : [];
@@ -140,20 +151,42 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
 
       {/* Overlay controls */}
       <View style={styles.overlay}>
-        {/* Edit Text button (top-right) - only show if we have word timings */}
-        {wordTimings && wordTimings.length > 0 && (
-          <Pressable
-            style={styles.editTextButton}
-            onPress={() => {
-              playSound('click');
-              setShowTextEditor(true);
-              onTextEditorChange?.(true);
-            }}
-            pointerEvents="auto"
-          >
-            <Feather name="type" size={24} color="#ffffff" />
-          </Pressable>
-        )}
+        {/* Top-right buttons */}
+        <View style={styles.topRightButtons}>
+          {/* Voice toggle - only show if we have transformed voices */}
+          {hasTransformedVoices && (
+            <Pressable
+              style={styles.voiceToggleButton}
+              onPress={() => {
+                const newVoice = selectedVoice === 'reboundhi' ? 'reboundhita' : 'reboundhi';
+                setSelectedVoice(newVoice);
+                playSound('click');
+                console.log('Switched to voice:', newVoice);
+              }}
+              pointerEvents="auto"
+            >
+              <Feather name="user" size={20} color="#ffffff" />
+              <Text style={styles.voiceToggleText}>
+                {selectedVoice === 'reboundhi' ? 'Reboundhi' : 'Reboundhita'}
+              </Text>
+            </Pressable>
+          )}
+          
+          {/* Edit Text button - only show if we have word timings */}
+          {wordTimings && wordTimings.length > 0 && (
+            <Pressable
+              style={styles.editTextButton}
+              onPress={() => {
+                playSound('click');
+                setShowTextEditor(true);
+                onTextEditorChange?.(true);
+              }}
+              pointerEvents="auto"
+            >
+              <Feather name="type" size={24} color="#ffffff" />
+            </Pressable>
+          )}
+        </View>
 
         {/* Save/Send Now button (bottom-center) */}
         <View style={styles.saveButtonContainer} pointerEvents="auto">
@@ -233,10 +266,30 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#0a0a0a',
   },
-  editTextButton: {
+  topRightButtons: {
     position: 'absolute',
     top: 50,
     right: 50,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  voiceToggleButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  voiceToggleText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  editTextButton: {
     width: 50,
     height: 50,
     borderRadius: 25,

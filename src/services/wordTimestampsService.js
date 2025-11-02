@@ -77,20 +77,33 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = [], transform
 
     console.log('Transformed word timings:', timingsWithBreaks);
 
-    // Convert transformed audio from base64 to blob URI (if present)
-    let transformedAudioUri = null;
-    if (data.transformedAudio) {
-      console.log('Converting transformed audio from base64...');
-      const base64Data = data.transformedAudio;
-      const byteCharacters = atob(base64Data);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    // Convert transformed audios from base64 to blob URIs (if present)
+    let transformedAudioUris = null;
+    if (data.transformedAudios) {
+      console.log('Converting transformed audios from base64...');
+      transformedAudioUris = {};
+      
+      // Helper to convert base64 to blob URI
+      const base64ToBlob = (base64Data) => {
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'audio/mp3' });
+        return URL.createObjectURL(blob);
+      };
+      
+      // Convert both voices
+      if (data.transformedAudios.reboundhi) {
+        transformedAudioUris.reboundhi = base64ToBlob(data.transformedAudios.reboundhi);
+        console.log('Reboundhi audio URI created:', transformedAudioUris.reboundhi);
       }
-      const byteArray = new Uint8Array(byteNumbers);
-      const transformedBlob = new Blob([byteArray], { type: 'audio/mp3' });
-      transformedAudioUri = URL.createObjectURL(transformedBlob);
-      console.log('Transformed audio URI created:', transformedAudioUri);
+      if (data.transformedAudios.reboundhita) {
+        transformedAudioUris.reboundhita = base64ToBlob(data.transformedAudios.reboundhita);
+        console.log('Reboundhita audio URI created:', transformedAudioUris.reboundhita);
+      }
     }
 
     // Note: We don't slice audio anymore - the new approach uses precise timestamps
@@ -100,7 +113,7 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = [], transform
       words: wordsArray,
       wordTimings: timingsWithBreaks,
       wordAudioSegments: null, // Not needed with new approach
-      transformedAudioUri: transformedAudioUri, // Transformed audio blob URI (if voice was transformed)
+      transformedAudioUris: transformedAudioUris, // { reboundhi: uri, reboundhita: uri }
       meta: data.meta, // Include metadata for debugging
     };
   } catch (error) {

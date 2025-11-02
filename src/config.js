@@ -243,7 +243,20 @@ export const config = {
   // === VOICE TRANSFORMATION ===
   voiceTransform: {
     enabled: true,                          // Default state for toggle in AudioRecorder
-    voiceId: 'q6bhPxtykZeN8o4aUNuh',        // ElevenLabs voice ID for transformation
     modelId: 'eleven_multilingual_sts_v2',  // ElevenLabs model
+    
+    // Two voices - both are transformed when enabled
+    voices: [
+      {
+        id: 'q6bhPxtykZeN8o4aUNuh',
+        name: 'Reboundhi',
+        default: true,  // Default voice in preview
+      },
+      {
+        id: 'UyE5iFj5Rg2T7GorYAnJ',
+        name: 'Reboundhita',
+        default: false,
+      },
+    ],
   },
 };

@@ -345,9 +345,8 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
     console.log('Sentence breaks:', breaks);
     console.log('Transcription result:', transcriptionResult);
 
-    // Use transformed audio if available, otherwise use original
-    const audioUriToUse = transcriptionResult?.transformedAudioUri || uri;
-    setRecordedAudioUri(audioUriToUse);
+    // Store original recording URI (for fallback)
+    setRecordedAudioUri(uri);
     setSentenceBreaks(breaks || []);
 
     // Store transcription data
@@ -361,9 +360,14 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
       if (transcriptionResult.wordAudioSegments) {
         setWordAudioSegments(transcriptionResult.wordAudioSegments);
       }
+      
+      // Store transformed audio URIs if available
+      if (transcriptionResult.transformedAudioUris) {
+        console.log('Transformed audio URIs received:', transcriptionResult.transformedAudioUris);
+        // Store both transformed audios (these will be passed to preview)
+        setWordAudioSegments(transcriptionResult.transformedAudioUris); // Reuse this state for voice URIs
+      }
     }
-    
-    console.log('Audio URI for playback:', audioUriToUse);
   };
 
   // Handle preview button press - call onPreview to navigate to preview mode

@@ -324,15 +324,28 @@ export default async function handler(req, res) {
     }));
 
     // 2) Transform voice if requested (BEFORE word detection)
+    // Transform with BOTH voices and return both
     let audioToProcess = file;
-    let transformedAudioBase64 = null;
+    let transformedAudios = {}; // { reboundhi: base64, reboundhita: base64 }
     
-    if (transformVoice && voiceId) {
-      console.log('[Transform] Starting voice transformation...');
-      const transformedBuffer = await transformVoiceWithElevenLabs(file, voiceId);
-      audioToProcess = transformedBuffer;
-      transformedAudioBase64 = transformedBuffer.toString('base64');
-      console.log('[Transform] Voice transformation complete');
+    if (transformVoice) {
+      console.log('[Transform] Starting dual voice transformation...');
+      
+      // Voice 1: Reboundhi
+      const voice1Id = 'q6bhPxtykZeN8o4aUNuh';
+      console.log('[Transform] Transforming with Reboundhi:', voice1Id);
+      const buffer1 = await transformVoiceWithElevenLabs(file, voice1Id);
+      transformedAudios.reboundhi = buffer1.toString('base64');
+      
+      // Voice 2: Reboundhita
+      const voice2Id = 'UyE5iFj5Rg2T7GorYAnJ';
+      console.log('[Transform] Transforming with Reboundhita:', voice2Id);
+      const buffer2 = await transformVoiceWithElevenLabs(file, voice2Id);
+      transformedAudios.reboundhita = buffer2.toString('base64');
+      
+      // Use first voice for word detection (they should have same timing)
+      audioToProcess = buffer1;
+      console.log('[Transform] Dual voice transformation complete');
     }
 
     // 3) Save audio to temp place so ffmpeg can read it
@@ -409,9 +422,9 @@ export default async function handler(req, res) {
         }
       };
       
-      // Include transformed audio if transformation was performed
-      if (transformedAudioBase64) {
-        response.transformedAudio = transformedAudioBase64;
+      // Include both transformed audios if transformation was performed
+      if (transformedAudios.reboundhi || transformedAudios.reboundhita) {
+        response.transformedAudios = transformedAudios;
       }
       
       return res.status(200).json(response);
