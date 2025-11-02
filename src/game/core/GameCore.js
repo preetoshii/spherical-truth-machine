@@ -125,6 +125,7 @@ export class GameCore {
 
     // Track bounce impact for visual deformation
     this.bounceImpact = null; // { x, y, strength, timestamp }
+    this.bounceStretch = null; // { rotation, intensity, timestamp } for squash/stretch
 
     // Track creation time for pop-in animation
     this.gelatoCreationTime = null;
@@ -458,6 +459,19 @@ export class GameCore {
             }
           }
         }
+        
+        // Capture bounce direction for squash/stretch effect
+        // Use the NEW velocity after bounce (the direction ball is launched)
+        const newVelocityX = mascotBody.velocity.x;
+        const newVelocityY = mascotBody.velocity.y;
+        const bounceSpeed = Math.sqrt(newVelocityX * newVelocityX + newVelocityY * newVelocityY);
+        const bounceAngle = Math.atan2(newVelocityY, newVelocityX);
+        
+        this.bounceStretch = {
+          rotation: bounceAngle - Math.PI / 2, // Align Y-axis with launch direction
+          intensity: Math.min(bounceSpeed / 15, 1), // Normalize to 0-1
+          timestamp: currentTime,
+        };
 
         // Apply spring boost perpendicular to Gelato
         const angle = gelatoBody.angle;
@@ -774,38 +788,34 @@ export class GameCore {
   }
 
   /**
-   * Get squash and stretch values for mascot based on velocity
-   * Returns { scaleX, scaleY, rotation } for directional deformation
+   * Get squash and stretch values for mascot based on bounce impact
+   * Returns { scaleX, scaleY, rotation } that decays over time
    */
   getSquashStretch() {
-    const velocityY = this.mascot.velocity.y;
-    const velocityX = this.mascot.velocity.x;
-
-    // Calculate total speed for squash/stretch intensity
-    const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-    const maxSpeed = 15; // Threshold for maximum squash/stretch
-    const intensity = Math.min(speed / maxSpeed, 1); // 0 to 1
-
-    // No deformation if moving too slowly
-    if (speed < 1) {
+    if (!this.bounceStretch) {
       return { scaleX: 1, scaleY: 1, rotation: 0 };
     }
 
-    // Calculate angle of motion (in radians)
-    // atan2(y, x) gives angle from horizontal axis
-    // We want rotation where scaleY stretches along motion direction
-    const motionAngle = Math.atan2(velocityY, velocityX);
-    
-    // Convert to rotation for Skia (need to subtract π/2 to align Y-axis with motion)
-    const rotation = motionAngle - Math.PI / 2;
+    const currentTime = Date.now();
+    const timeSinceBounce = currentTime - this.bounceStretch.timestamp;
+    const decayDuration = 300; // Stretch fades back to circle over 300ms
 
-    // Stretch along direction of motion
-    const stretchAmount = 0.15 * intensity; // Max 15% deformation
+    // Decay multiplier (1.0 at bounce → 0.0 after 300ms)
+    const decay = Math.max(0, 1 - (timeSinceBounce / decayDuration));
+
+    if (decay <= 0) {
+      // Stretch has completely decayed
+      this.bounceStretch = null;
+      return { scaleX: 1, scaleY: 1, rotation: 0 };
+    }
+
+    // Apply stretch with decay
+    const stretchAmount = 0.15 * this.bounceStretch.intensity * decay;
     
     return {
-      scaleX: 1 - stretchAmount * 0.7,  // Narrower (perpendicular to motion)
-      scaleY: 1 + stretchAmount,         // Longer (along motion direction)
-      rotation: rotation,                // Align with velocity
+      scaleX: 1 - stretchAmount * 0.7,  // Narrower (perpendicular to launch)
+      scaleY: 1 + stretchAmount,         // Longer (along launch direction)
+      rotation: this.bounceStretch.rotation, // Stays fixed at launch angle
     };
   }
 
