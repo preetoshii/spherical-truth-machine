@@ -214,7 +214,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
             }}
             pointerEvents="auto"
           >
-            <Feather name="type" size={24} color="#ffffff" />
+            <Feather name="type" size={24} color={primaryColor.current} />
           </Pressable>
         )}
         
