@@ -291,6 +291,9 @@ export function GameApp() {
    * This complements the immersive mode in MainActivity.kt which blocks edge-swipe gestures.
    * The hardware back button is still accessible, so we intercept it here to prevent
    * accidental exits during gameplay. The admin portal can still use the back button normally.
+   * 
+   * Note: iOS edge swipe prevention is handled natively in GameViewController.swift
+   * which defers system gestures on all screen edges using preferredScreenEdgesDeferringSystemGestures.
    */
   useEffect(() => {
     if (Platform.OS === 'android') {
