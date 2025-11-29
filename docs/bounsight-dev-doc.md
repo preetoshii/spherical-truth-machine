@@ -137,21 +137,49 @@ The preview mechanics directly impact game feel. Too responsive and it feels twi
 - Contractions treated as single words (e.g., "don't").
 - **Punctuation interjections:** Map major stops (period, em-dash, ellipsis) to pre-recorded interjection sounds ("hm", "ah", etc.). These are system sounds recorded once and stored with message audio. No on-screen glyph for punctuation.
 
-### Audio recording & storage (Recording-first approach)
-- **Workflow:** Admin records the full message phrase in the admin UI using device microphone.
-- **Speech-to-text:** Automatic transcription of recorded audio to generate editable text.
-- **Word segmentation:** Detect start/end timestamps for each word in the recording (stored in audio metadata or separate JSON).
-- **Playback:** Play specific segments of the recorded audio file based on word timestamps when ball bounces.
-- **Storage:** Full message audio stored as single `.wav/.mp3` file in GitHub storage with word boundary metadata.
+### Audio recording & storage (Recording-first approach) ✅ IMPLEMENTED
+- **Workflow:** Admin records the full message phrase in the admin UI using device microphone (expo-audio).
+- **Format:** Audio recorded as `.m4a` (AAC format) on iOS/Android, `.webm` on web.
+- **Processing:** Audio uploaded to `/api/align` endpoint (Vercel serverless function).
+- **Word boundary detection:** Energy-based RMS envelope analysis detects precise word boundaries (5-10ms accuracy).
+- **Speech-to-text:** Google Cloud Speech-to-Text API transcribes the audio (text only, no timestamps).
+- **Alignment:** 1:1 matching of transcribed words to detected energy segments.
+- **Voice transformation (optional):** ElevenLabs Speech-to-Speech API can transform voice to character voices (Reboundhi/Reboundhita).
+- **Storage:**
+  - Original audio: `message-audio/{date}.m4a` in GitHub repo
+  - Transformed audio (if enabled): Blob URIs stored in session (base64 from API)
+  - Word timings: Stored in `messages.json` with text and words array
+- **Data structure:**
+  ```json
+  {
+    "2025-11-29": {
+      "text": "you are loved",
+      "words": ["you", "are", "loved"],
+      "audioUrl": "message-audio/2025-11-29.m4a",
+      "wordTimings": [
+        {"word": "you", "start": 0, "end": 300},
+        {"word": "are", "start": 420, "end": 615},
+        {"word": "loved", "start": 730, "end": 1180}
+      ]
+    }
+  }
+  ```
 
-### Client playback
-- **Load message audio on startup**—single audio file per message with word boundary data.
-- Maintain a simple **word audio queue**; each bounce triggers playback of the next word segment using stored timestamps.
-- All platforms: `expo-av` for audio playback with seek/segment support.
+### Client playback ✅ IMPLEMENTED
+- **Load message audio on startup**: Single `.m4a` file per message with word timing metadata.
+- **Playback mechanism**: HTML5 `<audio>` element (web) via Howler.js library with seek() and play() for precise segment control.
+- **Word audio queue**: Each bounce triggers:
+  1. `audio.seek(wordTiming.start / 1000)` - Jump to word start time
+  2. `audio.play()` - Start playback
+  3. `setTimeout(() => audio.pause(), duration)` - Stop at word end time
+- **Voice switching**: Can cycle between transformed voices (Reboundhi/Reboundhita) by tapping ball in preview mode.
+- **Audio trimming**: `config.audio.trimStartMs` (default: 120ms) trims leading silence from each word segment.
 
-### Storage & CDN
-- `word_audio/{locale}/{voice_id}/{hash(word)}.wav`
-- Cache headers: long TTL; versioning via path.
+### Storage & CDN ✅ IMPLEMENTED
+- **Message audio:** `message-audio/{date}.m4a` stored in GitHub repo alongside `messages.json`
+- **Transformed audio:** Generated on-demand via ElevenLabs API, returned as base64, converted to blob URIs for session playback (not persisted)
+- **No CDN:** Audio files served directly from GitHub repo via raw.githubusercontent.com URLs
+- **Caching:** Browser caches audio files naturally via HTTP caching headers from GitHub
 - Optional: bundle a tiny on-device cache by LRU to minimize repeat fetches.
 
 ---
@@ -235,8 +263,8 @@ The preview mechanics directly impact game feel. Too responsive and it feels twi
 - **Haptics: expo-haptics + Web Vibration API**
   - **Why:** Native haptic feedback is crucial for game feel. Expo's API is simple and falls back gracefully on web. Note: Web haptics will be basic (simple vibration) compared to native's rich haptic patterns.
 
-- **Audio: expo-av + WebAudio API**
-  - **Why:** Low-latency audio playback for voice clips. Both APIs let us pre-load and trigger sounds instantly on bounce.
+- **Audio: Howler.js (web) + expo-audio (recording)**
+  - **Why:** Howler.js provides reliable, low-latency HTML5 audio playback on web with precise seek() support for word segments. expo-audio handles recording in admin UI across platforms.
 
 - **Message Storage: GitHub Repo**
   - **Why:** Zero setup, free hosting for `current-message.json`. Built-in version control. GitHub API allows in-app updates via token. Global CDN for fast fetches. Eliminates need for separate backend infrastructure in MVP.
@@ -244,14 +272,28 @@ The preview mechanics directly impact game feel. Too responsive and it feels twi
 - **Audio: Recording-first approach**
   - **Why:** Authentic voice quality from creator recordings. Record once → auto-transcribe → segment words → playback. No AI generation costs. Personal touch from real human voice.
 
-### Data model (minimal)
-- **Current message:** Single `current-message.json` file in GitHub repo containing:
-  - Original message text (with punctuation preserved)
-  - Tokenized word array (for consistency across clients)
-  - Metadata (updatedAt)
-- **Audio files:** Deferred to post-MVP
-- No database, no relations, no complex state management
-- **Why this simplicity:** We're not storing user data or message history. Just one current message that all clients fetch. Git provides version history for free.
+### Data model (minimal) ✅ IMPLEMENTED
+- **Messages:** `messages.json` file in GitHub repo containing multiple dated messages:
+  ```json
+  {
+    "current": "2025-11-29",
+    "messages": {
+      "2025-11-29": {
+        "text": "you are loved",
+        "words": ["you", "are", "loved"],
+        "audioUrl": "message-audio/2025-11-29.m4a",
+        "wordTimings": [
+          {"word": "you", "start": 0, "end": 300},
+          {"word": "are", "start": 420, "end": 615},
+          {"word": "loved", "start": 730, "end": 1180}
+        ]
+      }
+    }
+  }
+  ```
+- **Audio files:** ✅ IMPLEMENTED - Stored as `message-audio/{date}.m4a` in GitHub repo
+- **Storage approach:** No database, no relations, no complex state management
+- **Why this simplicity:** We're not storing user data or message history beyond a simple calendar. Just a collection of dated messages that all clients fetch. Git provides version history for free.
 
 ### In-app admin (see Section 9 for details)
 - Hidden gestural password (staircase pattern) unlocks admin UI

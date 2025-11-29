@@ -169,7 +169,7 @@ Or view logs in the Vercel dashboard:
 
 ## Redeploying After Changes
 
-Whenever you make changes to `/api/align.ts`:
+Whenever you make changes to `/api/align.js`:
 
 ```bash
 vercel --prod
@@ -182,7 +182,7 @@ This redeploys with your latest changes.
 Once deployed and working:
 1. Test with various recordings
 2. Compare accuracy to old Google STT approach
-3. Tune the parameters in `/api/align.ts` if needed (MIN_GAP_MS, MIN_SEG_MS, etc.)
+3. Tune the parameters in `/api/align.js` if needed (MIN_GAP_MS, MIN_SEG_MS, etc.)
 4. Integrate into your main recording flow
 
 ## Summary
