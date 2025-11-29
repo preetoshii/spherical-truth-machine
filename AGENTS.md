@@ -69,3 +69,4 @@ import { Button } from '../components/Button';
 
 - Don't commit secrets (.env files)
 - Link to docs/ for design decisions, don't duplicate them here
+- If developer can't find a file I mention, check `.vscode/settings.json` - some folders are hidden for cleaner UX
