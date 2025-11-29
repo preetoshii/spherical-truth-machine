@@ -3,14 +3,14 @@ import { StyleSheet, View, Dimensions, Pressable, Text, Animated, ActivityIndica
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 import { GameRenderer } from './GameRenderer';
-import { GameCore } from '../core/GameCore';
+import { GameCore } from './GameCore';
 import { config } from '../../config';
-import { AdminPortal } from '../../admin/AdminPortal';
-import { playSound } from '../../utils/audio';
-import { fetchMessages } from '../../admin/githubApi';
-import { Button } from '../../components/Button';
-import { triggerDrawingHaptic, triggerHaptic } from '../../utils/haptics';
-import { DebugMenu } from '../../components/DebugMenu';
+import { AdminPortal } from '../admin-portal/AdminPortal';
+import { playSound } from '../../shared/utils/audio';
+import { fetchMessages } from '../../shared/services/githubApi';
+import { Button } from '../../shared/components/Button';
+import { triggerDrawingHaptic, triggerHaptic } from '../../shared/utils/haptics';
+import { DebugMenu } from '../../shared/components/DebugMenu';
 
 /**
  * GameApp - Main game component

@@ -1,5 +1,11 @@
 # Audio Recording System: Design & Requirements Document
 
+> **⚠️ HISTORICAL DOCUMENT**
+>
+> This document was created during development to design the audio recording system. Now that the system is implemented, see **[README.md](../README.md)** (specifically the "Message System" and "Admin Portal" sections) for current documentation.
+>
+> This file is kept for historical reference only.
+
 This document was made to provide a clear idea of the implementation of the design and requirements document, using the audio-recording-intentions.md as the source of the questions to answer.
 
 

@@ -1,5 +1,13 @@
 # Bounsight – Admin Portal Design Document
 
+> **⚠️ HISTORICAL DOCUMENT**
+>
+> This document was created during development to design the admin portal. Now that the portal is implemented, see **[README.md](../README.md)** (specifically the "Admin Portal" and "Message Management" sections) for current documentation.
+>
+> **Note:** The implemented version uses horizontal card expansion rather than full-screen fade transitions described here. See actual implementation in [src/admin/](../src/admin/) for details.
+>
+> This file is kept for historical reference only.
+
 ## Overview
 
 The admin portal is a minimal, elegant interface for scheduling and managing daily affirmation messages. It prioritizes thoughtful composition and preview-before-publish workflow while maintaining Bounsight's minimalist aesthetic.

@@ -4,8 +4,8 @@ import { Feather } from '@expo/vector-icons';
 import { CalendarView } from './CalendarView';
 import { PreviewMode } from './PreviewMode';
 import { Confirmation } from './Confirmation';
-import { fetchMessages, saveMessage as saveMessageToGitHub } from './githubApi';
-import { playSound } from '../utils/audio';
+import { fetchMessages, saveMessage as saveMessageToGitHub } from '../../shared/services/githubApi';
+import { playSound } from '../../shared/utils/audio';
 
 /**
  * AdminPortal - Root component for admin interface

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { playSound } from '../utils/audio';
+import { playSound } from '../../shared/utils/audio';
 
 /**
  * Confirmation - Send Now confirmation dialog

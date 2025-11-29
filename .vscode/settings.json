@@ -1,23 +1,54 @@
 {
   "files.exclude": {
+    // Build & dependencies (never manually edit)
     "**/.git": true,
     "**/.expo": true,
     "**/node_modules": true,
     "**/dist": true,
     "**/android": true,
     "**/ios": true,
+
+    // Package management (use npm commands instead)
+    "**/package-lock.json": true,
+
+    // Config files (rarely need to touch)
+    "**/babel.config.js": true,
+    "**/metro.config.js": true,
+    "**/tsconfig.json": true,
+    "**/vercel.json": true,
+    "**/app.json": true,
+    "**/package.json": true,
+
+    // Vercel (managed by CLI)
     "**/.vercel": true,
-    "**/.DS_Store": true,
+    "**/.vercelignore": true,
+
+    // AI agent config (AGENTS.md is single source)
+    "**/.claude": true,
     "**/CLAUDE.md": true,
     "**/.cursorrules": true,
-    "**/.cursor": true
+    "**/.cursor": true,
+
+    // Native modules (rarely edit)
+    "**/modules": true,
+
+    // Scripts & misc
+    "**/scripts": true,
+    "**/.DS_Store": true,
+
+    // Root config files (managed by tools)
+    "**/.gitignore": true,
+    "**/index.js": true
   },
   "search.exclude": {
     "**/node_modules": true,
     "**/dist": true,
     "**/.expo": true,
     "**/android": true,
-    "**/ios": true
+    "**/ios": true,
+    "**/package-lock.json": true,
+    "**/.vercel": true,
+    "**/.claude": true
   },
   "files.watcherExclude": {
     "**/.git/objects/**": true,
@@ -26,6 +57,7 @@
     "**/dist/**": true,
     "**/.expo/**": true,
     "**/android/**": true,
-    "**/ios/**": true
+    "**/ios/**": true,
+    "**/.vercel/**": true
   }
 }

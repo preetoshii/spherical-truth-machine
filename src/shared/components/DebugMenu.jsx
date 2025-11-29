@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView, Platform } from 'react-native';
-import { config } from '../config';
+import { config } from '../../config';
 import { triggerHaptic } from '../utils/haptics';
 
 export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, fpsCap, setFpsCap, showFps, setShowFps, primaryColor = '#FFFFFF' }) {

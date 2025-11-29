@@ -1,5 +1,5 @@
 import { createAudioPlayer } from 'expo-audio';
-import { config } from '../config';
+import { config } from '../../config';
 import { triggerHaptic } from './haptics';
 
 // Sound player cache
@@ -28,15 +28,15 @@ function loadSound(name, source, volume = 1.0) {
 export async function playSound(name) {
   try {
     const soundMap = {
-      'back-button': require('../sfx/back-button.wav'),
-      'card-slide': require('../sfx/card-slide.wav'),
-      'gelato-create': require('../sfx/gelato-create.wav'),
-      'gelato-bounce': require('../sfx/gelato-bounce.wav'),
-      'loss': require('../sfx/loss.wav'),
-      'preview': require('../sfx/preview.wav'),
-      'wall-bump': require('../sfx/wall-bump.wav'),
-      'click': require('../sfx/click.wav'),
-      'expand-card': require('../sfx/expand-card.wav'),
+      'back-button': require('../../assets/sfx/back-button.wav'),
+      'card-slide': require('../../assets/sfx/card-slide.wav'),
+      'gelato-create': require('../../assets/sfx/gelato-create.wav'),
+      'gelato-bounce': require('../../assets/sfx/gelato-bounce.wav'),
+      'loss': require('../../assets/sfx/loss.wav'),
+      'preview': require('../../assets/sfx/preview.wav'),
+      'wall-bump': require('../../assets/sfx/wall-bump.wav'),
+      'click': require('../../assets/sfx/click.wav'),
+      'expand-card': require('../../assets/sfx/expand-card.wav'),
     };
 
     const source = soundMap[name];

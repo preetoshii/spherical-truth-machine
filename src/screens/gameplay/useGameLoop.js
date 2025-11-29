@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { GameCore } from '../core/GameCore';
+import { GameCore } from './GameCore';
 
 /**
  * IMPORTANT: This hook contains the canonical game loop logic.

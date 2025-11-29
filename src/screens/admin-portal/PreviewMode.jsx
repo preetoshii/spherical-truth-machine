@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { GameRenderer } from '../game/render/GameRenderer';
-import { useGameLoop } from '../game/hooks/useGameLoop';
-import { config } from '../config';
-import { playSound } from '../utils/audio';
+import { GameRenderer } from '../gameplay/GameRenderer';
+import { useGameLoop } from '../gameplay/useGameLoop';
+import { config } from '../../config';
+import { playSound } from '../../shared/utils/audio';
 import { TextEditor } from './TextEditor';
 
 /**

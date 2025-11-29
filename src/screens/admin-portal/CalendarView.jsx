@@ -2,9 +2,9 @@ import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TextInput, Animated as RNAnimated } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, withDelay } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
-import { playSound } from '../utils/audio';
+import { playSound } from '../../shared/utils/audio';
 import { Pressable } from 'react-native';
-import { useHorizontalScroll } from '../utils/useHorizontalScroll';
+import { useHorizontalScroll } from '../../shared/utils/useHorizontalScroll';
 import { AudioRecorder } from './AudioRecorder';
 
 /**

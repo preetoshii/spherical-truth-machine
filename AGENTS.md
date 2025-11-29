@@ -5,12 +5,22 @@
 ## Commands
 
 ```bash
-npm run web              # Start web dev server (http://localhost:8081)
+npm run web              # Start web dev server (http://localhost:8082)
 npm run ios              # Start iOS (requires Xcode)
 npm run android          # Start Android (requires Android Studio)
 ```
 
-**Admin portal:** Open http://localhost:8081 → Press 'a' key → Click admin button (top-right)
+**Admin portal:** Open http://localhost:8082 → Press 'a' key → Click admin button (top-right)
+
+## Development Principles
+
+When making decisions, prioritize:
+- **Radical simplicity:** Every feature and line of code must justify its existence
+- **Lightweight everything:** Small bundles, minimal dependencies, fast load times
+- **Single source of truth:** One codebase, one physics engine, one set of constants
+- **No bloat:** The game is about bouncing and hearing words. Everything else is secondary.
+
+**If a request or approach seems to conflict with these principles, ask the developer before proceeding.**
 
 ## Tech Stack
 
@@ -34,13 +44,11 @@ player.play();
 
 ## Project Structure
 
-See [src/README.md](src/README.md) for detailed navigation.
-
 **Key files:**
 - `src/config.js` - All tunables (physics, colors, timing)
-- `src/game/core/GameCore.js` - Physics engine
-- `src/game/render/GameApp.jsx` - Main game
-- `src/admin/AdminPortal.jsx` - Admin interface
+- `src/screens/gameplay/GameCore.js` - Physics engine
+- `src/screens/gameplay/GameApp.jsx` - Main game
+- `src/screens/admin-portal/AdminPortal.jsx` - Admin interface
 
 ## Code Style
 
@@ -54,7 +62,7 @@ export function MyComponent() {
 
 Use Button component for all interactive buttons:
 ```js
-import { Button } from '../components/Button';
+import { Button } from '../../shared/components/Button';
 <Button onPress={() => {}}>
   <Text>Click me</Text>
 </Button>

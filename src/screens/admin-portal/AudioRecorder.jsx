@@ -3,9 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'rea
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, withSpring, Easing } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { useAudioRecorder, useAudioRecorderState, RecordingPresets, useAudioPlayer } from 'expo-audio';
-import { startRecording, stopRecording, formatDuration } from '../services/audioRecordingService';
-import { getWordTimestamps } from '../services/wordTimestampsService';
-import { config } from '../config';
+import { startRecording, stopRecording, formatDuration } from '../../shared/services/audioRecordingService';
+import { getWordTimestamps } from '../../shared/services/wordTimestampsService';
+import { config } from '../../config';
 
 /**
  * AudioRecorder Component

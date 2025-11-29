@@ -1,8 +1,8 @@
 import Matter from 'matter-js';
 import { config } from '../../config';
-import { playSound } from '../../utils/audio';
+import { playSound } from '../../shared/utils/audio';
 import { createAudioPlayer } from 'expo-audio';
-import { ParallaxManager } from '../parallax/ParallaxManager';
+import { ParallaxManager } from '../../shared/effects/ParallaxManager';
 
 /**
  * GameCore - Physics engine using Matter.js

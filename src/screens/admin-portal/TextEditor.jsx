@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { playSound } from '../utils/audio';
+import { playSound } from '../../shared/utils/audio';
 
 /**
  * TextEditor - Overlay for editing transcribed text word by word

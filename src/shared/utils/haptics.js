@@ -1,6 +1,6 @@
 import { Platform, NativeModules } from 'react-native';
 import * as ExpoHaptics from 'expo-haptics';
-import { config } from '../config';
+import { config } from '../../config';
 
 const { CustomHaptics } = NativeModules;
 

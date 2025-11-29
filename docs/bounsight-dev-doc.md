@@ -1,5 +1,11 @@
 # Bounsight – Design & Dev Document (MVP → V1)
 
+> **⚠️ HISTORICAL DOCUMENT**
+>
+> This document was created during development to guide implementation. Now that features are built, see **[README.md](../README.md)** for current documentation describing what exists and how it works.
+>
+> This file is kept for historical reference only.
+
 **One-liner:** A minimalist, cross-platform bounce game that reveals a short, insightful message **one word per bounce**. You draw temporary spring lines; the mascot (a falling ball/character) hits them, speaks the next word, and the line appears on screen with haptics. Messages are pushed from a simple admin page and sync to Web, iOS, and Android.
 
 This document is a blueprint for emergent gameplay and development feel, not a rigid spec. The architecture is designed to support rapid iteration and tuning until the vibe is right.
