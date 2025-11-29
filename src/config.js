@@ -4,6 +4,59 @@
  * Values are TBD and exploratory - will emerge through playtesting.
  */
 
+/**
+ * Calculate responsive size based on screen width
+ * Uses linear interpolation between mobile and desktop reference sizes
+ * This ensures the game feels right on both mobile and desktop
+ * @param {number} screenWidth - Current screen width in pixels
+ * @param {number} mobileSize - Size at mobile reference width (375px)
+ * @param {number} desktopSize - Size at desktop reference width (1920px)
+ * @returns {number} - Scaled size
+ */
+export function getResponsiveSize(screenWidth, mobileSize, desktopSize) {
+  const mobileRef = 375;  // iPhone standard width
+  const desktopRef = 1920; // Common desktop width
+  
+  // Clamp screen width to reasonable bounds
+  const clampedWidth = Math.max(320, Math.min(screenWidth, 2560));
+  
+  // Linear interpolation
+  if (clampedWidth <= mobileRef) {
+    return mobileSize;
+  } else if (clampedWidth >= desktopRef) {
+    return desktopSize;
+  } else {
+    // Interpolate between mobile and desktop
+    const ratio = (clampedWidth - mobileRef) / (desktopRef - mobileRef);
+    return mobileSize + (desktopSize - mobileSize) * ratio;
+  }
+}
+
+/**
+ * Get responsive config values based on screen width
+ * Returns mascot radius and gelato maxLength that scale appropriately
+ * Compatible with existing resize system - walls already scale with dimensions
+ * @param {number} screenWidth - Current screen width in pixels
+ * @returns {Object} - { mascotRadius, gelatoMaxLength }
+ */
+export function getResponsiveConfig(screenWidth) {
+  // Mobile (375px): radius 30, maxLength ~200 (user says 275 feels too long on mobile)
+  // Desktop (1920px): radius 45, maxLength should scale proportionally with ball
+  // Scale gelato proportionally to ball radius to maintain consistent feel
+  const mascotRadius = getResponsiveSize(screenWidth, 30, 45);
+  const radiusScale = mascotRadius / 30; // Scale factor relative to mobile (1.0 on mobile, 1.5 on desktop)
+  
+  // Scale gelato proportionally to ball: base 200 * scale factor
+  // This ensures gelato feels right relative to ball size at all screen sizes
+  // Mobile: 200, Desktop: 200 * 1.5 = 300
+  const gelatoMaxLength = 200 * radiusScale;
+  
+  return {
+    mascotRadius,
+    gelatoMaxLength: Math.round(gelatoMaxLength),
+  };
+}
+
 export const config = {
   // === AUDIO SYNC ===
   audio: {
@@ -19,19 +72,11 @@ export const config = {
 
     // Mascot (ball) physics properties
     mascot: {
-      radius: 30,             // Ball radius in pixels
+      radius: 45,             // Ball radius in pixels (1.5x larger for better face visibility)
       restitution: 0.6,       // Bounciness on collision with walls (0 = no bounce, 1 = perfect bounce)
       friction: 0.01,         // Surface friction when sliding (0 = frictionless, 1 = sticky)
       frictionAir: 0.005,     // Air resistance affecting terminal velocity (lower = falls faster)
       mass: 1,                // Mass affects force calculations (default: 1)
-      
-      // Squash/stretch deformation on bounce (UNDER CONSTRUCTION - WORKS WEIRDLY)
-      squashStretch: {
-        enabled: false,        // Enable/disable bounce deformation
-        amount: 0.7,         // Deformation intensity (0.0-0.5, higher = more stretch)
-        holdTimeMs: 10,      // Time to hold stretched shape before relaxing (ms)
-        decayTimeMs: 100,     // Time to decay back to circle after hold (ms)
-      },
       
       // Face (eyes and mouth)
       face: {
@@ -101,8 +146,9 @@ export const config = {
 
   // === GELATO (SPRINGBOARDS) ===
   gelato: {
-    maxLength: 275,           // Maximum line length in pixels (enforced during drawing)
+    maxLength: 300,           // Maximum line length in pixels (fallback, actual value is responsive)
     thickness: 4,             // Visual line thickness in pixels
+    previewThickness: 6,      // Preview dots thickness (separate from actual gelato)
     springBoost: 1.25,        // Trampoline bounce multiplier (1.0 = normal physics, 1.25 = 125% bounce back)
     maxActiveGelatos: 1,      // How many Gelatos can exist simultaneously (currently: 1)
     color: '#FFFFFF',         // Line color (hex or rgba)

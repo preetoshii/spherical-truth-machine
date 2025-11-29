@@ -9,7 +9,7 @@ import { ParallaxManager } from '../../shared/effects/ParallaxManager';
  * Handles all physics simulation, collision detection, and game state
  */
 export class GameCore {
-  constructor(width, height, customMessage = null, audioUri = null, wordTimings = null, wordAudioSegments = null) {
+  constructor(width, height, customMessage = null, audioUri = null, wordTimings = null, wordAudioSegments = null, responsiveConfig = null) {
     // Create Matter.js engine
     this.engine = Matter.Engine.create();
     this.world = this.engine.world;
@@ -20,6 +20,10 @@ export class GameCore {
     // Store dimensions
     this.width = width;
     this.height = height;
+    
+    // Store responsive config (if provided, overrides static config values)
+    this.mascotRadius = responsiveConfig?.mascotRadius || config.physics.mascot.radius;
+    this.gelatoMaxLength = responsiveConfig?.gelatoMaxLength || config.gelato.maxLength;
 
     // Store custom message for preview mode
     this.customMessage = customMessage;
@@ -46,8 +50,8 @@ export class GameCore {
     // Create mascot (starts above screen for entrance animation)
     this.mascot = Matter.Bodies.circle(
       width / 2,
-      -config.physics.mascot.radius * 2, // Start above screen
-      config.physics.mascot.radius,
+      -this.mascotRadius * 2, // Start above screen
+      this.mascotRadius,
       {
         restitution: config.physics.mascot.restitution,
         friction: config.physics.mascot.friction,
@@ -125,7 +129,6 @@ export class GameCore {
 
     // Track bounce impact for visual deformation
     this.bounceImpact = null; // { x, y, strength, timestamp }
-    this.bounceStretch = null; // { rotation, intensity, timestamp } for squash/stretch
 
     // Track creation time for pop-in animation
     this.gelatoCreationTime = null;
@@ -193,7 +196,7 @@ export class GameCore {
     }
 
     // Check for loss (ball fell below screen)
-    if (this.gameStarted && !this.hasLost && this.mascot.position.y > this.height + config.physics.mascot.radius * 2) {
+    if (this.gameStarted && !this.hasLost && this.mascot.position.y > this.height + this.mascotRadius * 2) {
       this.handleLoss();
       return; // Skip physics update on loss frame
     }
@@ -217,7 +220,7 @@ export class GameCore {
       // Ease-out cubic easing for smooth deceleration
       const easeProgress = 1 - Math.pow(1 - progress, 3);
 
-      const startY = -config.physics.mascot.radius * 2;
+      const startY = -this.mascotRadius * 2;
       const newY = startY + (this.mascotTargetY - startY) * easeProgress;
 
       Matter.Body.setPosition(this.mascot, {
@@ -399,7 +402,7 @@ export class GameCore {
     // Reset ball to starting position (above screen)
     Matter.Body.setPosition(this.mascot, {
       x: this.width / 2,
-      y: -config.physics.mascot.radius * 2,
+      y: -this.mascotRadius * 2,
     });
 
     // Clear velocity (gravity will be disabled by !gameStarted check)
@@ -460,19 +463,6 @@ export class GameCore {
           }
         }
         
-        // Capture bounce direction for squash/stretch effect
-        // Use the NEW velocity after bounce (the direction ball is launched)
-        const newVelocityX = mascotBody.velocity.x;
-        const newVelocityY = mascotBody.velocity.y;
-        const bounceSpeed = Math.sqrt(newVelocityX * newVelocityX + newVelocityY * newVelocityY);
-        const bounceAngle = Math.atan2(newVelocityY, newVelocityX);
-        
-        this.bounceStretch = {
-          rotation: bounceAngle - Math.PI / 2, // Align Y-axis with launch direction
-          intensity: Math.min(bounceSpeed / 15, 1), // Normalize to 0-1
-          timestamp: currentTime,
-        };
-
         // Apply spring boost perpendicular to Gelato
         const angle = gelatoBody.angle;
         const normalX = -Math.sin(angle); // Perpendicular to line
@@ -481,7 +471,7 @@ export class GameCore {
         // Calculate how hard the ball is hitting the Gelato (dot product)
         const currentVelocity = mascotBody.velocity;
         const impactSpeed = currentVelocity.x * normalX + currentVelocity.y * normalY;
-
+        
         // Scale springBoost inversely with timeScale to maintain consistent bounce height
         // When time runs faster, ball hits harder, so we need less boost to reach same height
         const effectiveSpringBoost = config.gelato.springBoost / this.timeScale;
@@ -530,6 +520,17 @@ export class GameCore {
       x: this.mascot.position.x,
       y: this.mascot.position.y,
     };
+  }
+  
+  /**
+   * Get mascot radius (responsive)
+   */
+  getMascotRadius() {
+    return this.mascotRadius;
+  }
+
+  getGelatoMaxLength() {
+    return this.gelatoMaxLength;
   }
 
   /**
@@ -631,9 +632,9 @@ export class GameCore {
     const dy = endY - startY;
     const length = Math.sqrt(dx * dx + dy * dy);
 
-    if (length > config.gelato.maxLength) {
+    if (length > this.gelatoMaxLength) {
       // Clamp to max length
-      const scale = config.gelato.maxLength / length;
+      const scale = this.gelatoMaxLength / length;
       endX = startX + dx * scale;
       endY = startY + dy * scale;
     }
@@ -649,12 +650,18 @@ export class GameCore {
     const angle = Math.atan2(endY - startY, endX - startX);
     const gelatoLength = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
 
+    // Calculate responsive thickness (scale with mascot radius)
+    // Base thickness is 4px at 30px radius, scale proportionally
+    const baseThickness = 4;
+    const baseRadius = 30;
+    const responsiveThickness = (baseThickness / baseRadius) * this.mascotRadius;
+
     // Create static rectangular body for the Gelato
     this.gelato = Matter.Bodies.rectangle(
       centerX,
       centerY,
       gelatoLength,
-      config.gelato.thickness,
+      responsiveThickness,
       {
         isStatic: true,
         angle: angle,
@@ -788,48 +795,6 @@ export class GameCore {
   }
 
   /**
-   * Get squash and stretch values for mascot based on bounce impact
-   * Returns { scaleX, scaleY, rotation } with hold + decay phases
-   */
-  getSquashStretch() {
-    if (!this.bounceStretch || !config.physics.mascot.squashStretch.enabled) {
-      return { scaleX: 1, scaleY: 1, rotation: 0 };
-    }
-
-    const currentTime = Date.now();
-    const timeSinceBounce = currentTime - this.bounceStretch.timestamp;
-    const holdTime = config.physics.mascot.squashStretch.holdTimeMs;
-    const decayTime = config.physics.mascot.squashStretch.decayTimeMs;
-    const totalDuration = holdTime + decayTime;
-
-    // Phase 1: Hold stretched shape (0ms to holdTimeMs)
-    // Phase 2: Decay to circle (holdTimeMs to holdTimeMs + decayTimeMs)
-    let stretchMultiplier = 1.0;
-    
-    if (timeSinceBounce < holdTime) {
-      // Phase 1: Hold at full stretch
-      stretchMultiplier = 1.0;
-    } else if (timeSinceBounce < totalDuration) {
-      // Phase 2: Decay from 1.0 to 0.0
-      const decayProgress = (timeSinceBounce - holdTime) / decayTime;
-      stretchMultiplier = 1.0 - decayProgress;
-    } else {
-      // Stretch has completely finished
-      this.bounceStretch = null;
-      return { scaleX: 1, scaleY: 1, rotation: 0 };
-    }
-
-    // Apply stretch with multiplier
-    const stretchAmount = config.physics.mascot.squashStretch.amount * this.bounceStretch.intensity * stretchMultiplier;
-    
-    return {
-      scaleX: 1 - stretchAmount * 0.7,  // Narrower (perpendicular to launch)
-      scaleY: 1 + stretchAmount,         // Longer (along launch direction)
-      rotation: this.bounceStretch.rotation, // Stays fixed at launch angle
-    };
-  }
-
-  /**
    * Get Gelato line data for rendering
    */
   getGelatoLineData() {
@@ -838,10 +803,45 @@ export class GameCore {
 
   /**
    * Update boundaries when screen size changes
+   * Also updates responsive sizing for ball and gelatos
    */
-  updateBoundaries(width, height) {
+  updateBoundaries(width, height, responsiveConfig = null) {
     this.width = width;
     this.height = height;
+    
+    // Update responsive config if provided (for resize events)
+    if (responsiveConfig) {
+      this.mascotRadius = responsiveConfig.mascotRadius;
+      this.gelatoMaxLength = responsiveConfig.gelatoMaxLength;
+      
+      // Destroy existing gelato if it exists (it will be recreated with new size on next draw)
+      if (this.gelato) {
+        Matter.World.remove(this.world, this.gelato);
+        this.gelato = null;
+        this.gelatoLineData = null;
+      }
+      
+      // Update mascot body radius (requires recreating the body)
+      const currentPos = this.mascot.position;
+      const currentVel = this.mascot.velocity;
+      Matter.World.remove(this.world, this.mascot);
+      
+      this.mascot = Matter.Bodies.circle(
+        currentPos.x,
+        currentPos.y,
+        this.mascotRadius,
+        {
+          restitution: config.physics.mascot.restitution,
+          friction: config.physics.mascot.friction,
+          frictionAir: config.physics.mascot.frictionAir,
+          mass: config.physics.mascot.mass,
+          label: 'mascot',
+        }
+      );
+      
+      Matter.Body.setVelocity(this.mascot, currentVel);
+      Matter.World.add(this.world, this.mascot);
+    }
 
     // Remove old boundaries
     this.obstacles.forEach(obstacle => {

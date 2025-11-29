@@ -49,7 +49,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
     gelatoCreationTime,
     currentWord,
     mascotVelocityY,
-    squashStretch,
+    mascotRadius,
     lines,
     setLines,
     trail,
@@ -115,7 +115,9 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
     const newPath = [...currentPath, { x: touch.pageX, y: touch.pageY }];
 
     // Trim path if it exceeds max length (sliding start)
-    const trimmedPath = trimPathToMaxLength(newPath, config.gelato.maxLength);
+    // Use responsive max length from gameCore
+    const maxLength = gameCore.current ? gameCore.current.getGelatoMaxLength() : config.gelato.maxLength;
+    const trimmedPath = trimPathToMaxLength(newPath, maxLength);
 
     setCurrentPath(trimmedPath);
   };
@@ -204,7 +206,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
           gelatoCreationTime={gelatoCreationTime.current}
           currentWord={currentWord.current}
           mascotVelocityY={mascotVelocityY.current}
-          squashStretch={squashStretch.current}
+          mascotRadius={mascotRadius.current}
           parallaxStars={parallaxStars}
           trail={trail.current}
           trailEndFade={0}

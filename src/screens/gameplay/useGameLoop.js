@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { GameCore } from './GameCore';
+import { getResponsiveConfig } from '../../config';
 
 /**
  * IMPORTANT: This hook contains the canonical game loop logic.
@@ -29,7 +30,6 @@ export function useGameLoop(dimensions, customMessage = null, audioUri = null, w
   const gelatoCreationTime = useRef(null);
   const currentWord = useRef(null);
   const mascotVelocityY = useRef(0);
-  const squashStretch = useRef({ scaleX: 1, scaleY: 1 });
   const lastGelatoData = useRef(null);
   const trail = useRef([]);
   const primaryColor = useRef('#FFFFFF');
@@ -43,6 +43,9 @@ export function useGameLoop(dimensions, customMessage = null, audioUri = null, w
 
   // Initialize game loop
   useEffect(() => {
+    // Calculate responsive config based on screen width
+    const responsiveConfig = getResponsiveConfig(dimensions.width);
+    
     // Create GameCore instance
     gameCore.current = new GameCore(
       dimensions.width,
@@ -50,7 +53,8 @@ export function useGameLoop(dimensions, customMessage = null, audioUri = null, w
       customMessage,
       audioUri,
       wordTimings,
-      wordAudioSegments
+      wordAudioSegments,
+      responsiveConfig
     );
 
     let animationFrameId;
@@ -93,7 +97,7 @@ export function useGameLoop(dimensions, customMessage = null, audioUri = null, w
       gelatoCreationTime.current = gameCore.current.getGelatoCreationTime();
       currentWord.current = gameCore.current.getCurrentWord();
       mascotVelocityY.current = gameCore.current.getMascotVelocityY();
-      squashStretch.current = gameCore.current.getSquashStretch();
+      mascotRadius.current = gameCore.current.getMascotRadius();
       const trailData = gameCore.current.getTrail();
       trail.current = trailData.trail;
       primaryColor.current = gameCore.current.getPrimaryColor();
@@ -130,7 +134,7 @@ export function useGameLoop(dimensions, customMessage = null, audioUri = null, w
     gelatoCreationTime,
     currentWord,
     mascotVelocityY,
-    squashStretch,
+    mascotRadius,
     lines,
     setLines,
     trail,

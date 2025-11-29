@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 import { GameRenderer } from './GameRenderer';
 import { GameCore } from './GameCore';
-import { config } from '../../config';
+import { config, getResponsiveConfig } from '../../config';
 import { AdminPortal } from '../admin-portal/AdminPortal';
 import { playSound } from '../../shared/utils/audio';
 import { fetchMessages } from '../../shared/services/githubApi';
@@ -34,7 +34,7 @@ export function GameApp() {
   const lastGelatoData = useRef(null); // Track last gelato data to detect changes
   const currentWord = useRef(null); // Current word being displayed
   const mascotVelocityY = useRef(0); // Current Y velocity of mascot
-  const squashStretch = useRef({ scaleX: 1, scaleY: 1 }); // Squash/stretch for ball deformation
+  const mascotRadius = useRef(45); // Current mascot radius (responsive)
   const parallaxStars = useRef([]); // Parallax background stars
   const trail = useRef([]); // Motion trail behind ball
   const trailEndFade = useRef(0); // End fade progress (0 = visible, 1 = faded)
@@ -107,8 +107,11 @@ export function GameApp() {
 
   // Initialize physics once on mount
   useEffect(() => {
-    // Initialize physics with current dimensions
-    gameCore.current = new GameCore(dimensions.width, dimensions.height);
+    // Calculate responsive config based on screen width
+    const responsiveConfig = getResponsiveConfig(dimensions.width);
+    
+    // Initialize physics with current dimensions and responsive config
+    gameCore.current = new GameCore(dimensions.width, dimensions.height, null, null, null, null, responsiveConfig);
 
     let lastTime = performance.now();
     let lastFrameTime = performance.now(); // For FPS cap
@@ -150,7 +153,7 @@ export function GameApp() {
       gelatoCreationTime.current = gameCore.current.getGelatoCreationTime();
       currentWord.current = gameCore.current.getCurrentWord();
       mascotVelocityY.current = gameCore.current.getMascotVelocityY();
-      squashStretch.current = gameCore.current.getSquashStretch();
+      mascotRadius.current = gameCore.current.getMascotRadius();
       parallaxStars.current = gameCore.current.getParallaxStars();
       const trailData = gameCore.current.getTrail();
       trail.current = trailData.trail;
@@ -270,7 +273,9 @@ export function GameApp() {
 
       // Update boundaries live without destroying game
       if (gameCore.current) {
-        gameCore.current.updateBoundaries(newDimensions.width, newDimensions.height);
+        // Recalculate responsive config for new screen size
+        const responsiveConfig = getResponsiveConfig(newDimensions.width);
+        gameCore.current.updateBoundaries(newDimensions.width, newDimensions.height, responsiveConfig);
       }
     });
 
@@ -327,7 +332,9 @@ export function GameApp() {
     const newPath = [...currentPath, { x: touch.pageX, y: touch.pageY }];
 
     // Trim path if it exceeds max length (sliding start)
-    const trimmedPath = trimPathToMaxLength(newPath, config.gelato.maxLength);
+    // Use responsive max length from gameCore
+    const maxLength = gameCore.current ? gameCore.current.getGelatoMaxLength() : config.gelato.maxLength;
+    const trimmedPath = trimPathToMaxLength(newPath, maxLength);
 
     setCurrentPath(trimmedPath);
 
@@ -410,6 +417,11 @@ export function GameApp() {
           onResponderMove={handleTouchMove}
           onResponderRelease={handleTouchEnd}
         >
+          {/* Hidden preload element to force font to load before first word */}
+          <Text style={{ position: 'absolute', opacity: 0, fontFamily: 'FinlandRounded' }}>
+            preload
+          </Text>
+
           <GameRenderer
             width={dimensions.width}
             height={dimensions.height}
@@ -422,7 +434,7 @@ export function GameApp() {
             gelatoCreationTime={gelatoCreationTime.current}
             currentWord={currentWord.current}
             mascotVelocityY={mascotVelocityY.current}
-            squashStretch={squashStretch.current}
+            mascotRadius={mascotRadius.current}
             parallaxStars={parallaxStars.current}
             trail={trail.current}
             trailEndFade={trailEndFade.current}

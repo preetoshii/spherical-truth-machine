@@ -151,11 +151,155 @@ function WaveLetter({ letter, index, totalLetters, color }) {
 }
 
 /**
+ * ZogChanFace - Renders the ZogChan face from dzog-chan
+ * Based on the SVG paths from zog-chan-face.svg and zog-chan-speak.svg
+ */
+function ZogChanFace({ x, y, color, isSpeaking, radius }) {
+  // Scale factor to fit face inside ball
+  // Original SVG is 71x68, scale to fit in ball
+  const faceScale = (radius * 0.5) / 35.5; // Scale to ~50% of ball radius (medium size)
+  const faceWidth = 71 * faceScale;
+  const faceHeight = 68 * faceScale;
+  
+  // Center the face in the ball
+  const faceX = x - faceWidth / 2;
+  const faceY = y - faceHeight / 2;
+  
+  return (
+    <Group transform={[{ translateX: faceX }, { translateY: faceY }, { scale: faceScale }]}>
+      {/* Left eyebrow */}
+      <Path
+        path={(() => {
+          const p = Skia.Path.Make();
+          p.moveTo(2, 11.5946);
+          p.quadTo(6.16667, 8.59463, 16.4, 4.39463);
+          p.quadTo(24, 11.5946, 30, 17.0937);
+          p.quadTo(30, 27.0938, 30, 31.5938);
+          return p;
+        })()}
+        color={color}
+        style="stroke"
+        strokeWidth={3}
+        strokeCap="round"
+      />
+      
+      {/* Right eyebrow */}
+      <Path
+        path={(() => {
+          const p = Skia.Path.Make();
+          p.moveTo(69.0002, 13.0947);
+          p.quadTo(66.8335, 10.7613, 61.1002, 6.29467);
+          p.quadTo(55.5002, 7.09467, 48.5002, 8.09467);
+          p.quadTo(41.5002, 16.5938, 41.0002, 23.5938);
+          p.quadTo(40.6002, 29.1937, 40.8335, 33.5938);
+          p.quadTo(41.0002, 35.0938, 41.0002, 35.0938);
+          return p;
+        })()}
+        color={color}
+        style="stroke"
+        strokeWidth={3}
+        strokeCap="round"
+      />
+      
+      {/* Nose */}
+      <Path
+        path={(() => {
+          const p = Skia.Path.Make();
+          p.moveTo(25, 42);
+          p.quadTo(25.7755, 44.2618, 26.5511, 45.8183);
+          p.quadTo(30.0403, 47.0587, 36.0594, 49.1983);
+          p.quadTo(42.0617, 47.764, 44, 42);
+          return p;
+        })()}
+        color={color}
+        style="stroke"
+        strokeWidth={3}
+        strokeCap="round"
+      />
+      
+      {/* Mouth - changes when speaking */}
+      <Path
+        path={(() => {
+          const p = Skia.Path.Make();
+          // Mouth shape (same for both, but could animate)
+          p.moveTo(28.5459, 54.0555);
+          p.quadTo(26.5446, 54.5504, 19.5277, 61.0321);
+          p.quadTo(20.0265, 61.5332, 20.5252, 62.0344);
+          p.quadTo(49.526, 61.704, 50.5275, 61.2067);
+          p.quadTo(51.5289, 60.7095, 41.5445, 54.5895);
+          p.quadTo(40.0458, 54.0852, 39.3023, 53.835);
+          p.quadTo(37.0431, 55.0781, 34.5431, 55.0708);
+          p.quadTo(32.0431, 55.0634, 29.5542, 53.8062);
+          p.quadTo(28.5459, 54.0555, 28.5459, 54.0555);
+          p.close();
+          return p;
+        })()}
+        color={color}
+        style="fill"
+      />
+      
+      {/* Left eye line */}
+      <Path
+        path={(() => {
+          const p = Skia.Path.Make();
+          p.moveTo(8, 25.0004);
+          p.quadTo(13.5, 24.4995, 15.5, 24.5);
+          p.quadTo(21, 25.0004, 21, 25.0004);
+          return p;
+        })()}
+        color={color}
+        style="stroke"
+        strokeWidth={3}
+        strokeCap="round"
+      />
+      
+      {/* Right eye line */}
+      <Path
+        path={(() => {
+          const p = Skia.Path.Make();
+          p.moveTo(48, 25.0004);
+          p.quadTo(53.5, 24.4995, 55.5, 24.5);
+          p.quadTo(61, 25.0004, 61, 25.0004);
+          return p;
+        })()}
+        color={color}
+        style="stroke"
+        strokeWidth={3}
+        strokeCap="round"
+      />
+      
+      {/* Forehead dot */}
+      <Circle cx={34.5} cy={2.5} r={2.5} color={color} style="fill" />
+      
+      {/* Chin dot (only when speaking) */}
+      {isSpeaking && (
+        <Path
+          path={(() => {
+            const p = Skia.Path.Make();
+            p.moveTo(33.0082, 74.23);
+            p.quadTo(31.8082, 74.2269, 30.5039, 75.8902);
+            p.quadTo(30.0018, 76.7222, 31.4992, 77.7256);
+            p.quadTo(40.5004, 77.2498, 40.5017, 76.7493);
+            p.quadTo(40.503, 76.2489, 38.5069, 74.7442);
+            p.quadTo(38.0082, 74.2429, 37.5095, 73.7416);
+            p.quadTo(34.5082, 74.2338, 33.0082, 74.23);
+            p.close();
+            return p;
+          })()}
+          color={color}
+          style="fill"
+        />
+      )}
+    </Group>
+  );
+}
+
+/**
  * GameRenderer - Unified Skia renderer for all platforms
  * This same code works on Web, iOS, and Android
  * Touch events pass through the Canvas to allow line drawing
  */
-export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, squashStretch = { scaleX: 1, scaleY: 1 }, parallaxStars = [], trail = [], trailEndFade = 0, primaryColor = '#FFFFFF' }) {
+export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trail = [], trailEndFade = 0, primaryColor = '#FFFFFF' }) {
   // Calculate word opacity based on configured fade mode
   let wordOpacity = 0;
 
@@ -356,6 +500,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
               opacity={opacity}
               style="stroke"
               strokeWidth={config.gelato.thickness}
+              strokeCap="round"
             />
           );
         }
@@ -419,6 +564,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
                 opacity={opacity}
                 style="stroke"
                 strokeWidth={config.gelato.thickness}
+                strokeCap="round"
               />
             );
           }
@@ -433,6 +579,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
               opacity={opacity}
               style="stroke"
               strokeWidth={config.gelato.thickness}
+              strokeCap="round"
             />
           );
         }
@@ -483,6 +630,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
                 color={primaryColor}
                 style="stroke"
                 strokeWidth={config.gelato.thickness}
+                strokeCap="round"
               />
             );
           }
@@ -497,6 +645,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
             color={primaryColor}
             style="stroke"
             strokeWidth={config.gelato.thickness}
+            strokeCap="round"
           />
         );
       })}
@@ -567,7 +716,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
             color={primaryColor}
             opacity={0.6}
             style="stroke"
-            strokeWidth={config.gelato.thickness}
+            strokeWidth={config.gelato.previewThickness || config.gelato.thickness}
             strokeCap="round"
           >
             <DashPathEffect intervals={[1, 15]} />
@@ -575,71 +724,26 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         );
       })()}
 
-      {/* Mascot circle (now physics-based with squash and stretch!) */}
-      <Group
-        transform={[
-          { translateX: mascotX },
-          { translateY: mascotY },
-          { rotate: squashStretch.rotation || 0 },
-          { scaleX: squashStretch.scaleX },
-          { scaleY: squashStretch.scaleY },
-          { translateX: -mascotX },
-          { translateY: -mascotY },
-        ]}
-      >
+      {/* Mascot circle */}
+      <Group>
         <Circle
           cx={mascotX}
           cy={mascotY}
-          r={config.physics.mascot.radius}
+          r={mascotRadius}
           color={primaryColor}
           style="stroke"
-          strokeWidth={2}
+          strokeWidth={config.gelato.thickness}
         />
         
-        {/* Face (eyes and mustache) */}
+        {/* ZogChan Face */}
         {config.physics.mascot.face.enabled && (
-          <Group>
-            {/* Left eye (horizontal line) */}
-            <Line
-              p1={vec(
-                mascotX - config.physics.mascot.face.eyeSpacing / 2 - config.physics.mascot.face.eyeSize,
-                mascotY + config.physics.mascot.face.eyeOffsetY
-              )}
-              p2={vec(
-                mascotX - config.physics.mascot.face.eyeSpacing / 2 + config.physics.mascot.face.eyeSize,
-                mascotY + config.physics.mascot.face.eyeOffsetY
-              )}
-              color={primaryColor}
-              style="stroke"
-              strokeWidth={2}
-              strokeCap="round"
-            />
-            
-            {/* Right eye (horizontal line) */}
-            <Line
-              p1={vec(
-                mascotX + config.physics.mascot.face.eyeSpacing / 2 - config.physics.mascot.face.eyeSize,
-                mascotY + config.physics.mascot.face.eyeOffsetY
-              )}
-              p2={vec(
-                mascotX + config.physics.mascot.face.eyeSpacing / 2 + config.physics.mascot.face.eyeSize,
-                mascotY + config.physics.mascot.face.eyeOffsetY
-              )}
-              color={primaryColor}
-              style="stroke"
-              strokeWidth={2}
-              strokeCap="round"
-            />
-            
-            {/* Mouth (simple dot) */}
-            <Circle
-              cx={mascotX}
-              cy={mascotY + config.physics.mascot.face.mouthOffsetY}
-              r={2}
-              color={primaryColor}
-              style="fill"
-            />
-          </Group>
+          <ZogChanFace 
+            x={mascotX} 
+            y={mascotY} 
+            color={primaryColor}
+            isSpeaking={currentWord !== null}
+            radius={mascotRadius}
+          />
         )}
       </Group>
 
