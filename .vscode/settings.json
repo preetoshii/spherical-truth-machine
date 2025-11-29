@@ -1,0 +1,28 @@
+{
+  "files.exclude": {
+    "**/.git": true,
+    "**/.expo": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/android": true,
+    "**/ios": true,
+    "**/.vercel": true,
+    "**/.DS_Store": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.expo": true,
+    "**/android": true,
+    "**/ios": true
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.expo/**": true,
+    "**/android/**": true,
+    "**/ios/**": true
+  }
+}
