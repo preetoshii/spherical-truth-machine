@@ -766,9 +766,7 @@ See [AGENTS.md](AGENTS.md) for AI agent coding guidelines.
 ## Documentation
 
 - **[AGENTS.md](AGENTS.md)** - AI agent guidelines (commands, tech stack, patterns)
-- **[docs/bounsight-dev-doc.md](docs/bounsight-dev-doc.md)** - Historical design document (see README for current state)
-- **[docs/audio-recording-design.md](docs/audio-recording-design.md)** - Historical audio design document (see README for current state)
-- **[docs/admin-portal-dev-doc.md](docs/admin-portal-dev-doc.md)** - Historical admin portal design document (see README for current state)
+- **[docs/archived/](docs/archived/)** - Historical design documents from development (archived for reference)
 
 ---
 

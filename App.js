@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Platform, Text, ActivityIndicator } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 import { LoadSkiaWeb } from '@shopify/react-native-skia/lib/module/web';
 import { setupAudio } from './src/shared/utils/audio';
 import { useFonts } from 'expo-font';
@@ -50,29 +50,8 @@ export default function App() {
     loadApp();
   }, []);
 
-  if (loading || !fontsLoaded) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#69e" />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Error: {error}</Text>
-      </View>
-    );
-  }
-
-  if (!GameAppComponent) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Failed to load game</Text>
-      </View>
-    );
+  if (loading || !fontsLoaded || error || !GameAppComponent) {
+    return <View style={styles.container} />;
   }
 
   return <GameAppComponent />;
@@ -81,17 +60,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    color: '#ffffff',
-    fontSize: 18,
-    marginTop: 20,
-  },
-  errorText: {
-    color: '#ff6b6b',
-    fontSize: 18,
+    backgroundColor: '#000000',
   },
 });

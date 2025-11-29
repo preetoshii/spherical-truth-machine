@@ -53,6 +53,9 @@ export function GameApp() {
   // Remount counter - increment to force remount main game
   const [gameMountKey, setGameMountKey] = useState(0);
 
+  // Black overlay for smooth fade-in
+  const overlayOpacity = useRef(new Animated.Value(1)).current;
+
   // Animation frame ref (needs to be accessible to pause/resume)
   const animationFrameId = useRef(null);
 
@@ -88,6 +91,19 @@ export function GameApp() {
   useEffect(() => {
     fpsCapRef.current = fpsCap;
   }, [fpsCap]);
+
+  // Fade in overlay after a short delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }, 500); // 500ms delay before fade starts
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Initialize physics once on mount
   useEffect(() => {
@@ -448,6 +464,17 @@ export function GameApp() {
       )}
 
       <StatusBar style="light" />
+
+      {/* Black overlay that fades in on mount */}
+      <Animated.View
+        style={[
+          styles.overlay,
+          {
+            opacity: overlayOpacity,
+          },
+        ]}
+        pointerEvents="none"
+      />
     </View>
   );
 }
@@ -456,6 +483,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000000',
+    zIndex: 9999,
   },
   fullScreen: {
     position: 'absolute',
