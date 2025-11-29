@@ -15,10 +15,15 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
   const [showTextEditor, setShowTextEditor] = useState(false);
   const [editedWordTimings, setEditedWordTimings] = useState(wordTimings);
   
-  // Voice toggle state (Reboundhi vs Reboundhita)
-  // wordAudioSegments now contains { reboundhi: uri, reboundhita: uri }
-  const hasTransformedVoices = wordAudioSegments && typeof wordAudioSegments === 'object' && wordAudioSegments.reboundhi;
-  const [selectedVoice, setSelectedVoice] = useState('reboundhi'); // Default to Reboundhi
+  // Voice toggle state (uses enabled voices from config)
+  // Get list of enabled voices
+  const enabledVoices = config.voiceTransform.voices.filter(v => v.enabled);
+  const defaultVoice = enabledVoices.find(v => v.default) || enabledVoices[0];
+  const canSwitchVoices = enabledVoices.length > 1; // Only allow switching if multiple voices enabled
+
+  // wordAudioSegments contains { reboundhi: uri, reboundhita: uri, etc }
+  const hasTransformedVoices = wordAudioSegments && typeof wordAudioSegments === 'object' && wordAudioSegments[defaultVoice?.key];
+  const [selectedVoice, setSelectedVoice] = useState(defaultVoice?.key || 'reboundhi');
   
   // Determine which audio URI to use
   const activeAudioUri = hasTransformedVoices 
@@ -143,11 +148,17 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
       );
       
       if (distToBall <= ballRadius + 20) {
-        // Tapped the ball! Switch voice
-        const newVoice = selectedVoice === 'reboundhi' ? 'reboundhita' : 'reboundhi';
-        setSelectedVoice(newVoice);
-        playSound('click');
-        console.log('🎭 Tapped ball - switched to voice:', newVoice);
+        // Tapped the ball! Switch voice (only if multiple voices enabled)
+        if (canSwitchVoices && hasTransformedVoices) {
+          // Find current voice index and cycle to next enabled voice
+          const currentIndex = enabledVoices.findIndex(v => v.key === selectedVoice);
+          const nextIndex = (currentIndex + 1) % enabledVoices.length;
+          const newVoice = enabledVoices[nextIndex].key;
+
+          setSelectedVoice(newVoice);
+          playSound('click');
+          console.log('🎭 Tapped ball - switched to voice:', newVoice);
+        }
         setCurrentPath(null);
         return;
       }
@@ -222,7 +233,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
         {hasTransformedVoices && (
           <View style={styles.voiceIndicator} pointerEvents="none">
             <Text style={styles.voiceIndicatorText}>
-              {selectedVoice === 'reboundhi' ? 'Reboundhi' : 'Reboundhita'}
+              {enabledVoices.find(v => v.key === selectedVoice)?.name || selectedVoice}
             </Text>
           </View>
         )}

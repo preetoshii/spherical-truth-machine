@@ -318,18 +318,23 @@ export const config = {
   voiceTransform: {
     enabled: true,                          // Default state for toggle in AudioRecorder
     modelId: 'eleven_multilingual_sts_v2',  // ElevenLabs model
-    
-    // Two voices - both are transformed when enabled
+
+    // Available voices (only enabled voices will be used)
+    // If only 1 voice is enabled, ball tap switching will be disabled
     voices: [
       {
         id: 'q6bhPxtykZeN8o4aUNuh',
         name: 'Reboundhi',
-        default: true,  // Default voice in preview
+        key: 'reboundhi',                   // Key used internally for voice selection
+        default: true,                      // Default voice in preview
+        enabled: true,                      // Set to false to disable this voice
       },
       {
         id: 'UyE5iFj5Rg2T7GorYAnJ',
         name: 'Reboundhita',
+        key: 'reboundhita',                 // Key used internally for voice selection
         default: false,
+        enabled: false,                     // DISABLED - Set to true to enable switching
       },
     ],
   },
