@@ -26,10 +26,6 @@ export function Button({
 }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  // Debug logging
-  console.log('Button rendered with style:', JSON.stringify(style, null, 2));
-  console.log('Button children:', children);
-
   const handlePressIn = () => {
     if (disabled) return;
     // Only animate if scaleAmount is provided and > 0
@@ -74,7 +70,7 @@ export function Button({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={disabled}
-        style={[style, { borderWidth: 3, borderColor: 'yellow' }]}
+        style={style}
         {...otherProps}
       >
         {children}
