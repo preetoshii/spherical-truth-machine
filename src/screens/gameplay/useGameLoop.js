@@ -30,6 +30,7 @@ export function useGameLoop(dimensions, customMessage = null, audioUri = null, w
   const gelatoCreationTime = useRef(null);
   const currentWord = useRef(null);
   const mascotVelocityY = useRef(0);
+  const mascotRadius = useRef(45); // Default radius, updated from GameCore
   const lastGelatoData = useRef(null);
   const trail = useRef([]);
   const primaryColor = useRef('#FFFFFF');
