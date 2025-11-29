@@ -676,7 +676,7 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
 
       {/* Motion trail behind ball - single path with gradient fade */}
       {trail.length > 1 && (() => {
-        const ballRadius = config.physics.mascot.radius;
+        const ballRadius = mascotRadius; // Use responsive radius from props
         const maxOpacity = config.physics.mascot.trail.maxOpacity;
         const layers = config.physics.mascot.trail.gradientLayers;
         

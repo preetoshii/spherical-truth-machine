@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Dimensions, Pressable, Text, Animated, ActivityIndicator, Platform } from 'react-native';
+import { StyleSheet, View, Dimensions, Pressable, Text, Animated, ActivityIndicator, Platform, BackHandler } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 import { GameRenderer } from './GameRenderer';
@@ -285,6 +285,28 @@ export function GameApp() {
     return () => subscription?.remove();
   }, []);
 
+  /**
+   * Prevent Android hardware back button from interfering with gameplay.
+   * 
+   * This complements the immersive mode in MainActivity.kt which blocks edge-swipe gestures.
+   * The hardware back button is still accessible, so we intercept it here to prevent
+   * accidental exits during gameplay. The admin portal can still use the back button normally.
+   */
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        // Only allow back if admin portal is open (let it handle its own navigation)
+        if (showAdmin) {
+          return false; // Let admin portal handle back button
+        }
+        // Prevent back button during gameplay to avoid accidental exits
+        return true; // Prevent default back behavior
+      });
+
+      return () => backHandler.remove();
+    }
+  }, [showAdmin]);
+
   // Helper: Calculate total path length
   const calculatePathLength = (points) => {
     let length = 0;
@@ -479,7 +501,9 @@ export function GameApp() {
         </View>
       )}
 
-      <StatusBar style="light" />
+      {/* Hide status bar - immersive mode in MainActivity.kt handles system-level hiding,
+          but this ensures React Native doesn't show it either */}
+      <StatusBar hidden={true} />
 
       {/* Black overlay that fades in on mount */}
       <Animated.View

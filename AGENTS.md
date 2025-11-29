@@ -12,6 +12,22 @@ npm run android          # Start Android (requires Android Studio)
 
 **Admin portal:** Open http://localhost:8082 → Press 'a' key → Click admin button (top-right)
 
+## Android APK Installation
+
+**When user requests to install/reinstall APK on Android device:**
+
+**ALWAYS uninstall first, then install.** Use the one-liner from `.claude/android-build-workflow.md`:
+
+```bash
+~/Library/Android/sdk/platform-tools/adb uninstall com.preetoshi.bounsight && export ANDROID_HOME=~/Library/Android/sdk && export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" && cd /Users/preetoshi/bounsight/android && ./gradlew assembleRelease && cd .. && ~/Library/Android/sdk/platform-tools/adb install android/app/build/outputs/apk/release/app-release.apk
+```
+
+**Key points:**
+- Never use `npm run android` for APK installation (that's for Expo dev mode)
+- Always uninstall before installing to prevent cached app state
+- Uses `assembleRelease` (faster than `assembleDebug` for incremental builds)
+- See `.claude/android-build-workflow.md` for detailed explanation and troubleshooting
+
 ## Development Principles
 
 When making decisions, prioritize:

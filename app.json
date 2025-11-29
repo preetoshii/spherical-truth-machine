@@ -23,6 +23,8 @@
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
+      // Disable predictive back gesture to prevent interference with game swipes
+      // (Gelatos are drawn by swiping from screen edges)
       "predictiveBackGestureEnabled": false,
       "navigationBar": {
         "visible": "immersive",
