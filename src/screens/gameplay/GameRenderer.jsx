@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import { Canvas, Circle, Fill, Line, Rect, vec, DashPathEffect, Path, Skia, Group } from '@shopify/react-native-skia';
 import { Text, View, StyleSheet, Animated } from 'react-native';
 import { config } from '../../config';
@@ -322,8 +322,19 @@ function ZogChanFace({ x, y, color, isSpeaking, radius }) {
  * GameRenderer - Unified Skia renderer for all platforms
  * This same code works on Web, iOS, and Android
  * Touch events pass through the Canvas to allow line drawing
+ * 
+ * Uses shared gameState object for direct mutation without React reconciliation overhead.
+ * Frame prop triggers re-render when game state updates (minimal React reconciliation).
  */
-export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trail = [], trailEndFade = 0, primaryColor = '#FFFFFF', particles = [] }) {
+const GameRendererComponent = ({ width, height, gameState, frame, lines = [], currentPath = null }) => {
+  // Extract values from shared state object (read directly, no React reconciliation)
+  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trail = [], trailEndFade = 0, primaryColor = '#FFFFFF', particles = [] } = gameState;
+  const mascotX = mascotPos.x;
+  const mascotY = mascotPos.y;
+  
+  // Frame is used to trigger re-render but not read directly
+  // eslint-disable-next-line no-unused-vars
+  const _frame = frame;
   // Calculate word opacity based on configured fade mode
   let wordOpacity = 0;
 
@@ -804,7 +815,10 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
       )}
     </View>
   );
-}
+};
+
+// Memoize to prevent unnecessary re-renders - only re-render when frame or other props change
+export const GameRenderer = memo(GameRendererComponent);
 
 const styles = StyleSheet.create({
   wordContainer: {

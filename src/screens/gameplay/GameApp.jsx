@@ -24,26 +24,31 @@ export function GameApp() {
   });
   // Game physics core
   const gameCore = useRef(null);
-  const [, forceUpdate] = useState(0);
+  
+  // Shared game state object - mutated directly in game loop
+  // Only frame counter triggers minimal React re-render
+  const gameState = useRef({
+    mascotPos: { x: dimensions.width / 2, y: 100 },
+    obstacles: [],
+    bounceImpact: null,
+    gelatoCreationTime: null,
+    currentWord: null,
+    mascotVelocityY: 0,
+    mascotRadius: 45,
+    parallaxStars: [],
+    trail: [],
+    trailEndFade: 0,
+    primaryColor: '#FFFFFF',
+    particles: [],
+  });
+  
+  // Frame counter for minimal React re-render trigger (just a number, not full reconciliation)
+  const [frame, setFrame] = useState(0);
 
-  // Mascot position from physics
-  const mascotPos = useRef({ x: dimensions.width / 2, y: 100 });
-  const obstacles = useRef([]);
-  const bounceImpact = useRef(null); // Bounce impact data for visual deformation
-  const gelatoCreationTime = useRef(null); // Track creation time for pop-in animation
-  const lastGelatoData = useRef(null); // Track last gelato data to detect changes
-  const currentWord = useRef(null); // Current word being displayed
-  const mascotVelocityY = useRef(0); // Current Y velocity of mascot
-  const mascotRadius = useRef(45); // Current mascot radius (responsive)
-  const parallaxStars = useRef([]); // Parallax background stars
-  const trail = useRef([]); // Motion trail behind ball
-  const trailEndFade = useRef(0); // End fade progress (0 = visible, 1 = faded)
-  const primaryColor = useRef('#FFFFFF'); // Current primary color
-  const particles = useRef([]); // Wall bounce particles
-
-  // Simple line drawing state
+  // Simple line drawing state (still uses React state since it changes infrequently)
   const [lines, setLines] = useState([]);
   const [currentPath, setCurrentPath] = useState(null); // Array of {x, y} points
+  const lastGelatoData = useRef(null); // Track last gelato data to detect changes
 
   // Admin portal state
   const [showAdmin, setShowAdmin] = useState(false);
@@ -111,6 +116,9 @@ export function GameApp() {
     // Calculate responsive config based on screen width
     const responsiveConfig = getResponsiveConfig(dimensions.width);
     
+    // Initialize gameState with dimensions
+    gameState.current.mascotPos = { x: dimensions.width / 2, y: 100 };
+    
     // Initialize physics with current dimensions and responsive config
     gameCore.current = new GameCore(dimensions.width, dimensions.height, null, null, null, null, responsiveConfig);
 
@@ -147,20 +155,25 @@ export function GameApp() {
         accumulator.current -= FIXED_TIMESTEP;
       }
 
-      // Get updated positions from physics (render at display refresh rate)
-      mascotPos.current = gameCore.current.getMascotPosition();
-      obstacles.current = gameCore.current.getObstacles();
-      bounceImpact.current = gameCore.current.getBounceImpact();
-      gelatoCreationTime.current = gameCore.current.getGelatoCreationTime();
-      currentWord.current = gameCore.current.getCurrentWord();
-      mascotVelocityY.current = gameCore.current.getMascotVelocityY();
-      mascotRadius.current = gameCore.current.getMascotRadius();
-      parallaxStars.current = gameCore.current.getParallaxStars();
+      // Update shared game state directly (mutation - bypasses React reconciliation)
+      // Only frame counter triggers minimal React state update
+      const state = gameState.current;
+      state.mascotPos = gameCore.current.getMascotPosition();
+      state.obstacles = gameCore.current.getObstacles();
+      state.bounceImpact = gameCore.current.getBounceImpact();
+      state.gelatoCreationTime = gameCore.current.getGelatoCreationTime();
+      state.currentWord = gameCore.current.getCurrentWord();
+      state.mascotVelocityY = gameCore.current.getMascotVelocityY();
+      state.mascotRadius = gameCore.current.getMascotRadius();
+      state.parallaxStars = gameCore.current.getParallaxStars();
       const trailData = gameCore.current.getTrail();
-      trail.current = trailData.trail;
-      trailEndFade.current = trailData.endFadeProgress;
-      primaryColor.current = gameCore.current.getPrimaryColor();
-      particles.current = gameCore.current.getParticles();
+      state.trail = trailData.trail;
+      state.trailEndFade = trailData.endFadeProgress;
+      state.primaryColor = gameCore.current.getPrimaryColor();
+      state.particles = gameCore.current.getParticles();
+      
+      // Minimal React update - just a number, triggers Skia re-render without full reconciliation
+      setFrame(prev => prev + 1);
 
       // Sync lines with GameCore (updates when gelato destroyed after fade)
       const currentGelatoData = gameCore.current.getGelatoLineData();
@@ -168,9 +181,6 @@ export function GameApp() {
         lastGelatoData.current = currentGelatoData;
         setLines(currentGelatoData ? [currentGelatoData] : []);
       }
-
-      // Force re-render and monitor FPS
-      forceUpdate(n => n + 1);
 
       fpsCounter.current.frames++;
       const now = performance.now();
@@ -234,22 +244,29 @@ export function GameApp() {
             accumulator.current -= FIXED_TIMESTEP;
           }
 
-          mascotPos.current = gameCore.current.getMascotPosition();
-          obstacles.current = gameCore.current.getObstacles();
-          bounceImpact.current = gameCore.current.getBounceImpact();
-          gelatoCreationTime.current = gameCore.current.getGelatoCreationTime();
-          currentWord.current = gameCore.current.getCurrentWord();
-          mascotVelocityY.current = gameCore.current.getMascotVelocityY();
-          particles.current = gameCore.current.getParticles();
+          // Update shared game state directly
+          const state = gameState.current;
+          state.mascotPos = gameCore.current.getMascotPosition();
+          state.obstacles = gameCore.current.getObstacles();
+          state.bounceImpact = gameCore.current.getBounceImpact();
+          state.gelatoCreationTime = gameCore.current.getGelatoCreationTime();
+          state.currentWord = gameCore.current.getCurrentWord();
+          state.mascotVelocityY = gameCore.current.getMascotVelocityY();
+          state.mascotRadius = gameCore.current.getMascotRadius();
+          state.parallaxStars = gameCore.current.getParallaxStars();
+          const trailData = gameCore.current.getTrail();
+          state.trail = trailData.trail;
+          state.trailEndFade = trailData.endFadeProgress;
+          state.primaryColor = gameCore.current.getPrimaryColor();
+          state.particles = gameCore.current.getParticles();
+          
+          setFrame(prev => prev + 1);
 
           const currentGelatoData = gameCore.current.getGelatoLineData();
           if (currentGelatoData !== lastGelatoData.current) {
             lastGelatoData.current = currentGelatoData;
             setLines(currentGelatoData ? [currentGelatoData] : []);
           }
-
-          // Force re-render and monitor FPS
-          forceUpdate(n => n + 1);
 
           fpsCounter.current.frames++;
           const now = performance.now();
@@ -453,31 +470,20 @@ export function GameApp() {
           <GameRenderer
             width={dimensions.width}
             height={dimensions.height}
-            mascotX={mascotPos.current.x}
-            mascotY={mascotPos.current.y}
-            obstacles={obstacles.current}
+            gameState={gameState.current}
+            frame={frame}
             lines={lines}
             currentPath={currentPath}
-            bounceImpact={bounceImpact.current}
-            gelatoCreationTime={gelatoCreationTime.current}
-            currentWord={currentWord.current}
-            mascotVelocityY={mascotVelocityY.current}
-            mascotRadius={mascotRadius.current}
-            parallaxStars={parallaxStars.current}
-            trail={trail.current}
-            trailEndFade={trailEndFade.current}
-            primaryColor={primaryColor.current}
-            particles={particles.current}
           />
 
           {/* Admin Button - Feather Icon */}
           <Pressable onPress={openAdmin} style={styles.adminButton}>
-            <Feather name="feather" size={20} color={primaryColor.current} style={{ opacity: 0.6 }} />
+            <Feather name="feather" size={20} color={gameState.current.primaryColor} style={{ opacity: 0.6 }} />
           </Pressable>
 
           {/* Debug Button (always visible) with optional FPS Counter */}
           <Pressable onPress={() => setShowDebugMenu(true)} style={styles.debugButton}>
-            <Text style={[styles.debugButtonText, { color: primaryColor.current }]}>
+            <Text style={[styles.debugButtonText, { color: gameState.current.primaryColor }]}>
               {config.performance.showFps ? `⚙️ ${fps} FPS` : '⚙️'}
             </Text>
           </Pressable>
@@ -492,7 +498,7 @@ export function GameApp() {
             setFpsCap={setFpsCap}
             showFps={showFps}
             setShowFps={setShowFps}
-            primaryColor={primaryColor.current}
+            primaryColor={gameState.current.primaryColor}
           />
         </View>
       )}
@@ -500,7 +506,7 @@ export function GameApp() {
       {/* Admin portal - unmount when closed */}
       {showAdmin && (
         <View style={styles.fullScreen}>
-          <AdminPortal onClose={closeAdmin} preloadedData={preloadedMessagesData} primaryColor={primaryColor.current} />
+          <AdminPortal onClose={closeAdmin} preloadedData={preloadedMessagesData} primaryColor={gameState.current.primaryColor} />
         </View>
       )}
 
