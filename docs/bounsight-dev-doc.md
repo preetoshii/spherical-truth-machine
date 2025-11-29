@@ -167,11 +167,11 @@ The preview mechanics directly impact game feel. Too responsive and it feels twi
 
 ### Client playback ✅ IMPLEMENTED
 - **Load message audio on startup**: Single `.m4a` file per message with word timing metadata.
-- **Playback mechanism**: HTML5 `<audio>` element (web) via Howler.js library with seek() and play() for precise segment control.
+- **Playback mechanism**: expo-audio's `createAudioPlayer()` with seekTo() and play() for precise segment control (cross-platform).
 - **Word audio queue**: Each bounce triggers:
-  1. `audio.seek(wordTiming.start / 1000)` - Jump to word start time
-  2. `audio.play()` - Start playback
-  3. `setTimeout(() => audio.pause(), duration)` - Stop at word end time
+  1. `audioPlayer.seekTo(wordTiming.start / 1000)` - Jump to word start time (convert ms to seconds)
+  2. `audioPlayer.play()` - Start playback
+  3. `setTimeout(() => audioPlayer.pause(), duration)` - Stop at word end time
 - **Voice switching**: Can cycle between transformed voices (Reboundhi/Reboundhita) by tapping ball in preview mode.
 - **Audio trimming**: `config.audio.trimStartMs` (default: 120ms) trims leading silence from each word segment.
 
@@ -263,8 +263,8 @@ The preview mechanics directly impact game feel. Too responsive and it feels twi
 - **Haptics: expo-haptics + Web Vibration API**
   - **Why:** Native haptic feedback is crucial for game feel. Expo's API is simple and falls back gracefully on web. Note: Web haptics will be basic (simple vibration) compared to native's rich haptic patterns.
 
-- **Audio: Howler.js (web) + expo-audio (recording)**
-  - **Why:** Howler.js provides reliable, low-latency HTML5 audio playback on web with precise seek() support for word segments. expo-audio handles recording in admin UI across platforms.
+- **Audio: expo-audio (cross-platform)**
+  - **Why:** expo-audio provides unified API for both recording and playback across web, iOS, and Android. Low-latency audio with precise seekTo() support for word segment playback. Eliminates need for multiple audio libraries.
 
 - **Message Storage: GitHub Repo**
   - **Why:** Zero setup, free hosting for `current-message.json`. Built-in version control. GitHub API allows in-app updates via token. Global CDN for fast fetches. Eliminates need for separate backend infrastructure in MVP.

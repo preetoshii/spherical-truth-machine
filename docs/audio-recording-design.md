@@ -23,7 +23,8 @@ This document defines the complete technical design and requirements for Bounsig
 
 **Key Technologies:**
 - **Recording:** expo-audio (cross-platform)
-- **Transcription & Word Timing:** Google Cloud Speech-to-Text API
+- **Transcription:** Google Cloud Speech-to-Text API
+- **Word Timing:** Energy-based RMS envelope detection (server-side)
 - **Storage:** GitHub (same repo as messages.json)
 - **Playback:** expo-audio player with segment seeking
 
@@ -42,7 +43,7 @@ This document defines the complete technical design and requirements for Bounsig
 
 ## Overview
 
-Users will record affirmation messages directly in the admin UI. The system will automatically transcribe the audio and detect word boundaries using Google Cloud Speech-to-Text API. During gameplay, the ball reveals words one-by-one while playing the exact audio segment from the original recording.
+Users will record affirmation messages directly in the admin UI. The system will automatically transcribe the audio using Google Cloud Speech-to-Text API and detect word boundaries using energy-based RMS envelope analysis. During gameplay, the ball reveals words one-by-one while playing the exact audio segment from the original recording.
 
 ---
 
