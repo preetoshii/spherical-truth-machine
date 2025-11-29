@@ -89,7 +89,7 @@ export const config = {
     speed: {
       start: 1,            // Starting time multiplier (1.0 = normal time)
       end: 2.0,              // Ending time multiplier (2.0 = 2x speed, like fast-forward)
-      bouncesUntilMax: 60,   // Number of bounces to reach maximum difficulty
+      bouncesUntilMax: 10,   // Number of bounces to reach maximum difficulty
     },
 
     // Example progression:
@@ -270,7 +270,7 @@ export const config = {
   // === COLOR SYSTEM ===
   // Monochromatic design: single primary color used throughout (ball, trail, gelato, UI, text)
   colors: {
-    mode: 'bounce',          // 'static' = fixed color, 'bounce' = change per bounce, 'time' = gradual fade
+    mode: 'time',          // 'static' = fixed color, 'bounce' = change per bounce, 'time' = gradual fade
     
     // Color palette (used when mode is 'bounce' or 'time')
     palette: [
@@ -290,7 +290,7 @@ export const config = {
     // Bounce mode: control when color changes
     // - Number (e.g., 1, 2, 5): Change every N bounces (1 = every bounce, 2 = every other bounce)
     // - 'quote': Change only when message/quote completes and restarts
-    bouncesPerColorChange: 'quote',
+    bouncesPerColorChange: 1,
     
     // Time mode: how long to transition between colors (ms)
     timeFadeDuration: 5000,
