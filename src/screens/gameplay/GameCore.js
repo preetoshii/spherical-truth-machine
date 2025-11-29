@@ -957,6 +957,10 @@ export class GameCore {
     // Direction away from wall (perpendicular)
     const directionX = isLeftWall ? 1 : -1;
 
+    // Calculate responsive size scale based on mascot radius
+    // Mobile (30px radius) = 1.0x, Desktop (45px radius) = 1.5x
+    const sizeScale = this.mascotRadius / 30;
+
     // Spawn particles
     for (let i = 0; i < particleConfig.count; i++) {
       const spreadAngle = particleConfig.spreadAngle * (Math.PI / 180); // Convert to radians
@@ -971,8 +975,9 @@ export class GameCore {
       const vx = Math.cos(finalAngle) * speed;
       const vy = (Math.random() - 0.5) * speed * 0.5; // Slight vertical variation
 
-      // Random size
-      const size = particleConfig.sizeMin + Math.random() * (particleConfig.sizeMax - particleConfig.sizeMin);
+      // Random size (scaled by mascot radius for responsive sizing)
+      const baseSize = particleConfig.sizeMin + Math.random() * (particleConfig.sizeMax - particleConfig.sizeMin);
+      const size = baseSize * sizeScale;
 
       this.particles.push({
         x: impactX,
