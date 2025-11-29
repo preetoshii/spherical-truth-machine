@@ -957,9 +957,10 @@ export class GameCore {
     // Direction away from wall (perpendicular)
     const directionX = isLeftWall ? 1 : -1;
 
-    // Calculate responsive size scale based on mascot radius
+    // Calculate responsive scale based on mascot radius
     // Mobile (30px radius) = 1.0x, Desktop (45px radius) = 1.5x
-    const sizeScale = this.mascotRadius / 30;
+    // Apply to both size and velocity for consistent feel across screen sizes
+    const scale = this.mascotRadius / 30;
 
     // Spawn particles
     for (let i = 0; i < particleConfig.count; i++) {
@@ -970,14 +971,15 @@ export class GameCore {
       const baseAngle = directionX > 0 ? 0 : Math.PI; // 0 = right, PI = left
       const finalAngle = baseAngle + randomAngle;
 
-      // Random velocity magnitude
-      const speed = particleConfig.velocityMin + Math.random() * (particleConfig.velocityMax - particleConfig.velocityMin);
+      // Random velocity magnitude (scaled for responsive sizing)
+      const baseSpeed = particleConfig.velocityMin + Math.random() * (particleConfig.velocityMax - particleConfig.velocityMin);
+      const speed = baseSpeed * scale;
       const vx = Math.cos(finalAngle) * speed;
       const vy = (Math.random() - 0.5) * speed * 0.5; // Slight vertical variation
 
       // Random size (scaled by mascot radius for responsive sizing)
       const baseSize = particleConfig.sizeMin + Math.random() * (particleConfig.sizeMax - particleConfig.sizeMin);
-      const size = baseSize * sizeScale;
+      const size = baseSize * scale;
 
       this.particles.push({
         x: impactX,
@@ -998,6 +1000,10 @@ export class GameCore {
     const particleConfig = config.walls.particles;
     const currentTime = Date.now();
 
+    // Calculate responsive scale for gravity
+    const scale = this.mascotRadius / 30;
+    const scaledGravity = particleConfig.gravity * scale;
+
     // Update each particle
     this.particles = this.particles.filter(particle => {
       const age = currentTime - particle.timestamp;
@@ -1007,10 +1013,10 @@ export class GameCore {
         return false;
       }
 
-      // Update physics
+      // Update physics (with scaled gravity)
       particle.x += particle.vx;
       particle.y += particle.vy;
-      particle.vy += particleConfig.gravity; // Apply gravity
+      particle.vy += scaledGravity;
 
       // Update opacity (fade out linearly)
       particle.opacity = 1 - (age / particleConfig.fadeOutMs);
