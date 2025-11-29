@@ -1,5 +1,27 @@
 # Bounsight AI Agent Guidelines
 
+## ⚠️ META-RULE: Maintaining This File
+
+**IMPORTANT:** This file (AGENTS.md) is the single source of truth for AI agent context across all tools (Claude Code, Cursor, etc.).
+
+**When adding or updating AI agent instructions:**
+- ✅ **ALWAYS** edit this file (AGENTS.md)
+- ❌ **NEVER** edit CLAUDE.md or .cursorrules (they just reference this file)
+- ❌ **NEVER** create tool-specific instruction files
+
+**If the user asks to "add a rule" or "remember this for future AI sessions":**
+1. Add the instruction to the appropriate section in this file
+2. Keep instructions clear, specific, and actionable
+3. Use examples where helpful
+4. Update existing sections rather than creating duplicate content
+
+**File structure:**
+- `AGENTS.md` ← Edit this (you are here)
+- `CLAUDE.md` ← Contains only `@AGENTS.md` (do not edit)
+- `.cursorrules` ← Contains only `@AGENTS.md` (do not edit)
+
+---
+
 ## Project Overview
 
 Bounsight is a React Native game built with Expo that combines physics-based gameplay with scheduled audio messages. The game features a bouncing ball with facial expressions that responds to physics interactions while users can schedule voice messages through an admin portal.
