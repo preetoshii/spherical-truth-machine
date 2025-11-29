@@ -133,8 +133,8 @@ export const config = {
     //   - Pure speed increase without changing game feel
     speed: {
       start: 1,            // Starting time multiplier (1.0 = normal time)
-      end: 2.0,              // Ending time multiplier (2.0 = 2x speed, like fast-forward)
-      bouncesUntilMax: 10,   // Number of bounces to reach maximum difficulty
+      end: 1.7,              // Ending time multiplier (2.0 = 2x speed, like fast-forward)
+      bouncesUntilMax: 30,   // Number of bounces to reach maximum difficulty
     },
 
     // Example progression:
@@ -298,7 +298,8 @@ export const config = {
   visuals: {
     backgroundColor: '#000000',   // Canvas background color (pure black)
     wordColor: '#FFFFFF',         // Text color for revealed words
-    wordFontSize: 145,            // Font size for revealed words in pixels
+    wordFontSize: 145,            // Base font size for revealed words in pixels
+    wordMaxWidthPercent: 98,      // Max % of screen width for words (auto-scales down if needed)
 
     // Word fade mode: controls how words fade in/out after bounce
     // - 'velocity': Text opacity syncs 1:1 with ball's velocity change (physics-based, organic feel)

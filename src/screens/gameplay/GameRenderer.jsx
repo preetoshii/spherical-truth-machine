@@ -69,15 +69,38 @@ function StarShape({ cx, cy, size, color, opacity }) {
 
 /**
  * WaveText - Mexican wave effect where each letter waves in sequence
+ * Auto-scales font size to fit within screen width
  */
-function WaveText({ text, opacity, color }) {
+function WaveText({ text, opacity, color, screenWidth }) {
   const letters = text.split('');
   const totalLetters = letters.length;
+
+  // Calculate dynamic font size based on text width
+  const baseFontSize = config.visuals.wordFontSize;
+  const maxWidthPercent = config.visuals.wordMaxWidthPercent;
+
+  // Estimate text width (rough approximation: 0.6 * fontSize per character on average)
+  // This is a heuristic - actual rendering may vary slightly by font
+  const estimatedTextWidth = text.length * baseFontSize * 0.6;
+  const maxAllowedWidth = screenWidth * (maxWidthPercent / 100);
+
+  // Scale down font size if text would exceed max width
+  const scaleFactor = estimatedTextWidth > maxAllowedWidth
+    ? maxAllowedWidth / estimatedTextWidth
+    : 1;
+  const finalFontSize = baseFontSize * scaleFactor;
 
   return (
     <View style={{ flexDirection: 'row', opacity }}>
       {letters.map((letter, index) => (
-        <WaveLetter key={`${text}-${index}`} letter={letter} index={index} totalLetters={totalLetters} color={color} />
+        <WaveLetter
+          key={`${text}-${index}`}
+          letter={letter}
+          index={index}
+          totalLetters={totalLetters}
+          color={color}
+          fontSize={finalFontSize}
+        />
       ))}
     </View>
   );
@@ -86,7 +109,7 @@ function WaveText({ text, opacity, color }) {
 /**
  * WaveLetter - Individual letter with wave animation
  */
-function WaveLetter({ letter, index, totalLetters, color }) {
+function WaveLetter({ letter, index, totalLetters, color, fontSize }) {
   const translateY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -137,6 +160,7 @@ function WaveLetter({ letter, index, totalLetters, color }) {
       style={[
         styles.word,
         {
+          fontSize: fontSize,
           color: color,
           transform: [
             { translateY },
@@ -758,7 +782,12 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
           ]}
           pointerEvents="none"
         >
-          <WaveText text={currentWord.text} opacity={wordOpacity} color={primaryColor} />
+          <WaveText
+            text={currentWord.text}
+            opacity={wordOpacity}
+            color={primaryColor}
+            screenWidth={width}
+          />
         </View>
       )}
     </View>
@@ -777,7 +806,7 @@ const styles = StyleSheet.create({
   },
   word: {
     fontFamily: 'FinlandRounded',
-    fontSize: config.visuals.wordFontSize,
+    // fontSize is now set dynamically per letter
     color: config.visuals.wordColor,
     letterSpacing: 1,
   },
