@@ -201,14 +201,14 @@ export const config = {
     // Wall bounce particle effect (dust clouds)
     particles: {
       enabled: true,          // Enable/disable wall bounce particles
-      count: 5,               // Number of particles per wall bounce
-      sizeMin: 2,             // Minimum particle radius in pixels
-      sizeMax: 4,             // Maximum particle radius in pixels
-      velocityMin: 2,         // Minimum initial velocity
-      velocityMax: 6,         // Maximum initial velocity
+      count: 3,               // Number of particles per wall bounce
+      sizeMin: 10,             // Minimum particle radius in pixels
+      sizeMax: 20,             // Maximum particle radius in pixels
+      velocityMin: 1,         // Minimum initial velocity
+      velocityMax: 2,         // Maximum initial velocity
       spreadAngle: 60,        // Spray angle in degrees (relative to perpendicular)
-      gravity: 0.15,          // Gravity affecting particles (lower = floatier)
-      fadeOutMs: 400,         // How long particles take to fade out
+      gravity: 0.05,          // Gravity affecting particles (lower = floatier)
+      fadeOutMs: 1500,         // How long particles take to fade out
       shrink: true,           // Whether particles shrink as they fade
     },
   },
