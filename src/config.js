@@ -197,6 +197,20 @@ export const config = {
     restitution: 1.2,         // Wall bounciness (0 = absorbs all energy, 0.5 = loses half, 1 = perfect bounce)
     thickness: 5,             // Thickness of boundary walls in pixels (affects physics collision edge)
     visible: false,           // Whether to render walls visually (false = invisible boundaries at screen edges)
+
+    // Wall bounce particle effect (dust clouds)
+    particles: {
+      enabled: true,          // Enable/disable wall bounce particles
+      count: 5,               // Number of particles per wall bounce
+      sizeMin: 2,             // Minimum particle radius in pixels
+      sizeMax: 4,             // Maximum particle radius in pixels
+      velocityMin: 2,         // Minimum initial velocity
+      velocityMax: 6,         // Maximum initial velocity
+      spreadAngle: 60,        // Spray angle in degrees (relative to perpendicular)
+      gravity: 0.15,          // Gravity affecting particles (lower = floatier)
+      fadeOutMs: 400,         // How long particles take to fade out
+      shrink: true,           // Whether particles shrink as they fade
+    },
   },
 
   // === HAPTICS (Mobile vibration feedback) ===

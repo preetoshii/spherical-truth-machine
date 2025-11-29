@@ -137,7 +137,10 @@ export class GameCore {
     this.trail = []; // Array of { x, y, timestamp }
     this.lastTrailTime = 0;
     this.lastBounceForTrail = 0; // Timestamp of last gelato bounce (for trail activation)
-    
+
+    // Particle system (wall bounce dust clouds)
+    this.particles = []; // Array of { x, y, vx, vy, size, opacity, timestamp }
+
     // Color system
     this.currentColorIndex = 0;
     this.primaryColor = config.colors.mode === 'static' 
@@ -254,7 +257,10 @@ export class GameCore {
 
     // Update parallax background based on ball's Y position
     this.parallaxManager.update(this.mascot.position.y);
-    
+
+    // Update particles
+    this.updateParticles(deltaMs);
+
     // Update color if mode is 'time' (gradual fade)
     if (config.colors.mode === 'time') {
       const currentTime = Date.now();
@@ -508,6 +514,11 @@ export class GameCore {
       const wallBody = bodyA.label === 'wall' ? bodyA : bodyB.label === 'wall' ? bodyB : null;
       if (mascotBody && wallBody) {
         playSound('wall-bump');
+
+        // Spawn particles on wall bounce
+        if (config.walls.particles.enabled) {
+          this.spawnWallParticles(mascotBody, wallBody);
+        }
       }
     }
   }
@@ -929,6 +940,90 @@ export class GameCore {
       console.warn('Using fallback message');
       // Keep using the fallback message set in constructor
     }
+  }
+
+  /**
+   * Spawn particles on wall bounce
+   */
+  spawnWallParticles(mascotBody, wallBody) {
+    const particleConfig = config.walls.particles;
+    const mascotPos = mascotBody.position;
+
+    // Determine which wall was hit (left or right)
+    const isLeftWall = wallBody.position.x < this.width / 2;
+    const impactX = isLeftWall ? config.walls.thickness : this.width - config.walls.thickness;
+    const impactY = mascotPos.y;
+
+    // Direction away from wall (perpendicular)
+    const directionX = isLeftWall ? 1 : -1;
+
+    // Spawn particles
+    for (let i = 0; i < particleConfig.count; i++) {
+      const spreadAngle = particleConfig.spreadAngle * (Math.PI / 180); // Convert to radians
+      const randomAngle = (Math.random() - 0.5) * spreadAngle; // Random angle within spread
+
+      // Base direction (away from wall) + random spread
+      const baseAngle = directionX > 0 ? 0 : Math.PI; // 0 = right, PI = left
+      const finalAngle = baseAngle + randomAngle;
+
+      // Random velocity magnitude
+      const speed = particleConfig.velocityMin + Math.random() * (particleConfig.velocityMax - particleConfig.velocityMin);
+      const vx = Math.cos(finalAngle) * speed;
+      const vy = (Math.random() - 0.5) * speed * 0.5; // Slight vertical variation
+
+      // Random size
+      const size = particleConfig.sizeMin + Math.random() * (particleConfig.sizeMax - particleConfig.sizeMin);
+
+      this.particles.push({
+        x: impactX,
+        y: impactY,
+        vx,
+        vy,
+        size,
+        opacity: 1,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  /**
+   * Update particles (physics and fade out)
+   */
+  updateParticles(delta) {
+    const particleConfig = config.walls.particles;
+    const currentTime = Date.now();
+
+    // Update each particle
+    this.particles = this.particles.filter(particle => {
+      const age = currentTime - particle.timestamp;
+
+      // Remove if fully faded
+      if (age >= particleConfig.fadeOutMs) {
+        return false;
+      }
+
+      // Update physics
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vy += particleConfig.gravity; // Apply gravity
+
+      // Update opacity (fade out linearly)
+      particle.opacity = 1 - (age / particleConfig.fadeOutMs);
+
+      // Shrink if enabled
+      if (particleConfig.shrink) {
+        particle.size = particle.size * (1 - (age / particleConfig.fadeOutMs) * 0.5); // Shrink to 50% of original
+      }
+
+      return true;
+    });
+  }
+
+  /**
+   * Get particles for rendering
+   */
+  getParticles() {
+    return this.particles;
   }
 
   /**

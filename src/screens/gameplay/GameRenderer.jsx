@@ -323,7 +323,7 @@ function ZogChanFace({ x, y, color, isSpeaking, radius }) {
  * This same code works on Web, iOS, and Android
  * Touch events pass through the Canvas to allow line drawing
  */
-export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trail = [], trailEndFade = 0, primaryColor = '#FFFFFF' }) {
+export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], lines = [], currentPath = null, bounceImpact = null, gelatoCreationTime = null, currentWord = null, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trail = [], trailEndFade = 0, primaryColor = '#FFFFFF', particles = [] }) {
   // Calculate word opacity based on configured fade mode
   let wordOpacity = 0;
 
@@ -748,6 +748,18 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
         );
       })()}
 
+      {/* Wall bounce particles (dust clouds) */}
+      {particles.map((particle, index) => (
+        <Circle
+          key={`particle-${index}`}
+          cx={particle.x}
+          cy={particle.y}
+          r={particle.size}
+          color={primaryColor}
+          opacity={particle.opacity}
+        />
+      ))}
+
       {/* Mascot circle */}
       <Group>
         <Circle
@@ -758,12 +770,12 @@ export function GameRenderer({ width, height, mascotX, mascotY, obstacles = [], 
           style="stroke"
           strokeWidth={config.gelato.thickness}
         />
-        
+
         {/* ZogChan Face */}
         {config.physics.mascot.face.enabled && (
-          <ZogChanFace 
-            x={mascotX} 
-            y={mascotY} 
+          <ZogChanFace
+            x={mascotX}
+            y={mascotY}
             color={primaryColor}
             isSpeaking={currentWord !== null}
             radius={mascotRadius}

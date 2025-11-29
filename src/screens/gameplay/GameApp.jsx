@@ -39,6 +39,7 @@ export function GameApp() {
   const trail = useRef([]); // Motion trail behind ball
   const trailEndFade = useRef(0); // End fade progress (0 = visible, 1 = faded)
   const primaryColor = useRef('#FFFFFF'); // Current primary color
+  const particles = useRef([]); // Wall bounce particles
 
   // Simple line drawing state
   const [lines, setLines] = useState([]);
@@ -159,6 +160,7 @@ export function GameApp() {
       trail.current = trailData.trail;
       trailEndFade.current = trailData.endFadeProgress;
       primaryColor.current = gameCore.current.getPrimaryColor();
+      particles.current = gameCore.current.getParticles();
 
       // Sync lines with GameCore (updates when gelato destroyed after fade)
       const currentGelatoData = gameCore.current.getGelatoLineData();
@@ -238,6 +240,7 @@ export function GameApp() {
           gelatoCreationTime.current = gameCore.current.getGelatoCreationTime();
           currentWord.current = gameCore.current.getCurrentWord();
           mascotVelocityY.current = gameCore.current.getMascotVelocityY();
+          particles.current = gameCore.current.getParticles();
 
           const currentGelatoData = gameCore.current.getGelatoLineData();
           if (currentGelatoData !== lastGelatoData.current) {
@@ -439,6 +442,7 @@ export function GameApp() {
             trail={trail.current}
             trailEndFade={trailEndFade.current}
             primaryColor={primaryColor.current}
+            particles={particles.current}
           />
 
           {/* Admin Button - Feather Icon */}
