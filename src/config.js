@@ -100,6 +100,15 @@ export const config = {
         maxOpacity: 0.25,      // Maximum trail opacity (0.0 = invisible, 1.0 = solid)
         gradientLayers: 1,    // Number of overlapping layers for gradient effect (more = smoother fade)
       },
+
+      // Shadow on ground
+      shadow: {
+        enabled: true,        // Toggle shadow on/off
+        yPosition: 0.95,      // Shadow Y position as fraction of screen height (0.95 = 95% down)
+        opacity: 0.2,         // Shadow opacity (0.0 = invisible, 1.0 = solid)
+        scaleX: 1.2,          // Horizontal scale multiplier (1.2 = 20% wider than ball)
+        scaleY: 0.3,          // Vertical scale multiplier (0.3 = squished to 30% height)
+      },
     },
 
     // Entrance animation (ball dropping from top)

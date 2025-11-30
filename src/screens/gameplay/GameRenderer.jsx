@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, memo } from 'react';
-import { Canvas, Circle, Fill, Line, Rect, vec, DashPathEffect, Path, Skia, Group } from '@shopify/react-native-skia';
+import { Canvas, Circle, Fill, Line, Rect, vec, DashPathEffect, Path, Skia, Group, Oval } from '@shopify/react-native-skia';
 import { Text, View, StyleSheet, Animated } from 'react-native';
 import { config } from '../../config';
 
@@ -770,6 +770,24 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
           opacity={particle.opacity}
         />
       ))}
+
+      {/* Shadow on ground (follows ball horizontally) */}
+      {config.physics.mascot.shadow.enabled && (() => {
+        const shadowY = height * config.physics.mascot.shadow.yPosition;
+        const shadowRadiusX = mascotRadius * config.physics.mascot.shadow.scaleX;
+        const shadowRadiusY = mascotRadius * config.physics.mascot.shadow.scaleY;
+
+        return (
+          <Oval
+            x={mascotX - shadowRadiusX}
+            y={shadowY - shadowRadiusY}
+            width={shadowRadiusX * 2}
+            height={shadowRadiusY * 2}
+            color={primaryColor}
+            opacity={config.physics.mascot.shadow.opacity}
+          />
+        );
+      })()}
 
       {/* Mascot circle */}
       <Group>
