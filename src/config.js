@@ -125,7 +125,7 @@ export const config = {
     // Death fade-out animation (when player loses)
     death: {
       fadeOutMs: 600,         // Duration of fade-out when player dies (milliseconds)
-      delayBeforeResetMs: 700, // Delay after fade completes before resetting scene (milliseconds)
+      delayBeforeResetMs: 0, // Delay after fade completes before resetting scene (milliseconds)
     },
 
     // Idle floating animation (before game starts)
