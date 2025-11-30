@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, memo } from 'react';
-import { Canvas, Circle, Fill, Line, Rect, vec, DashPathEffect, Path, Skia, Group, Oval, Blur } from '@shopify/react-native-skia';
+import { Canvas, Circle, Fill, Line, Rect, vec, DashPathEffect, Path, Skia, Group, Oval, Blur, LinearGradient } from '@shopify/react-native-skia';
 import { Text, View, StyleSheet, Animated } from 'react-native';
 import { config } from '../../config';
 
@@ -727,17 +727,28 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
           // Opacity decreases for shorter layers (creates fade at head)
           const layerOpacity = (layerIndex + 1) / layers;
 
+          // Calculate gradient start/end points along the trail
+          const startPoint = layerTrail[0];
+          const fadeLength = Math.min(layerTrail.length, 8);
+          const endPoint = layerTrail[Math.min(fadeLength, layerTrail.length - 1)];
+
           return (
             <Path
               key={`trail-${trailIdx}-layer-${layerIndex}`}
               path={path}
-              color={primaryColor}
               opacity={layerOpacity * maxOpacity * endFadeMultiplier}
               style="stroke"
               strokeWidth={ballRadius * 2}
               strokeCap="round"
               strokeJoin="round"
-            />
+            >
+              <LinearGradient
+                start={vec(startPoint.x, startPoint.y)}
+                end={vec(endPoint.x, endPoint.y)}
+                colors={[`${primaryColor}00`, primaryColor]}
+                positions={[0, 1]}
+              />
+            </Path>
           );
         }).filter(Boolean);
       })}
