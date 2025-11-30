@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, memo } from 'react';
-import { Canvas, Circle, Fill, Line, Rect, vec, DashPathEffect, Path, Skia, Group, Oval } from '@shopify/react-native-skia';
+import { Canvas, Circle, Fill, Line, Rect, vec, DashPathEffect, Path, Skia, Group, Oval, Blur } from '@shopify/react-native-skia';
 import { Text, View, StyleSheet, Animated } from 'react-native';
 import { config } from '../../config';
 
@@ -328,7 +328,7 @@ function ZogChanFace({ x, y, color, isSpeaking, radius }) {
  */
 const GameRendererComponent = ({ width, height, gameState, frame, lines = [], currentPath = null }) => {
   // Extract values from shared state object (read directly, no React reconciliation)
-  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trail = [], trailEndFade = 0, primaryColor = '#FFFFFF', particles = [] } = gameState;
+  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [] } = gameState;
   const mascotX = mascotPos.x;
   const mascotY = mascotPos.y;
   
@@ -685,47 +685,51 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
         );
       })}
 
-      {/* Motion trail behind ball - single path with gradient fade */}
-      {trail.length > 1 && (() => {
-        const ballRadius = mascotRadius; // Use responsive radius from props
+      {/* Motion trails behind ball - supports multiple overlapping trails */}
+      {trails.map((trailData, trailIdx) => {
+        const trail = trailData.points;
+        const endFadeProgress = trailData.endFadeProgress;
+
+        if (trail.length < 2) return null;
+
+        const ballRadius = mascotRadius;
         const maxOpacity = config.physics.mascot.trail.maxOpacity;
         const layers = config.physics.mascot.trail.gradientLayers;
-        
+
         // Apply end fade (when trail expires after bounce window)
-        const endFadeMultiplier = 1.0 - trailEndFade; // 1.0 = visible, 0.0 = faded
-        
+        const endFadeMultiplier = 1.0 - endFadeProgress; // 1.0 = visible, 0.0 = faded
+
         // Render multiple overlapping paths with decreasing lengths for gradient effect
-        // Each path starts from progressively newer points, creating fade-out at head
         return Array.from({ length: layers }).map((_, layerIndex) => {
           // Calculate what portion of trail to include in this layer
           const startIndex = Math.floor((trail.length - 1) * (layerIndex / layers));
           const layerTrail = trail.slice(startIndex);
-          
+
           if (layerTrail.length < 2) return null;
-          
+
           // Create smooth path for this layer
           const path = Skia.Path.Make();
           path.moveTo(layerTrail[0].x, layerTrail[0].y);
-          
+
           for (let i = 1; i < layerTrail.length - 1; i++) {
             const midX = (layerTrail[i].x + layerTrail[i + 1].x) / 2;
             const midY = (layerTrail[i].y + layerTrail[i + 1].y) / 2;
             path.quadTo(layerTrail[i].x, layerTrail[i].y, midX, midY);
           }
-          
+
           if (layerTrail.length > 1) {
             path.lineTo(
               layerTrail[layerTrail.length - 1].x,
               layerTrail[layerTrail.length - 1].y
             );
           }
-          
+
           // Opacity decreases for shorter layers (creates fade at head)
           const layerOpacity = (layerIndex + 1) / layers;
-          
+
           return (
             <Path
-              key={`trail-layer-${layerIndex}`}
+              key={`trail-${trailIdx}-layer-${layerIndex}`}
               path={path}
               color={primaryColor}
               opacity={layerOpacity * maxOpacity * endFadeMultiplier}
@@ -736,7 +740,7 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
             />
           );
         }).filter(Boolean);
-      })()}
+      })}
 
       {/* Draw current path being drawn (dotted curved preview) */}
       {currentPath && currentPath.length >= 2 && (() => {
@@ -771,21 +775,41 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
         />
       ))}
 
-      {/* Shadow on ground (follows ball horizontally) */}
-      {config.physics.mascot.shadow.enabled && (() => {
-        const shadowY = height * config.physics.mascot.shadow.yPosition;
-        const shadowRadiusX = mascotRadius * config.physics.mascot.shadow.scaleX;
-        const shadowRadiusY = mascotRadius * config.physics.mascot.shadow.scaleY;
+      {/* Ground glow (emanates from below screen edge) */}
+      {config.physics.mascot.glow.enabled && (() => {
+        const glowY = height * config.physics.mascot.glow.yPosition;
+        const glowRadiusX = mascotRadius * config.physics.mascot.glow.scaleX;
+        const glowRadiusY = mascotRadius * config.physics.mascot.glow.scaleY;
+
+        // Pulsating animation using sine wave
+        const time = Date.now() / 1000; // Convert to seconds
+        const pulsePhase = (Math.sin(time * Math.PI * 2 / config.physics.mascot.glow.pulseSpeed) + 1) / 2; // 0 to 1
+        const pulseAmount = config.physics.mascot.glow.pulseAmount;
+        const baseOpacity = config.physics.mascot.glow.opacity;
+        const pulsatingOpacity = baseOpacity * (1 - pulseAmount + pulsePhase * pulseAmount);
+
+        // Height-based opacity modulation (0 = top of screen, height = bottom)
+        const ballHeightPercent = mascotY / height; // 0 = top, 1 = bottom
+        const fadeStart = config.physics.mascot.glow.heightFadeStart;
+        const fadeEnd = config.physics.mascot.glow.heightFadeEnd;
+
+        // Calculate height fade: 0 at top, 1 at fadeEnd
+        const heightFade = Math.max(0, Math.min(1, (ballHeightPercent - fadeStart) / (fadeEnd - fadeStart)));
+
+        // Apply both pulsation and height-based fade
+        const finalOpacity = pulsatingOpacity * heightFade;
 
         return (
           <Oval
-            x={mascotX - shadowRadiusX}
-            y={shadowY - shadowRadiusY}
-            width={shadowRadiusX * 2}
-            height={shadowRadiusY * 2}
+            x={mascotX - glowRadiusX}
+            y={glowY - glowRadiusY}
+            width={glowRadiusX * 2}
+            height={glowRadiusY * 2}
             color={primaryColor}
-            opacity={config.physics.mascot.shadow.opacity}
-          />
+            opacity={finalOpacity}
+          >
+            <Blur blur={config.physics.mascot.glow.blur} />
+          </Oval>
         );
       })()}
 

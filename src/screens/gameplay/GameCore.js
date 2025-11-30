@@ -133,8 +133,9 @@ export class GameCore {
     // Track creation time for pop-in animation
     this.gelatoCreationTime = null;
     
-    // Motion trail tracking
-    this.trail = []; // Array of { x, y, timestamp }
+    // Motion trail tracking (supports multiple overlapping trails)
+    this.trails = []; // Array of trail arrays: [{ points: [{x, y, timestamp}], bounceTime }]
+    this.currentTrail = []; // Current active trail being drawn
     this.lastTrailTime = 0;
     this.lastBounceForTrail = 0; // Timestamp of last gelato bounce (for trail activation)
 
@@ -280,43 +281,49 @@ export class GameCore {
       this.primaryColor = this.interpolateColor(currentColor, nextColor, progress);
     }
     
-    // Update motion trail
+    // Update motion trail (supports multiple overlapping trails)
     if (config.physics.mascot.trail.enabled && this.gameStarted) {
       const currentTime = Date.now();
       const activeAfterBounceMs = config.physics.mascot.trail.activeAfterBounceMs;
       const endFadeDurationMs = config.physics.mascot.trail.endFadeDurationMs;
-      
+
       const timeSinceBounce = currentTime - this.lastBounceForTrail;
-      
-      // Check if trail should be completely removed (past active + fade windows)
-      const isFullyExpired = activeAfterBounceMs > 0 && 
+
+      // Check if current trail should be completely removed (past active + fade windows)
+      const isFullyExpired = activeAfterBounceMs > 0 &&
                             (timeSinceBounce > activeAfterBounceMs + endFadeDurationMs);
-      
+
       if (isFullyExpired) {
-        // Trail has completely faded - clear it
-        this.trail = [];
+        // Current trail has completely faded - clear it
+        this.currentTrail = [];
       } else {
         // Trail is visible (either active or fading) - ALWAYS sample to follow ball
         if (currentTime - this.lastTrailTime >= config.physics.mascot.trail.sampleInterval) {
-          this.trail.push({
+          this.currentTrail.push({
             x: this.mascot.position.x,
             y: this.mascot.position.y,
             timestamp: currentTime,
           });
           this.lastTrailTime = currentTime;
-          
+
           // Limit trail length
-          if (this.trail.length > config.physics.mascot.trail.maxPoints) {
-            this.trail.shift();
+          if (this.currentTrail.length > config.physics.mascot.trail.maxPoints) {
+            this.currentTrail.shift();
           }
         }
-        
+
         // Remove old trail points that have fully faded
         const fadeOutMs = config.physics.mascot.trail.fadeOutMs;
-        this.trail = this.trail.filter(point => 
+        this.currentTrail = this.currentTrail.filter(point =>
           currentTime - point.timestamp < fadeOutMs
         );
       }
+
+      // Clean up old trails that have completely faded
+      this.trails = this.trails.filter(trail => {
+        const timeSinceTrailBounce = currentTime - trail.bounceTime;
+        return timeSinceTrailBounce < activeAfterBounceMs + endFadeDurationMs;
+      });
     }
 
     // Apply velocity capping (safety valve) - scale caps with time dilation
@@ -400,8 +407,9 @@ export class GameCore {
       this.bounceImpact = null;
     }
     
-    // Clear motion trail
-    this.trail = [];
+    // Clear motion trails
+    this.trails = [];
+    this.currentTrail = [];
     this.lastTrailTime = 0;
     this.lastBounceForTrail = 0;
 
@@ -447,10 +455,16 @@ export class GameCore {
         }
 
         this.lastBounceTime = currentTime;
-        
-        // Activate trail on gelato bounce - clear old trail and start fresh
+
+        // Activate trail on gelato bounce - archive old trail and start fresh
+        if (this.currentTrail.length > 0) {
+          this.trails.push({
+            points: [...this.currentTrail], // Copy current trail
+            bounceTime: this.lastBounceForTrail, // Use old bounce time for fade calculation
+          });
+        }
         this.lastBounceForTrail = currentTime;
-        this.trail = []; // Reset trail on each bounce
+        this.currentTrail = []; // Start fresh trail
         
         // Change color on bounce if mode is 'bounce'
         if (config.colors.mode === 'bounce') {
@@ -594,32 +608,51 @@ export class GameCore {
   }
 
   /**
-   * Get motion trail for rendering
-   * Returns { trail: [...points], endFadeProgress: 0.0-1.0 }
+   * Get motion trails for rendering (supports multiple overlapping trails)
+   * Returns { trails: [{ points: [...], endFadeProgress: 0.0-1.0 }] }
    */
   getTrail() {
-    if (!config.physics.mascot.trail.enabled) return { trail: [], endFadeProgress: 0 };
-    
+    if (!config.physics.mascot.trail.enabled) return { trails: [] };
+
     const currentTime = Date.now();
     const activeAfterBounceMs = config.physics.mascot.trail.activeAfterBounceMs;
     const endFadeDurationMs = config.physics.mascot.trail.endFadeDurationMs;
-    
-    if (activeAfterBounceMs === 0) {
-      // Always on - no end fade
-      return { trail: this.trail, endFadeProgress: 0 };
+
+    const allTrails = [];
+
+    // Add old trails with their fade progress
+    for (const trail of this.trails) {
+      const timeSinceBounce = currentTime - trail.bounceTime;
+      let endFadeProgress = 0;
+
+      if (activeAfterBounceMs > 0 && timeSinceBounce > activeAfterBounceMs) {
+        const fadeTime = timeSinceBounce - activeAfterBounceMs;
+        endFadeProgress = Math.min(1.0, fadeTime / endFadeDurationMs);
+      }
+
+      allTrails.push({
+        points: trail.points,
+        endFadeProgress,
+      });
     }
-    
-    const timeSinceBounce = currentTime - this.lastBounceForTrail;
-    
-    // Calculate end fade progress
-    // 0.0 = fully visible, 1.0 = fully faded
-    let endFadeProgress = 0;
-    if (timeSinceBounce > activeAfterBounceMs) {
-      const fadeTime = timeSinceBounce - activeAfterBounceMs;
-      endFadeProgress = Math.min(1.0, fadeTime / endFadeDurationMs);
+
+    // Add current trail
+    if (this.currentTrail.length > 0) {
+      const timeSinceBounce = currentTime - this.lastBounceForTrail;
+      let endFadeProgress = 0;
+
+      if (activeAfterBounceMs > 0 && timeSinceBounce > activeAfterBounceMs) {
+        const fadeTime = timeSinceBounce - activeAfterBounceMs;
+        endFadeProgress = Math.min(1.0, fadeTime / endFadeDurationMs);
+      }
+
+      allTrails.push({
+        points: this.currentTrail,
+        endFadeProgress,
+      });
     }
-    
-    return { trail: this.trail, endFadeProgress };
+
+    return { trails: allTrails };
   }
 
   /**

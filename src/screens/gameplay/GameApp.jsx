@@ -36,8 +36,7 @@ export function GameApp() {
     mascotVelocityY: 0,
     mascotRadius: 45,
     parallaxStars: [],
-    trail: [],
-    trailEndFade: 0,
+    trails: [],
     primaryColor: '#FFFFFF',
     particles: [],
   });
@@ -167,8 +166,7 @@ export function GameApp() {
       state.mascotRadius = gameCore.current.getMascotRadius();
       state.parallaxStars = gameCore.current.getParallaxStars();
       const trailData = gameCore.current.getTrail();
-      state.trail = trailData.trail;
-      state.trailEndFade = trailData.endFadeProgress;
+      state.trails = trailData.trails;
       state.primaryColor = gameCore.current.getPrimaryColor();
       state.particles = gameCore.current.getParticles();
       
@@ -255,8 +253,7 @@ export function GameApp() {
           state.mascotRadius = gameCore.current.getMascotRadius();
           state.parallaxStars = gameCore.current.getParallaxStars();
           const trailData = gameCore.current.getTrail();
-          state.trail = trailData.trail;
-          state.trailEndFade = trailData.endFadeProgress;
+          state.trails = trailData.trails;
           state.primaryColor = gameCore.current.getPrimaryColor();
           state.particles = gameCore.current.getParticles();
           
