@@ -146,6 +146,9 @@ export class GameCore {
     // Particle system (wall bounce dust clouds)
     this.particles = []; // Array of { x, y, vx, vy, size, opacity, timestamp }
 
+    // Wall glow effects (impact feedback on side walls)
+    this.wallGlows = []; // Array of { side, y, timestamp }
+
     // Color system
     this.currentColorIndex = 0;
     this.primaryColor = config.colors.mode === 'static' 
@@ -283,6 +286,9 @@ export class GameCore {
 
     // Update particles
     this.updateParticles(deltaMs);
+
+    // Update wall glows
+    this.updateWallGlows();
 
     // Update color if mode is 'time' (gradual fade)
     if (config.colors.mode === 'time') {
@@ -445,6 +451,9 @@ export class GameCore {
     this.lastTrailTime = 0;
     this.lastBounceForTrail = 0;
 
+    // Clear wall glows
+    this.wallGlows = [];
+
     // Reset ball to starting position (above screen)
     Matter.Body.setPosition(this.mascot, {
       x: this.width / 2,
@@ -564,6 +573,16 @@ export class GameCore {
       const wallBody = bodyA.label === 'wall' ? bodyA : bodyB.label === 'wall' ? bodyB : null;
       if (mascotBody && wallBody) {
         playSound('wall-bump');
+
+        // Spawn wall glow
+        if (config.walls.glow.enabled) {
+          const isLeftWall = wallBody.position.x < this.width / 2;
+          this.wallGlows.push({
+            side: isLeftWall ? 'left' : 'right',
+            y: mascotBody.position.y,  // Exact Y position of impact
+            timestamp: Date.now(),
+          });
+        }
 
         // Spawn particles on wall bounce
         if (config.walls.particles.enabled) {
@@ -1100,10 +1119,31 @@ export class GameCore {
   }
 
   /**
+   * Update wall glows (filter expired)
+   */
+  updateWallGlows() {
+    const glowConfig = config.walls.glow;
+    const currentTime = Date.now();
+
+    // Remove fully faded glows
+    this.wallGlows = this.wallGlows.filter(glow => {
+      const age = currentTime - glow.timestamp;
+      return age < glowConfig.fadeOutMs;
+    });
+  }
+
+  /**
    * Get particles for rendering
    */
   getParticles() {
     return this.particles;
+  }
+
+  /**
+   * Get wall glows for rendering
+   */
+  getWallGlows() {
+    return this.wallGlows;
   }
 
   /**

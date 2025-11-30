@@ -220,7 +220,7 @@ export const config = {
 
     // Wall bounce particle effect (dust clouds)
     particles: {
-      enabled: true,          // Enable/disable wall bounce particles
+      enabled: false,          // Enable/disable wall bounce particles
       count: 3,               // Number of particles per wall bounce
       sizeMin: 10,             // Minimum particle radius in pixels
       sizeMax: 20,             // Maximum particle radius in pixels
@@ -230,6 +230,17 @@ export const config = {
       gravity: 0.05,          // Gravity affecting particles (lower = floatier)
       fadeOutMs: 1500,         // How long particles take to fade out
       shrink: true,           // Whether particles shrink as they fade
+    },
+
+    // Wall glow effect (impact feedback)
+    glow: {
+      enabled: true,          // Toggle wall glow on/off
+      fadeOutMs: 800,         // Fade duration in milliseconds
+      opacity: 0.9,           // Peak opacity (0.9 = very bright, emphasizes impact)
+      scaleX: 0.5,            // Horizontal width (narrow vertical bar)
+      scaleY: 3.0,            // Vertical height (tall to cover impact area)
+      blur: 25,               // Blur radius in pixels (soft glow)
+      xOffset: 0,             // Distance from wall edge (pixels, 0 = at wall)
     },
   },
 

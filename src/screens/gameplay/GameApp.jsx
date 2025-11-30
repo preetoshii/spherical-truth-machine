@@ -39,6 +39,7 @@ export function GameApp() {
     trails: [],
     primaryColor: '#FFFFFF',
     particles: [],
+    wallGlows: [],
     deathFadeProgress: 0,
   });
   
@@ -170,6 +171,7 @@ export function GameApp() {
       state.trails = trailData.trails;
       state.primaryColor = gameCore.current.getPrimaryColor();
       state.particles = gameCore.current.getParticles();
+      state.wallGlows = gameCore.current.getWallGlows();
       state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
       
       // Minimal React update - just a number, triggers Skia re-render without full reconciliation
@@ -258,6 +260,7 @@ export function GameApp() {
           state.trails = trailData.trails;
           state.primaryColor = gameCore.current.getPrimaryColor();
           state.particles = gameCore.current.getParticles();
+          state.wallGlows = gameCore.current.getWallGlows();
           state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
           
           setFrame(prev => prev + 1);

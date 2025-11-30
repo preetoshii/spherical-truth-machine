@@ -2,7 +2,7 @@ import React, { useEffect, useRef, memo } from 'react';
 import { Canvas, Circle, Fill, Line, Rect, vec, DashPathEffect, Path, Skia, Group, Oval, Blur, LinearGradient } from '@shopify/react-native-skia';
 import { Text, View, StyleSheet, Animated } from 'react-native';
 import { config } from '../../config';
-
+// Wall glow feature added
 // Load Inter font (clean, geometric, open-source)
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
@@ -328,7 +328,7 @@ function ZogChanFace({ x, y, color, isSpeaking, radius }) {
  */
 const GameRendererComponent = ({ width, height, gameState, frame, lines = [], currentPath = null }) => {
   // Extract values from shared state object (read directly, no React reconciliation)
-  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [], deathFadeProgress = 0 } = gameState;
+  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [], wallGlows = [], deathFadeProgress = 0 } = gameState;
   const mascotX = mascotPos.x;
   const mascotY = mascotPos.y;
 
@@ -829,6 +829,41 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
         );
       })()}
 
+      {/* Wall glow effects (impact feedback on side walls) */}
+      {config.walls.glow.enabled && wallGlows.map((glow, index) => {
+        const glowConfig = config.walls.glow;
+        const currentTime = Date.now();
+        const age = currentTime - glow.timestamp;
+
+        // Calculate opacity: fade from peak to 0 linearly
+        const fadeProgress = age / glowConfig.fadeOutMs;
+        const glowOpacity = Math.max(0, (1 - fadeProgress) * glowConfig.opacity);
+
+        // Determine X position based on which wall
+        const wallThickness = config.walls.thickness;
+        const glowX = glow.side === 'left'
+          ? wallThickness + glowConfig.xOffset
+          : width - wallThickness - glowConfig.xOffset;
+
+        // Vertical dimensions (rotated 90° from ground glow)
+        const glowWidth = mascotRadius * glowConfig.scaleX;   // Horizontal (narrow)
+        const glowHeight = mascotRadius * glowConfig.scaleY;  // Vertical (tall)
+
+        return (
+          <Oval
+            key={`wall-glow-${index}`}
+            x={glowX - glowWidth}
+            y={glow.y - glowHeight}
+            width={glowWidth * 2}
+            height={glowHeight * 2}
+            color={primaryColor}
+            opacity={glowOpacity}
+          >
+            <Blur blur={glowConfig.blur} />
+          </Oval>
+        );
+      })}
+
       {/* Mascot circle */}
       <Group>
         <Circle
@@ -851,7 +886,7 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
           />
         )}
       </Group>
-        </Group>
+      </Group>
       </Canvas>
 
       {/* Word overlay with Mexican wave animation */}
