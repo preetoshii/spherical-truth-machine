@@ -1,4 +1,4 @@
-# Bounsight
+# Spherical Truth Machine
 
 A minimalist, cross-platform bounce game that reveals insightful messages one word per bounce. Players draw temporary Gelatos (springboards), and a bouncing ball character speaks each word on impact with synchronized audio and haptics.
 
@@ -8,7 +8,7 @@ Built by two brothers as a playful vehicle to share messages through gameplay.
 
 ## Table of Contents
 
-- [What is Bounsight?](#what-is-bounsight)
+- [What is Spherical Truth Machine?](#what-is-spherical-truth-machine)
 - [Quick Start](#quick-start)
 - [How to Play](#how-to-play)
   - [Controls](#controls)
@@ -45,9 +45,9 @@ Built by two brothers as a playful vehicle to share messages through gameplay.
 
 ---
 
-## What is Bounsight?
+## What is Spherical Truth Machine?
 
-Bounsight is a game where **repetition via play helps a message "settle in."** The loop is meditative and affirmative without feeling like a lecture. It's a tiny stage for words wrapped in fun, simple gameplay—the medium we enjoy building.
+Spherical Truth Machine is a game where **repetition via play helps a message "settle in."** The loop is meditative and affirmative without feeling like a lecture. It's a tiny stage for words wrapped in fun, simple gameplay—the medium we enjoy building.
 
 ### Core Loop
 

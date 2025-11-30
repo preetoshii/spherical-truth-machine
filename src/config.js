@@ -1,5 +1,5 @@
 /**
- * Bounsight - Game Configuration
+ * Spherical Truth Machine - Game Configuration
  * All tunable constants in one place for easy vibe-coding.
  * Values are TBD and exploratory - will emerge through playtesting.
  */

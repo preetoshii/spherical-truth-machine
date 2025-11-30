@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "bounsight-app",
-    "slug": "bounsight-app",
+    "name": "Spherical Truth Machine",
+    "slug": "spherical-truth-machine",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,17 +14,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.bounsight-app"
+      "bundleIdentifier": "com.anonymous.spherical-truth-machine"
     },
     "android": {
-      "package": "com.preetoshi.bounsight",
+      "package": "com.preetoshi.spherical-truth-machine",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
-      // Disable predictive back gesture to prevent interference with game swipes
-      // (Gelatos are drawn by swiping from screen edges)
       "predictiveBackGestureEnabled": false,
       "navigationBar": {
         "visible": "immersive",

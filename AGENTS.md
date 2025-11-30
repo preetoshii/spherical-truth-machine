@@ -1,4 +1,4 @@
-# Bounsight
+# Spherical Truth Machine
 
 ⚠️ This file is the single source of truth for AI agents. Edit this file, not CLAUDE.md or .cursorrules.
 
@@ -19,7 +19,7 @@ npm run android          # Start Android (requires Android Studio)
 **ALWAYS uninstall first, then install.** Use the one-liner from `.claude/android-build-workflow.md`:
 
 ```bash
-~/Library/Android/sdk/platform-tools/adb uninstall com.preetoshi.bounsight && export ANDROID_HOME=~/Library/Android/sdk && export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" && cd /Users/preetoshi/bounsight/android && ./gradlew assembleRelease && cd .. && ~/Library/Android/sdk/platform-tools/adb install android/app/build/outputs/apk/release/app-release.apk
+~/Library/Android/sdk/platform-tools/adb uninstall com.preetoshi.spherical-truth-machine && export ANDROID_HOME=~/Library/Android/sdk && export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" && cd /Users/preetoshi/spherical-truth-machine/android && ./gradlew assembleRelease && cd .. && ~/Library/Android/sdk/platform-tools/adb install android/app/build/outputs/apk/release/app-release.apk
 ```
 
 **Key points:**

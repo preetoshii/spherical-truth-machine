@@ -1,4 +1,4 @@
-# Bounsight Word Timestamps API
+# Spherical Truth Machine Word Timestamps API
 
 This serverless API provides 5-10ms accurate word boundary detection for audio recordings using energy-based analysis.
 

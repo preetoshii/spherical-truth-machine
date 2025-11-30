@@ -1005,7 +1005,7 @@ export class GameCore {
 
       // Build GitHub API URL with cache buster to force fresh fetch
       const cacheBuster = Date.now();
-      const url = `https://api.github.com/repos/preetoshii/bounsight/contents/messages.json?ref=master&_=${cacheBuster}`;
+      const url = `https://api.github.com/repos/preetoshii/spherical-truth-machine/contents/messages.json?ref=master&_=${cacheBuster}`;
 
       const headers = {
         'Accept': 'application/vnd.github.v3+json',

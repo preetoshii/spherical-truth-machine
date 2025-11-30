@@ -23,18 +23,18 @@ Apps often appear cached after installing a new build because:
 ### Standard Build & Install (USE THIS BY DEFAULT)
 ```bash
 # Step 1: Uninstall existing app
-~/Library/Android/sdk/platform-tools/adb uninstall com.preetoshi.bounsight
+~/Library/Android/sdk/platform-tools/adb uninstall com.preetoshi.spherical-truth-machine
 
 # Step 2: Build new APK (uses incremental cache - fast)
-export ANDROID_HOME=~/Library/Android/sdk && export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" && cd /Users/preetoshi/bounsight/android && ./gradlew assembleRelease
+export ANDROID_HOME=~/Library/Android/sdk && export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" && cd /Users/preetoshi/spherical-truth-machine/android && ./gradlew assembleRelease
 
 # Step 3: Install new APK
-~/Library/Android/sdk/platform-tools/adb install /Users/preetoshi/bounsight/android/app/build/outputs/apk/release/app-release.apk
+~/Library/Android/sdk/platform-tools/adb install /Users/preetoshi/spherical-truth-machine/android/app/build/outputs/apk/release/app-release.apk
 ```
 
 **One-liner version:**
 ```bash
-~/Library/Android/sdk/platform-tools/adb uninstall com.preetoshi.bounsight && export ANDROID_HOME=~/Library/Android/sdk && export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" && cd /Users/preetoshi/bounsight/android && ./gradlew assembleRelease && cd .. && ~/Library/Android/sdk/platform-tools/adb install android/app/build/outputs/apk/release/app-release.apk
+~/Library/Android/sdk/platform-tools/adb uninstall com.preetoshi.spherical-truth-machine && export ANDROID_HOME=~/Library/Android/sdk && export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" && cd /Users/preetoshi/spherical-truth-machine/android && ./gradlew assembleRelease && cd .. && ~/Library/Android/sdk/platform-tools/adb install android/app/build/outputs/apk/release/app-release.apk
 ```
 
 **Why this works:**
@@ -63,7 +63,7 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" &
 
 Check if app is installed:
 ```bash
-~/Library/Android/sdk/platform-tools/adb shell pm list packages | grep bounsight
+~/Library/Android/sdk/platform-tools/adb shell pm list packages | grep spherical-truth-machine
 ```
 
 Check APK build timestamp:
@@ -73,7 +73,7 @@ ls -lh android/app/build/outputs/apk/release/app-release.apk
 
 Force kill app on device:
 ```bash
-~/Library/Android/sdk/platform-tools/adb shell am force-stop com.preetoshi.bounsight
+~/Library/Android/sdk/platform-tools/adb shell am force-stop com.preetoshi.spherical-truth-machine
 ```
 
 ## Key Insight

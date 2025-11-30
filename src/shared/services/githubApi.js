@@ -6,7 +6,7 @@
 // GitHub configuration
 const GITHUB_CONFIG = {
   owner: 'preetoshii', // GitHub username
-  repo: 'bounsight',
+  repo: 'spherical-truth-machine',
   branch: 'master',
   filePath: 'messages.json',
   token: process.env.EXPO_PUBLIC_GITHUB_TOKEN || null, // Load from environment variable

@@ -1,5 +1,5 @@
 {
-  "name": "bounsight-api",
+  "name": "spherical-truth-machine-api",
   "version": "1.0.0",
   "description": "Serverless API for word timestamp alignment",
   "private": true,
