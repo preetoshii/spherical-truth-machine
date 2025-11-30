@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { GameRenderer } from '../gameplay/GameRenderer';
@@ -56,8 +56,18 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
     primaryColor,
   } = useGameLoop(dimensions, message, activeAudioUri, activeWordTimings, null, null);
 
-  // Get parallax stars from game core
+  // Get additional game state from game core (for new features like wall glows)
   const parallaxStars = gameCore.current ? gameCore.current.getParallaxStars() : [];
+  const particles = gameCore.current ? gameCore.current.getParticles() : [];
+  const wallGlows = gameCore.current ? gameCore.current.getWallGlows() : [];
+  const deathFadeProgress = gameCore.current ? gameCore.current.getDeathFadeProgress() : 0;
+
+  // Frame counter for triggering re-renders
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setFrame(f => f + 1), 16);
+    return () => clearInterval(interval);
+  }, []);
 
   const [currentPath, setCurrentPath] = useState(null);
   
@@ -197,20 +207,24 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
         <GameRenderer
           width={dimensions.width}
           height={dimensions.height}
-          mascotX={mascotPos.current.x}
-          mascotY={mascotPos.current.y}
-          obstacles={obstacles.current}
+          gameState={{
+            mascotPos: mascotPos.current,
+            obstacles: obstacles.current,
+            bounceImpact: bounceImpact.current,
+            gelatoCreationTime: gelatoCreationTime.current,
+            currentWord: currentWord.current,
+            mascotVelocityY: mascotVelocityY.current,
+            mascotRadius: mascotRadius.current,
+            parallaxStars,
+            trails: trail.current,
+            primaryColor: primaryColor.current,
+            particles,
+            wallGlows,
+            deathFadeProgress,
+          }}
+          frame={frame}
           lines={lines}
           currentPath={currentPath}
-          bounceImpact={bounceImpact.current}
-          gelatoCreationTime={gelatoCreationTime.current}
-          currentWord={currentWord.current}
-          mascotVelocityY={mascotVelocityY.current}
-          mascotRadius={mascotRadius.current}
-          parallaxStars={parallaxStars}
-          trail={trail.current}
-          trailEndFade={0}
-          primaryColor={primaryColor.current}
         />
       </View>
 
