@@ -149,6 +149,7 @@ export class GameCore {
     // Wall glow effects (impact feedback on side walls)
     this.wallGlows = []; // Array of { side, y, timestamp }
     this.lastWallBumpSound = null; // Track last played sound to prevent consecutive repeats
+    this.lastGelatoBounceSound = null; // Track last played gelato bounce sound to prevent consecutive repeats
 
     // Color system
     this.currentColorIndex = 0;
@@ -551,8 +552,12 @@ export class GameCore {
           y: currentVelocity.y + normalY * boostVelocity,
         });
 
-        // Play gelato bounce sound
-        playSound('gelato-bounce');
+        // Randomly pick one of the deep bass chord tones for musical variety (but prevent consecutive repeats)
+        const gelatoBounceVariants = ['gelato-bounce-C2', 'gelato-bounce-E2', 'gelato-bounce-G2', 'gelato-bounce-C3'];
+        const availableBounceVariants = gelatoBounceVariants.filter(v => v !== this.lastGelatoBounceSound);
+        const randomBounceVariant = availableBounceVariants[Math.floor(Math.random() * availableBounceVariants.length)];
+        this.lastGelatoBounceSound = randomBounceVariant;
+        playSound(randomBounceVariant);
 
         // Store impact data for visual deformation
         this.bounceImpact = {
