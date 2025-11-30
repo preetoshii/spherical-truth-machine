@@ -38,6 +38,10 @@ export class GameCore {
     if (audioUri && wordTimings && wordTimings.length > 0) {
       try {
         this.audioPlayer = createAudioPlayer({ uri: audioUri });
+        // Set voice volume from config (default 0.5 = 50% volume)
+        if (this.audioPlayer && config.audio && config.audio.voiceVolume !== undefined) {
+          this.audioPlayer.volume = config.audio.voiceVolume;
+        }
         console.log('Expo-audio player created for full recording');
       } catch (error) {
         console.error('Failed to create audio player:', error);

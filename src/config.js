@@ -58,12 +58,18 @@ export function getResponsiveConfig(screenWidth) {
 }
 
 export const config = {
-  // === AUDIO SYNC ===
+  // === AUDIO ===
   audio: {
-    // Trim this many milliseconds from the start of each word slice
-    // Google's timestamps may include leading silence/breath sounds
-    // Increase if audio plays too early, decrease if too late
-    trimStartMs: 120, // Try values between 50-150ms
+    // Audio sync/trimming
+    trimStartMs: 0,         // Trim this many milliseconds from the start of each word slice
+                              // Google's timestamps may include leading silence/breath sounds
+                              // Increase if audio plays too early, decrease if too late
+                              // Try values between 50-150ms
+    
+    // Volume controls
+    voiceVolume: 0.1,         // Voice playback volume for word narration (0 = mute, 1 = full, default: 0.5 = 50%)
+    sfxVolume: 0.5,           // Sound effects volume for bounces (0 = mute, 1 = full)
+    duckingSfx: false,         // Whether to lower SFX volume when voice plays
   },
 
   // === PHYSICS ===
@@ -281,12 +287,6 @@ export const config = {
     },
   },
 
-  // === AUDIO (Not yet implemented) ===
-  audio: {
-    voiceVolume: 1.0,         // Voice playback volume for word narration (0 = mute, 1 = full)
-    sfxVolume: 0.3,           // Sound effects volume for bounces (0 = mute, 1 = full)
-    duckingSfx: true,         // Whether to lower SFX volume when voice plays
-  },
 
   // === PARALLAX STARFIELD ===
   // Multi-layer scrolling background that creates illusion of climbing through space
