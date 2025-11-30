@@ -116,37 +116,37 @@
       ]
     },
     "2025-11-30": {
-      "text": "who am I today",
+      "text": "the man is big",
       "words": [
-        "who",
-        "am",
-        "I",
-        "today"
+        "the",
+        "man",
+        "is",
+        "big"
       ],
       "audio": {
-        "original": "30-11-2025-who-am-i-original.m4a",
-        "transformed": "30-11-2025-who-am-i-transformed.mp3"
+        "original": "30-11-2025-the-man-is-original.m4a",
+        "transformed": "30-11-2025-the-man-is-transformed.mp3"
       },
       "wordTimings": [
         {
-          "word": "who",
-          "start": 1340,
-          "end": 1815
+          "word": "the",
+          "start": 965,
+          "end": 1540
         },
         {
-          "word": "am",
-          "start": 2220,
-          "end": 2700
+          "word": "man",
+          "start": 1825,
+          "end": 2495
         },
         {
-          "word": "I",
-          "start": 3140,
-          "end": 3795
+          "word": "is",
+          "start": 2695,
+          "end": 3195
         },
         {
-          "word": "today",
-          "start": 4055,
-          "end": 4610
+          "word": "big",
+          "start": 3430,
+          "end": 3970
         }
       ]
     }
