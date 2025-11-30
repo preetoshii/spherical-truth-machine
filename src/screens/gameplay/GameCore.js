@@ -77,6 +77,10 @@ export class GameCore {
     // Track loss state
     this.hasLost = false;
 
+    // Track death fade-out animation
+    this.deathFadeStartTime = null; // Timestamp when death fade started
+    this.deathFadeProgress = 0;     // 0.0 = visible, 1.0 = fully faded
+
     // Track bounce count for difficulty progression
     this.bounceCount = 0;
 
@@ -194,6 +198,24 @@ export class GameCore {
    * Call this every frame with delta time
    */
   step(deltaMs) {
+    // Handle death fade-out animation
+    if (this.hasLost && this.deathFadeStartTime !== null) {
+      const currentTime = Date.now();
+      const elapsed = currentTime - this.deathFadeStartTime;
+      const fadeOutMs = config.physics.death.fadeOutMs;
+      const delayBeforeReset = config.physics.death.delayBeforeResetMs;
+
+      // Update fade progress (0.0 = visible, 1.0 = fully faded)
+      this.deathFadeProgress = Math.min(1.0, elapsed / fadeOutMs);
+
+      // Check if fade is complete AND delay has passed
+      if (elapsed >= fadeOutMs + delayBeforeReset) {
+        this.completeReset();
+      }
+
+      return; // Skip all other updates during death fade
+    }
+
     // Disable gravity before game starts (manual position control)
     if (!this.gameStarted) {
       Matter.Body.setVelocity(this.mascot, { x: 0, y: 0 });
@@ -388,10 +410,20 @@ export class GameCore {
     // Play loss sound
     playSound('loss');
 
+    // Start death fade-out animation
+    this.deathFadeStartTime = Date.now();
+    this.deathFadeProgress = 0;
+  }
+
+  /**
+   * Complete the reset after death fade-out finishes
+   * This is called from step() after the fade animation completes
+   */
+  completeReset() {
     // Reset word index to start message from beginning
     this.wordIndex = 0;
     this.currentWord = null;
-    
+
     // Change color on quote restart if mode is 'bounce' and bouncesPerColorChange is 'quote'
     if (config.colors.mode === 'bounce' && config.colors.bouncesPerColorChange === 'quote') {
       this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
@@ -406,7 +438,7 @@ export class GameCore {
       this.gelatoLineData = null;
       this.bounceImpact = null;
     }
-    
+
     // Clear motion trails
     this.trails = [];
     this.currentTrail = [];
@@ -428,6 +460,10 @@ export class GameCore {
     this.idleFloatStartTime = null;
     this.gameStarted = false;
     this.hasLost = false;
+
+    // Reset death fade state
+    this.deathFadeStartTime = null;
+    this.deathFadeProgress = 0;
 
     // Reset bounce count and difficulty
     this.bounceCount = 0;
@@ -1068,6 +1104,13 @@ export class GameCore {
    */
   getParticles() {
     return this.particles;
+  }
+
+  /**
+   * Get death fade progress (0.0 = visible, 1.0 = fully faded)
+   */
+  getDeathFadeProgress() {
+    return this.deathFadeProgress;
   }
 
   /**

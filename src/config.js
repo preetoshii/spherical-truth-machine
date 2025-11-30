@@ -101,13 +101,18 @@ export const config = {
         gradientLayers: 1,    // Number of overlapping layers for gradient effect (more = smoother fade)
       },
 
-      // Shadow on ground
-      shadow: {
-        enabled: true,        // Toggle shadow on/off
-        yPosition: 0.95,      // Shadow Y position as fraction of screen height (0.95 = 95% down)
-        opacity: 0.2,         // Shadow opacity (0.0 = invisible, 1.0 = solid)
-        scaleX: 1.2,          // Horizontal scale multiplier (1.2 = 20% wider than ball)
-        scaleY: 0.3,          // Vertical scale multiplier (0.3 = squished to 30% height)
+      // Ground glow (emanates from below screen edge)
+      glow: {
+        enabled: true,        // Toggle glow on/off
+        yPosition: 1.02,      // Glow Y position as fraction of screen height (1.02 = slightly below screen)
+        opacity: 0.7,         // Glow opacity (0.0 = invisible, 1.0 = solid)
+        scaleX: 3.0,          // Horizontal scale multiplier (3.0 = 3x wider than ball)
+        scaleY: 0.7,          // Vertical scale multiplier (0.7 = squished to 70% height)
+        blur: 30,             // Blur radius in pixels (higher = softer glow)
+        pulseSpeed: 2.0,      // Pulsation speed (seconds per cycle)
+        pulseAmount: 0.35,    // Pulsation amount (0.35 = 35% variation in opacity)
+        heightFadeStart: 0.0, // Start fading at top of screen (0% down)
+        heightFadeEnd: 0.75,  // Full opacity at 75% down screen
       },
     },
 
@@ -115,6 +120,12 @@ export const config = {
     entrance: {
       delayMs: 1000,          // Delay before entrance animation starts (in milliseconds)
       durationMs: 800,        // Duration of entrance animation (in milliseconds)
+    },
+
+    // Death fade-out animation (when player loses)
+    death: {
+      fadeOutMs: 600,         // Duration of fade-out when player dies (milliseconds)
+      delayBeforeResetMs: 700, // Delay after fade completes before resetting scene (milliseconds)
     },
 
     // Idle floating animation (before game starts)

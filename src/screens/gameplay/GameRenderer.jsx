@@ -328,9 +328,12 @@ function ZogChanFace({ x, y, color, isSpeaking, radius }) {
  */
 const GameRendererComponent = ({ width, height, gameState, frame, lines = [], currentPath = null }) => {
   // Extract values from shared state object (read directly, no React reconciliation)
-  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [] } = gameState;
+  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [], deathFadeProgress = 0 } = gameState;
   const mascotX = mascotPos.x;
   const mascotY = mascotPos.y;
+
+  // Calculate death fade opacity (0.0 = fully visible, 1.0 = fully faded)
+  const deathFadeOpacity = 1.0 - deathFadeProgress;
   
   // Frame is used to trigger re-render but not read directly
   // eslint-disable-next-line no-unused-vars
@@ -395,8 +398,10 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
         {/* Background */}
         <Fill color={config.visuals.backgroundColor} />
 
-        {/* Parallax starfield background */}
-        {parallaxStars.map((star, index) => {
+        {/* Game content with death fade */}
+        <Group opacity={deathFadeOpacity}>
+          {/* Parallax starfield background */}
+          {parallaxStars.map((star, index) => {
           // Calculate twinkle effect (subtle opacity pulsing)
           let twinkledOpacity = star.opacity;
           if (config.parallax.twinkle.enabled) {
@@ -807,7 +812,7 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
         // Calculate height fade: 0 at top, 1 at fadeEnd
         const heightFade = Math.max(0, Math.min(1, (ballHeightPercent - fadeStart) / (fadeEnd - fadeStart)));
 
-        // Apply both pulsation and height-based fade
+        // Apply pulsation and height-based fade
         const finalOpacity = pulsatingOpacity * heightFade;
 
         return (
@@ -846,7 +851,7 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
           />
         )}
       </Group>
-
+        </Group>
       </Canvas>
 
       {/* Word overlay with Mexican wave animation */}

@@ -39,6 +39,7 @@ export function GameApp() {
     trails: [],
     primaryColor: '#FFFFFF',
     particles: [],
+    deathFadeProgress: 0,
   });
   
   // Frame counter for minimal React re-render trigger (just a number, not full reconciliation)
@@ -169,6 +170,7 @@ export function GameApp() {
       state.trails = trailData.trails;
       state.primaryColor = gameCore.current.getPrimaryColor();
       state.particles = gameCore.current.getParticles();
+      state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
       
       // Minimal React update - just a number, triggers Skia re-render without full reconciliation
       setFrame(prev => prev + 1);
@@ -256,6 +258,7 @@ export function GameApp() {
           state.trails = trailData.trails;
           state.primaryColor = gameCore.current.getPrimaryColor();
           state.particles = gameCore.current.getParticles();
+          state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
           
           setFrame(prev => prev + 1);
 
