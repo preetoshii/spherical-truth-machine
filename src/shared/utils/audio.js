@@ -35,6 +35,10 @@ export async function playSound(name) {
       'loss': require('../../assets/sfx/loss.wav'),
       'preview': require('../../assets/sfx/preview.wav'),
       'wall-bump': require('../../assets/sfx/wall-bump.wav'),
+      'wall-bump-C4': require('../../assets/sfx/wall/wall-bump-C4.wav'),
+      'wall-bump-E4': require('../../assets/sfx/wall/wall-bump-E4.wav'),
+      'wall-bump-G4': require('../../assets/sfx/wall/wall-bump-G4.wav'),
+      'wall-bump-C5': require('../../assets/sfx/wall/wall-bump-C5.wav'),
       'click': require('../../assets/sfx/click.wav'),
       'expand-card': require('../../assets/sfx/expand-card.wav'),
     };

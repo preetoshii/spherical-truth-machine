@@ -148,6 +148,7 @@ export class GameCore {
 
     // Wall glow effects (impact feedback on side walls)
     this.wallGlows = []; // Array of { side, y, timestamp }
+    this.lastWallBumpSound = null; // Track last played sound to prevent consecutive repeats
 
     // Color system
     this.currentColorIndex = 0;
@@ -572,7 +573,12 @@ export class GameCore {
       // Check if mascot hit a wall/boundary
       const wallBody = bodyA.label === 'wall' ? bodyA : bodyB.label === 'wall' ? bodyB : null;
       if (mascotBody && wallBody) {
-        playSound('wall-bump');
+        // Randomly pick one of the chord tones for musical variety (but prevent consecutive repeats)
+        const wallBumpVariants = ['wall-bump-C4', 'wall-bump-E4', 'wall-bump-G4', 'wall-bump-C5'];
+        const availableVariants = wallBumpVariants.filter(v => v !== this.lastWallBumpSound);
+        const randomVariant = availableVariants[Math.floor(Math.random() * availableVariants.length)];
+        this.lastWallBumpSound = randomVariant;
+        playSound(randomVariant);
 
         // Spawn wall glow
         if (config.walls.glow.enabled) {
