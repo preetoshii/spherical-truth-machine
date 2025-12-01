@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, Pressable } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Text, Pressable, Animated } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { CalendarView } from './CalendarView';
 import { PreviewMode } from './PreviewMode';
@@ -277,6 +277,24 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
     return editingDate === today;
   };
 
+  // Exit animation state
+  const [isExiting, setIsExiting] = useState(false);
+  const portalOpacity = useRef(new Animated.Value(1)).current;
+
+  // Handle exit animation - fade out overlay (matches card animation duration)
+  useEffect(() => {
+    if (isExiting) {
+      Animated.timing(portalOpacity, {
+        toValue: 0,
+        duration: 500, // Match card exit animation duration
+        useNativeDriver: true,
+      }).start(() => {
+        setIsExiting(false);
+        onClose();
+      });
+    }
+  }, [isExiting]);
+
   // Handle back button - simple and direct
   const handleBack = () => {
     playSound('back-button');
@@ -292,14 +310,14 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
       logger.log('ADMIN_UI', '→ Collapsing card');
       exitEdit();
     } else if (currentView === 'calendar') {
-      logger.log('ADMIN_UI', '→ Closing portal');
+      logger.log('ADMIN_UI', '→ Closing portal with exit animation');
       playSound('card-slide');
-      onClose();
+      setIsExiting(true); // Trigger exit animation
     }
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity: portalOpacity }]}>
       {/* Single persistent back button - hide when text editor is open */}
       {!isTextEditorOpen && (
         <Pressable
@@ -323,6 +341,8 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
           primaryColor={primaryColor}
           scrollToDate={scrollToDate}
           onScrollComplete={() => setScrollToDate(null)}
+          isExiting={isExiting}
+          onExitComplete={() => {}} // Handled by Animated.View fade
         />
       )}
 
@@ -347,14 +367,14 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
           uploadProgress={uploadProgress}
         />
       )}
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#000000',
   },
   fullScreen: {
     position: 'absolute',

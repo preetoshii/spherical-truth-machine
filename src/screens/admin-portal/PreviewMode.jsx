@@ -287,7 +287,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#000000',
   },
   gameView: {
     flex: 1,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: '#ffffff',
     borderWidth: 2,
-    borderColor: '#0a0a0a',
+    borderColor: '#000000',
     paddingHorizontal: 40,
     paddingVertical: 20,
     borderRadius: 999,
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#0a0a0a',
+    color: '#000000',
   },
   editTextButton: {
     position: 'absolute',

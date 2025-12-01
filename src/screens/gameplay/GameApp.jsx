@@ -456,60 +456,58 @@ export function GameApp() {
 
   return (
     <View style={styles.container}>
-      {/* Game view - unmount completely when admin is open */}
-      {!showAdmin && (
-        <View
-          key={gameMountKey}
-          style={styles.fullScreen}
-          onStartShouldSetResponder={() => true}
-          onResponderGrant={handleTouchStart}
-          onResponderMove={handleTouchMove}
-          onResponderRelease={handleTouchEnd}
-        >
-          {/* Hidden preload element to force font to load before first word */}
-          <Text style={{ position: 'absolute', opacity: 0, fontFamily: 'FinlandRounded' }}>
-            preload
+      {/* Game view - always mounted and visible (admin portal overlays on top) */}
+      <View
+        key={gameMountKey}
+        style={styles.fullScreen}
+        onStartShouldSetResponder={() => true}
+        onResponderGrant={handleTouchStart}
+        onResponderMove={handleTouchMove}
+        onResponderRelease={handleTouchEnd}
+      >
+        {/* Hidden preload element to force font to load before first word */}
+        <Text style={{ position: 'absolute', opacity: 0, fontFamily: 'FinlandRounded' }}>
+          preload
+        </Text>
+
+        <GameRenderer
+          width={dimensions.width}
+          height={dimensions.height}
+          gameState={gameState.current}
+          frame={frame}
+          lines={lines}
+          currentPath={currentPath}
+        />
+
+        {/* Admin Button - Feather Icon */}
+        <Pressable onPress={openAdmin} style={styles.adminButton}>
+          <Feather name="feather" size={20} color={gameState.current.primaryColor} style={{ opacity: 0.6 }} />
+        </Pressable>
+
+        {/* Debug Button (always visible) with optional FPS Counter */}
+        <Pressable onPress={() => setShowDebugMenu(true)} style={styles.debugButton}>
+          <Text style={[styles.debugButtonText, { color: gameState.current.primaryColor }]}>
+            {config.performance.showFps ? `⚙️ ${fps} FPS` : '⚙️'}
           </Text>
+        </Pressable>
 
-          <GameRenderer
-            width={dimensions.width}
-            height={dimensions.height}
-            gameState={gameState.current}
-            frame={frame}
-            lines={lines}
-            currentPath={currentPath}
-          />
+        {/* Debug Menu Overlay */}
+        <DebugMenu
+          visible={showDebugMenu}
+          onClose={() => setShowDebugMenu(false)}
+          hapticsConfig={hapticsConfig}
+          setHapticsConfig={setHapticsConfig}
+          fpsCap={fpsCap}
+          setFpsCap={setFpsCap}
+          showFps={showFps}
+          setShowFps={setShowFps}
+          primaryColor={gameState.current.primaryColor}
+        />
+      </View>
 
-          {/* Admin Button - Feather Icon */}
-          <Pressable onPress={openAdmin} style={styles.adminButton}>
-            <Feather name="feather" size={20} color={gameState.current.primaryColor} style={{ opacity: 0.6 }} />
-          </Pressable>
-
-          {/* Debug Button (always visible) with optional FPS Counter */}
-          <Pressable onPress={() => setShowDebugMenu(true)} style={styles.debugButton}>
-            <Text style={[styles.debugButtonText, { color: gameState.current.primaryColor }]}>
-              {config.performance.showFps ? `⚙️ ${fps} FPS` : '⚙️'}
-            </Text>
-          </Pressable>
-
-          {/* Debug Menu Overlay */}
-          <DebugMenu
-            visible={showDebugMenu}
-            onClose={() => setShowDebugMenu(false)}
-            hapticsConfig={hapticsConfig}
-            setHapticsConfig={setHapticsConfig}
-            fpsCap={fpsCap}
-            setFpsCap={setFpsCap}
-            showFps={showFps}
-            setShowFps={setShowFps}
-            primaryColor={gameState.current.primaryColor}
-          />
-        </View>
-      )}
-
-      {/* Admin portal - unmount when closed */}
+      {/* Admin portal - overlay on top of game */}
       {showAdmin && (
-        <View style={styles.fullScreen}>
+        <View style={[styles.fullScreen, { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }]}>
           <AdminPortal onClose={closeAdmin} preloadedData={preloadedMessagesData} primaryColor={gameState.current.primaryColor} />
         </View>
       )}

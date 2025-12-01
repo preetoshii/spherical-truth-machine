@@ -32,6 +32,7 @@ function CardItem({
   todayIndex,
   onRecordingComplete,
   primaryColor = '#FFFFFF',
+  isExiting = false,
 }) {
   // Shared values for animations
   const scale = useSharedValue(1);
@@ -46,15 +47,30 @@ function CardItem({
 
   // Entrance animation - cards fly up from bottom
   useEffect(() => {
-    translateY.value = withDelay(
-      delay,
-      withSpring(0, {
-        damping: 22,      // Balanced - subtle bounce
-        stiffness: 300,   // Fast but not too stiff
-        mass: 0.8,        // Slight weight
-      })
-    );
-  }, []);
+    if (!isExiting) {
+      translateY.value = withDelay(
+        delay,
+        withSpring(0, {
+          damping: 22,      // Balanced - subtle bounce
+          stiffness: 300,   // Fast but not too stiff
+          mass: 0.8,        // Slight weight
+        })
+      );
+    }
+  }, [isExiting]);
+
+  // Exit animation - cards fly down to bottom (all together, no stagger)
+  useEffect(() => {
+    if (isExiting) {
+      // All cards exit together (no stagger delay)
+      translateY.value = withSpring(500, {
+        damping: 22,
+        stiffness: 300,
+        mass: 0.8,
+      });
+      opacity.value = withTiming(0, { duration: 300 });
+    }
+  }, [isExiting]);
 
   // Animate when editing state changes
   useEffect(() => {
@@ -179,7 +195,7 @@ function CardItem({
 /**
  * CalendarView - Horizontal scrolling card-based calendar
  */
-export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initialEditingDate, initialEditingText, scrollToDate, onScrollComplete, primaryColor = '#FFFFFF' }) {
+export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initialEditingDate, initialEditingText, scrollToDate, onScrollComplete, primaryColor = '#FFFFFF', isExiting = false, onExitComplete }) {
   const { width, height } = Dimensions.get('window');
   const scrollViewRef = useRef(null);
   useHorizontalScroll(scrollViewRef); // Hook for vertical-to-horizontal scroll translation
@@ -302,6 +318,20 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
       }
     }
   }, [scrollToDate]);
+
+  // Handle exit animation completion
+  useEffect(() => {
+    if (isExiting) {
+      // All cards exit together, so just wait for animation duration
+      const animationDuration = 500; // Spring animation duration estimate
+      
+      if (onExitComplete) {
+        setTimeout(() => {
+          onExitComplete();
+        }, animationDuration);
+      }
+    }
+  }, [isExiting, onExitComplete]);
 
   const formatDate = (dateStr, isToday) => {
     const date = new Date(dateStr + 'T00:00:00');
@@ -440,6 +470,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
                 todayIndex={todayIndex}
                 onRecordingComplete={handleRecordingComplete}
                 primaryColor={primaryColor}
+                isExiting={isExiting}
               />
             );
           })}
