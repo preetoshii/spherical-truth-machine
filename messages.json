@@ -1,5 +1,5 @@
 {
-  "current": "2025-11-30",
+  "current": "2025-12-01",
   "messages": {
     "2025-10-18": {
       "text": "you are braver than you believe",
@@ -151,37 +151,43 @@
       ]
     },
     "2025-12-01": {
-      "text": "bring the mother home",
+      "text": "Tom is inspiring human being",
       "words": [
-        "bring",
-        "the",
-        "mother",
-        "home"
+        "Tom",
+        "is",
+        "inspiring",
+        "human",
+        "being"
       ],
       "audio": {
-        "original": "30-11-2025-bring-the-mother-original.m4a",
-        "transformed": "30-11-2025-bring-the-mother-transformed.mp3"
+        "original": "01-12-2025-tom-is-inspiring-original.m4a",
+        "transformed": "01-12-2025-tom-is-inspiring-transformed.mp3"
       },
       "wordTimings": [
         {
-          "word": "bring",
-          "start": 965,
-          "end": 1595
+          "word": "Tom",
+          "start": 1390,
+          "end": 1960
         },
         {
-          "word": "the",
-          "start": 1835,
-          "end": 2415
+          "word": "is",
+          "start": 2345,
+          "end": 2895
         },
         {
-          "word": "mother",
-          "start": 2550,
-          "end": 3160
+          "word": "inspiring",
+          "start": 3385,
+          "end": 4405
         },
         {
-          "word": "home",
-          "start": 3520,
-          "end": 3910
+          "word": "human",
+          "start": 5025,
+          "end": 5710
+        },
+        {
+          "word": "being",
+          "start": 6205,
+          "end": 6595
         }
       ]
     }
