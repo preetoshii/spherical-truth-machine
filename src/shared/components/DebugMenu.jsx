@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Pressable, ScrollView, Platform } from 'react-n
 import { config } from '../../config';
 import { triggerHaptic } from '../utils/haptics';
 
-export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, fpsCap, setFpsCap, showFps, setShowFps, primaryColor = '#FFFFFF' }) {
+export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, fpsCap, setFpsCap, showFps, setShowFps, primaryColor = '#FFFFFF', onAddCoin, onResetProgress }) {
   if (!visible) return null;
 
   const fpsCapOptions = [null, 10, 20, 30, 40, 50, 60, 70, 80, 90, 120];
@@ -340,6 +340,31 @@ export function DebugMenu({ visible, onClose, hapticsConfig, setHapticsConfig, f
               </View>
             </View>
           </View>
+
+          {/* Coins & Progress Section */}
+          {(onAddCoin || onResetProgress) && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: primaryColor }]}>Coins & Progress</Text>
+              
+              {onAddCoin && (
+                <Pressable
+                  onPress={onAddCoin}
+                  style={[styles.testButton, { marginBottom: 12 }]}
+                >
+                  <Text style={styles.testButtonText}>Add Coin (+1)</Text>
+                </Pressable>
+              )}
+              
+              {onResetProgress && (
+                <Pressable
+                  onPress={onResetProgress}
+                  style={[styles.testButton, { backgroundColor: '#FF4444' }]}
+                >
+                  <Text style={styles.testButtonText}>Reset Progress to 0</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
         </ScrollView>
 
         {/* Close Button at Bottom */}

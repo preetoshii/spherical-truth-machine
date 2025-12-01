@@ -328,7 +328,7 @@ function ZogChanFace({ x, y, color, isSpeaking, radius }) {
  */
 const GameRendererComponent = ({ width, height, gameState, frame, lines = [], currentPath = null, debugMode = false }) => {
   // Extract values from shared state object (read directly, no React reconciliation)
-  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [], wallGlows = [], bounceRipples = [], lastBounceScale = null, deathFadeProgress = 0, coins = [], coinCount = 0 } = gameState;
+  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [], wallGlows = [], bounceRipples = [], lastBounceScale = null, deathFadeProgress = 0, deathStartTime = null, coinCountCutsceneActive = false, coinCountCutsceneStartTime = null, coins = [], coinCount = 0 } = gameState;
   const mascotX = mascotPos.x;
   const mascotY = mascotPos.y;
 
@@ -987,19 +987,35 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
       </Group>
       </Canvas>
 
-      {/* Coin count display on death screen */}
-      {config.coins.enabled && config.coins.deathScreen.show && deathFadeProgress > 0 && (() => {
+      {/* Coin count display on death screen (cutscene) - DISABLED: now shown in progress bar */}
+      {false && config.coins.enabled && config.coins.deathScreen.show && coinCountCutsceneActive && coinCountCutsceneStartTime !== null && (() => {
         const countColor = config.coins.deathScreen.useDynamicColor ? primaryColor : config.coins.deathScreen.staticColor;
+        const fadeInMs = config.coins.deathScreen.fadeInMs;
+        
+        // Calculate coin count opacity based on time since cutscene started
+        const currentTime = Date.now();
+        const timeSinceCutsceneStart = currentTime - coinCountCutsceneStartTime;
+        
+        let coinCountOpacity = 0;
+        if (timeSinceCutsceneStart < fadeInMs) {
+          // Fade in over first 300ms
+          coinCountOpacity = timeSinceCutsceneStart / fadeInMs;
+        } else {
+          // Stay at full opacity for remaining cutscene duration
+          coinCountOpacity = 1.0;
+        }
+        
         return (
           <View style={styles.coinCountContainer} pointerEvents="none">
             <Text style={[styles.coinCountText, {
-              opacity: deathFadeProgress,
+              opacity: coinCountOpacity,
               color: countColor,
               fontSize: config.coins.deathScreen.fontSize,
               top: `${config.coins.deathScreen.yPosition * 100}%`,
             }]}>
               {coinCount}
             </Text>
+            {/* TODO: Add radial progress bar animation here */}
           </View>
         );
       })()}

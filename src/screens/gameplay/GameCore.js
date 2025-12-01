@@ -6,6 +6,7 @@ import { ParallaxManager } from '../../shared/effects/ParallaxManager';
 import { logger } from '../../shared/utils/logger';
 import { notifyBounce, notifyMessageRestart } from '../../shared/services/primaryColorManager';
 import { quantizeVelocityAngle } from '../../shared/utils/physics';
+import { getProgress } from '../../shared/services/progressStorage';
 
 /**
  * GameCore - Physics engine using Matter.js
@@ -87,6 +88,7 @@ export class GameCore {
     // Track death fade-out animation
     this.deathFadeStartTime = null; // Timestamp when death fade started
     this.deathFadeProgress = 0;     // 0.0 = visible, 1.0 = fully faded
+    this.deathStartTime = null;      // Timestamp when death started (for coin count timing)
 
     // Track bounce count for difficulty progression
     this.bounceCount = 0;
@@ -94,6 +96,11 @@ export class GameCore {
     // Track coins collected
     this.coinCount = 0;
     this.coins = []; // Array of coin animations: { x, y, timestamp }
+    this.lastCoinSpawnTime = null; // Track when last coin was spawned (for death screen timing)
+    
+    // Coin count cutscene state
+    this.coinCountCutsceneActive = false;
+    this.coinCountCutsceneStartTime = null;
 
     // Store current time scale for difficulty (time dilation approach)
     this.timeScale = 1.0;
@@ -194,6 +201,7 @@ export class GameCore {
     }
     this.wordIndex = 0; // Current word in message
     this.currentWord = null; // Currently displayed word { text, timestamp }
+    this.shouldSpawnCoinOnNextBounce = false; // Flag to spawn coin after message completes
 
     // Load current message from messages.json if not in preview mode
     // Preview mode is detected by presence of wordTimings or wordAudioSegments
@@ -217,6 +225,36 @@ export class GameCore {
    * Call this every frame with delta time
    */
   step(deltaMs) {
+    // Update death fade progress continuously (even during cutscene)
+    if (this.hasLost && this.deathFadeStartTime !== null) {
+      const currentTime = Date.now();
+      const elapsed = currentTime - this.deathFadeStartTime;
+      const fadeOutMs = config.physics.death.fadeOutMs;
+      
+      // Update fade progress (0.0 = visible, 1.0 = fully faded)
+      // This continues to update even during the coin cutscene
+      this.deathFadeProgress = Math.min(1.0, elapsed / fadeOutMs);
+    }
+
+    // Handle coin count cutscene (after death, before reset)
+    if (this.coinCountCutsceneActive && this.coinCountCutsceneStartTime !== null) {
+      const currentTime = Date.now();
+      const cutsceneElapsed = currentTime - this.coinCountCutsceneStartTime;
+      const cutsceneDuration = config.coins.deathScreen.cutsceneDurationMs;
+
+      // When cutscene duration completes, trigger reset
+      if (cutsceneElapsed >= cutsceneDuration) {
+        this.completeReset();
+      }
+
+      // Still update coins during cutscene so they animate
+      if (config.coins.enabled) {
+        this.updateCoins();
+      }
+
+      return; // Skip all other updates during cutscene
+    }
+
     // Handle death fade-out animation
     if (this.hasLost && this.deathFadeStartTime !== null) {
       const currentTime = Date.now();
@@ -224,12 +262,27 @@ export class GameCore {
       const fadeOutMs = config.physics.death.fadeOutMs;
       const delayBeforeReset = config.physics.death.delayBeforeResetMs;
 
-      // Update fade progress (0.0 = visible, 1.0 = fully faded)
-      this.deathFadeProgress = Math.min(1.0, elapsed / fadeOutMs);
+      // Check if coins are enabled and cutscene should start
+      // Only show cutscene if player collected at least 1 coin (skip if 0 coins)
+      if (config.coins.enabled && this.deathStartTime !== null && this.coinCount > 0) {
+        const cutsceneDelay = config.coins.deathScreen.cutsceneDelayMs;
+        const cutsceneStartTime = this.deathStartTime + cutsceneDelay;
 
-      // Check if fade is complete AND delay has passed
-      if (elapsed >= fadeOutMs + delayBeforeReset) {
+        // Activate cutscene when delay has passed
+        if (currentTime >= cutsceneStartTime && !this.coinCountCutsceneActive) {
+          this.coinCountCutsceneActive = true;
+          this.coinCountCutsceneStartTime = currentTime;
+        }
+      }
+
+      // If coins disabled OR no coins collected, reset immediately after death fade completes
+      if ((!config.coins.enabled || this.coinCount === 0) && elapsed >= fadeOutMs + delayBeforeReset) {
         this.completeReset();
+      }
+
+      // Still update coins during death fade so they animate
+      if (config.coins.enabled) {
+        this.updateCoins();
       }
 
       return; // Skip all other updates during death fade
@@ -436,7 +489,9 @@ export class GameCore {
     playDeathArpeggio(this.lastBounceSound);
 
     // Start death fade-out animation
-    this.deathFadeStartTime = Date.now();
+    const now = Date.now();
+    this.deathFadeStartTime = now;
+    this.deathStartTime = now; // Track death start for coin count timing
     this.deathFadeProgress = 0;
   }
 
@@ -448,6 +503,7 @@ export class GameCore {
     // Reset word index to start message from beginning
     this.wordIndex = 0;
     this.currentWord = null;
+    this.shouldSpawnCoinOnNextBounce = false; // Reset coin spawn flag
 
     // Notify color manager of message restart (for bounce mode with 'quote' setting)
     if (config.colors.mode === 'bounce' && config.colors.bouncesPerColorChange === 'quote') {
@@ -490,6 +546,12 @@ export class GameCore {
     // Reset death fade state
     this.deathFadeStartTime = null;
     this.deathFadeProgress = 0;
+    this.deathStartTime = null;
+    this.lastCoinSpawnTime = null; // Reset coin spawn tracking
+    
+    // Reset cutscene state
+    this.coinCountCutsceneActive = false;
+    this.coinCountCutsceneStartTime = null;
 
     // Reset bounce count and difficulty
     this.bounceCount = 0;
@@ -607,8 +669,19 @@ export class GameCore {
           this.lastBounceScale = { timestamp: currentTime };
         }
 
-        // Spawn coin on gelato bounce with physics
-        if (config.coins.enabled) {
+        // Store impact data for visual deformation
+        this.bounceImpact = {
+          x: mascotBody.position.x,
+          y: mascotBody.position.y,
+          strength: Math.abs(impactSpeed),
+          timestamp: currentTime,
+        };
+
+        // Check if we just completed the message (wordIndex wrapped from last to 0)
+        const wasLastWord = this.wordIndex === this.message.length - 1;
+        
+        // Spawn coin on bounce after message completion (no word revealed)
+        if (config.coins.enabled && this.shouldSpawnCoinOnNextBounce) {
           this.coinCount++;
           this.coins.push({
             x: mascotBody.position.x,
@@ -618,19 +691,21 @@ export class GameCore {
             timestamp: currentTime,
             rotationPhase: Math.random() * Math.PI * 2, // Random initial rotation phase
           });
+          this.lastCoinSpawnTime = currentTime; // Track spawn time for death screen timing
           playSound('pickup-coin');
+          this.shouldSpawnCoinOnNextBounce = false; // Reset flag
+          // Clear current word so no text is displayed on coin bounce
+          this.currentWord = null;
+        } else {
+          // Reveal next word (Milestone 3)
+          this.revealNextWord();
+          
+          // If we just completed the message (wrapped from last word to 0), 
+          // set flag to spawn coin on next bounce (without revealing a word)
+          if (wasLastWord && this.wordIndex === 0) {
+            this.shouldSpawnCoinOnNextBounce = true;
+          }
         }
-
-        // Store impact data for visual deformation
-        this.bounceImpact = {
-          x: mascotBody.position.x,
-          y: mascotBody.position.y,
-          strength: Math.abs(impactSpeed),
-          timestamp: currentTime,
-        };
-
-        // Reveal next word (Milestone 3)
-        this.revealNextWord();
 
         // Increment bounce count and update difficulty
         this.bounceCount++;
@@ -1374,6 +1449,75 @@ export class GameCore {
    */
   getDeathFadeProgress() {
     return this.deathFadeProgress;
+  }
+
+  /**
+   * Get death start time (for coin count timing)
+   */
+  getDeathStartTime() {
+    return this.deathStartTime;
+  }
+
+  /**
+   * Get coin count cutscene active state
+   */
+  getCoinCountCutsceneActive() {
+    return this.coinCountCutsceneActive;
+  }
+
+  /**
+   * Get coin count cutscene start time
+   */
+  getCoinCountCutsceneStartTime() {
+    return this.coinCountCutsceneStartTime;
+  }
+
+  /**
+   * Get current stored progress from localStorage
+   */
+  getProgress() {
+    return getProgress();
+  }
+
+  /**
+   * Get session coin count (coins collected this session)
+   */
+  getSessionCoinCount() {
+    return this.coinCount;
+  }
+
+  /**
+   * Debug: Add a coin to the session count
+   */
+  addDebugCoin() {
+    if (config.coins.enabled) {
+      this.coinCount++;
+      const currentTime = Date.now();
+      const mascotPos = this.getMascotPosition();
+      this.coins.push({
+        x: mascotPos.x,
+        y: mascotPos.y,
+        vx: config.coins.physics.velocityX,
+        vy: config.coins.physics.velocityY,
+        timestamp: currentTime,
+        rotationPhase: Math.random() * Math.PI * 2,
+      });
+      playSound('pickup-coin');
+    }
+  }
+
+  /**
+   * Get game started state
+   */
+  getGameStarted() {
+    return this.gameStarted;
+  }
+
+  /**
+   * Get has lost state
+   */
+  getHasLost() {
+    return this.hasLost;
   }
 
   /**

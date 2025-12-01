@@ -13,6 +13,8 @@ import { Button } from '../../shared/components/Button';
 import { triggerDrawingHaptic, triggerHaptic } from '../../shared/utils/haptics';
 import { DebugMenu } from '../../shared/components/DebugMenu';
 import { logger } from '../../shared/utils/logger';
+import { RadialProgressBar } from '../../shared/components/RadialProgressBar';
+import { getProgress, setProgress, addProgress } from '../../shared/services/progressStorage';
 
 /**
  * GameApp - Main game component
@@ -43,12 +45,34 @@ export function GameApp() {
     particles: [],
     wallGlows: [],
     deathFadeProgress: 0,
+    deathStartTime: null,
+    coinCountCutsceneActive: false,
+    coinCountCutsceneStartTime: null,
     coins: [],
     coinCount: 0,
+    progress: 0,
+    animatedProgress: 0,
+    displayedCoinCount: 0, // Coin count displayed during cutscene animation
+    depositedCoins: 0, // Number of coins deposited during animation
+    lastDepositTime: null, // Timestamp of last coin deposit
+    cutsceneStartProgress: 0, // Stored progress when cutscene started (base for calculations)
+    progressBarPulse: false, // Flag to trigger pulse animation on progress bar
+    progressBarWasIdle: false, // Track if progress bar was in idle state
+    progressBarWasGameplay: false, // Track if progress bar was in gameplay state
+    progressBarIdleStartTime: null, // When we entered idle state
+    progressBarGameplayStartTime: null, // When we entered gameplay state
+    gameStarted: false,
+    hasLost: false,
   });
   
   // Frame counter for minimal React re-render trigger (just a number, not full reconciliation)
   const [frame, setFrame] = useState(0);
+  
+  // Progress animation state
+  const progressAnimationRef = useRef(null);
+  const cutsceneStartProgressRef = useRef(0);
+  const cutsceneTargetProgressRef = useRef(0);
+  const animatedProgressValue = useRef(new Animated.Value(0)).current;
 
   // Simple line drawing state (still uses React state since it changes infrequently)
   const [lines, setLines] = useState([]);
@@ -201,8 +225,89 @@ export function GameApp() {
       state.bounceRipples = gameCore.current.getBounceRipples();
       state.lastBounceScale = gameCore.current.getLastBounceScale();
       state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
+      state.deathStartTime = gameCore.current.getDeathStartTime();
+      state.coinCountCutsceneActive = gameCore.current.getCoinCountCutsceneActive();
+      state.coinCountCutsceneStartTime = gameCore.current.getCoinCountCutsceneStartTime();
       state.coins = gameCore.current.getCoins();
       state.coinCount = gameCore.current.getCoinCount();
+      state.progress = gameCore.current.getProgress();
+      
+      // Handle coin deposit animation during cutscene
+      if (state.coinCountCutsceneActive && state.coinCountCutsceneStartTime !== null) {
+        const currentTime = Date.now();
+        const depositInterval = config.progressBar.coinDepositIntervalMs;
+        const startDelay = config.progressBar.coinDepositStartDelayMs;
+        const timeSinceCutsceneStart = currentTime - state.coinCountCutsceneStartTime;
+        
+        // Initialize animation state on first frame of cutscene
+        if (state.lastDepositTime === null) {
+          state.displayedCoinCount = state.coinCount;
+          state.depositedCoins = 0;
+          // Store the initial progress when cutscene starts (this is our base)
+          state.cutsceneStartProgress = state.progress;
+          // Start animated progress from current stored progress
+          state.animatedProgress = state.progress;
+          animatedProgressValue.setValue(state.progress);
+          // Set lastDepositTime to cutscene start + delay (so deposits start after delay)
+          state.lastDepositTime = state.coinCountCutsceneStartTime + startDelay;
+        }
+        
+        // Check if initial delay has passed and it's time for next deposit
+        if (timeSinceCutsceneStart >= startDelay && state.displayedCoinCount > 0 && (currentTime - state.lastDepositTime) >= depositInterval) {
+          // Deposit one coin
+          state.displayedCoinCount--;
+          state.depositedCoins++;
+          
+          // Play coin pickup sound
+          playSound('pickup-coin');
+          
+          // Trigger pulse animation (will be read by RadialProgressBar)
+          state.progressBarPulse = true;
+          
+          // Calculate new progress: initial stored progress + (deposited coins / coins per full bar)
+          const progressPerCoin = 1 / config.progressBar.coinsPerFullBar;
+          const newProgress = Math.min(1.0, state.cutsceneStartProgress + (state.depositedCoins * progressPerCoin));
+          
+          // Update animated progress immediately (so it shows incrementally)
+          state.animatedProgress = newProgress;
+          animatedProgressValue.setValue(newProgress);
+          
+          // Also animate smoothly to the new value for smooth transition
+          Animated.timing(animatedProgressValue, {
+            toValue: newProgress,
+            duration: depositInterval, // Animate over the deposit interval
+            useNativeDriver: false,
+          }).start();
+          
+          // Update localStorage with this deposit
+          addProgress(progressPerCoin);
+          
+          // Update stored progress in state (will be read from storage next frame)
+          state.progress = newProgress;
+          
+          state.lastDepositTime = currentTime;
+        } else {
+          // Reset pulse flag after animation
+          state.progressBarPulse = false;
+        }
+      } else {
+        // Reset animation state when cutscene is not active
+        state.displayedCoinCount = 0;
+        state.depositedCoins = 0;
+        state.lastDepositTime = null;
+        state.cutsceneStartProgress = 0;
+        
+        // Reset progress bar fade tracking when game resets (returns to idle)
+        if (!state.gameStarted && !state.hasLost) {
+          // Game has reset to idle - reset fade tracking so it fades in again
+          state.progressBarWasIdle = false;
+          state.progressBarWasGameplay = false;
+          state.progressBarIdleStartTime = null;
+          state.progressBarGameplayStartTime = null;
+        }
+      }
+      state.gameStarted = gameCore.current.getGameStarted();
+      state.hasLost = gameCore.current.getHasLost();
       state.gelato = gameCore.current.getGelato(); // For debug visualization
       
       // Minimal React update - just a number, triggers Skia re-render without full reconciliation
@@ -241,6 +346,32 @@ export function GameApp() {
       }
     };
   }, []); // Only on mount
+
+  // Reset animation state when cutscene ends
+  useEffect(() => {
+    const cutsceneActive = gameState.current.coinCountCutsceneActive;
+    if (!cutsceneActive) {
+      // Reset animation state when cutscene ends
+      gameState.current.displayedCoinCount = 0;
+      gameState.current.depositedCoins = 0;
+      gameState.current.lastDepositTime = null;
+      gameState.current.cutsceneStartProgress = 0;
+      // Reset animated value to current stored progress
+      animatedProgressValue.setValue(gameState.current.progress);
+    }
+  }, [gameState.current.coinCountCutsceneActive]);
+
+  // Update animated progress value in gameState
+  useEffect(() => {
+    const listener = animatedProgressValue.addListener(({ value }) => {
+      gameState.current.animatedProgress = value;
+      setFrame(prev => prev + 1); // Trigger re-render
+    });
+    
+    return () => {
+      animatedProgressValue.removeListener(listener);
+    };
+  }, []);
 
   // Pause/resume animation when admin portal opens/closes
   useEffect(() => {
@@ -305,8 +436,14 @@ export function GameApp() {
           state.bounceRipples = gameCore.current.getBounceRipples();
           state.lastBounceScale = gameCore.current.getLastBounceScale();
           state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
+          state.deathStartTime = gameCore.current.getDeathStartTime();
+          state.coinCountCutsceneActive = gameCore.current.getCoinCountCutsceneActive();
+          state.coinCountCutsceneStartTime = gameCore.current.getCoinCountCutsceneStartTime();
           state.coins = gameCore.current.getCoins();
           state.coinCount = gameCore.current.getCoinCount();
+          state.progress = gameCore.current.getProgress();
+          state.gameStarted = gameCore.current.getGameStarted();
+          state.hasLost = gameCore.current.getHasLost();
           
           setFrame(prev => prev + 1);
 
@@ -559,6 +696,18 @@ export function GameApp() {
               showFps={showFps}
               setShowFps={setShowFps}
               primaryColor={gameState.current.primaryColor}
+              onAddCoin={() => {
+                if (gameCore.current) {
+                  gameCore.current.addDebugCoin();
+                }
+              }}
+              onResetProgress={() => {
+                setProgress(0);
+                // Force update to reflect the change
+                gameState.current.progress = 0;
+                gameState.current.animatedProgress = 0;
+                animatedProgressValue.setValue(0);
+              }}
             />
           </>
         )}
@@ -575,6 +724,101 @@ export function GameApp() {
           />
         </View>
       )}
+
+      {/* Progress Bar - visible only during cutscene (idle removed for now) */}
+      {config.progressBar.enabled && (() => {
+        const isCutscene = gameState.current.coinCountCutsceneActive;
+        
+        // Only show during cutscene, not during idle
+        if (!isCutscene) return null;
+        
+        const state = gameState.current;
+        const currentTime = Date.now();
+        const fadeDurationMs = config.progressBar.fadeDurationMs;
+        
+        // Determine position (cutscene only)
+        const position = config.progressBar.cutscenePosition;
+        
+        // Calculate opacity (fade in/out smoothly during cutscene)
+        let opacity = 0;
+        const cutsceneStartTime = state.coinCountCutsceneStartTime;
+        if (cutsceneStartTime) {
+          const timeSinceStart = currentTime - cutsceneStartTime;
+          // Fade in at start of cutscene
+          const fadeInProgress = Math.min(1, timeSinceStart / fadeDurationMs);
+          
+          // Fade out at end of cutscene
+          const cutsceneDuration = config.coins.deathScreen.cutsceneDurationMs;
+          const timeUntilEnd = cutsceneDuration - timeSinceStart;
+          const fadeOutProgress = timeUntilEnd <= fadeDurationMs 
+            ? Math.max(0, timeUntilEnd / fadeDurationMs)
+            : 1;
+          
+          // Combine both fades
+          opacity = Math.min(fadeInProgress, fadeOutProgress);
+        }
+        
+        // Don't render if opacity is 0 (or very close to 0)
+        if (opacity < 0.01) return null;
+        
+        // Use animated progress during cutscene
+        const progress = state.animatedProgress;
+        
+        // Calculate position styles
+        const positionStyle = {
+          position: 'absolute',
+        };
+        
+        // Handle positioning (can be number or percentage string)
+        if (position.left !== undefined) {
+          if (typeof position.left === 'string') {
+            positionStyle.left = position.left;
+          } else {
+            positionStyle.left = position.left;
+          }
+        }
+        if (position.right !== undefined) {
+          if (typeof position.right === 'string') {
+            positionStyle.right = position.right;
+          } else {
+            positionStyle.right = position.right;
+          }
+        }
+        
+        // Handle top position (can be number or percentage string)
+        if (typeof position.top === 'string') {
+          positionStyle.top = position.top;
+        } else {
+          positionStyle.top = position.top;
+        }
+        
+        // Apply transform if provided
+        if (position.transform) {
+          positionStyle.transform = position.transform;
+        }
+        
+        // Show coin count in center during cutscene, not during idle
+        const showCoinCount = isCutscene;
+        // During cutscene, always use displayedCoinCount (starts at session count, decrements to 0)
+        const coinCount = showCoinCount 
+          ? gameState.current.displayedCoinCount
+          : null;
+        
+        return (
+          <View style={positionStyle}>
+            <RadialProgressBar
+              progress={progress}
+              size={config.progressBar.size}
+              strokeWidth={config.progressBar.strokeWidth}
+              color={gameState.current.primaryColor}
+              opacity={opacity}
+              coinCount={coinCount}
+              coinCountFontSize={config.coins.deathScreen.fontSize}
+              shouldPulse={gameState.current.progressBarPulse}
+            />
+          </View>
+        );
+      })()}
 
       {/* Hide status bar - immersive mode in MainActivity.kt handles system-level hiding,
           but this ensures React Native doesn't show it either */}
@@ -618,7 +862,7 @@ const styles = StyleSheet.create({
   adminButton: {
     position: 'absolute',
     top: 50,
-    right: 50,
+    left: 50,
     width: 44,
     height: 44,
     borderRadius: 22,

@@ -255,7 +255,7 @@ export const config = {
 
   // === COINS ===
   coins: {
-    enabled: true,            // Enable/disable coin collection system
+    enabled: false,            // Enable/disable coin collection system
 
     // Visual properties (rounded rectangle pill shape)
     width: 8,                 // Coin width in pixels (small pill)
@@ -291,6 +291,34 @@ export const config = {
       useDynamicColor: true,  // Use dynamic primary color for count text
       staticColor: '#FFD700', // Static gold color (only used if useDynamicColor is false)
       yPosition: 0.4,         // Vertical position (0.4 = 40% from top)
+      fadeInMs: 300,          // Fade-in duration (ms)
+      cutsceneDelayMs: 0,    // Delay before cutscene starts (0 = immediately with death)
+      cutsceneDurationMs: 3000, // How long cutscene displays (will animate progress bar)
+    },
+  },
+
+  // === PROGRESS BAR ===
+  progressBar: {
+    enabled: true,              // Enable/disable progress bar
+    size: 120,                   // Diameter in pixels (increased from 60)
+    strokeWidth: 6,              // Progress ring thickness (increased from 4)
+    progressPerCoin: 0.01,       // Progress amount per coin (0.01 = 1% per coin)
+    fadeDurationMs: 300,         // Fade in/out duration
+    coinsPerFullBar: 20,         // Number of coins needed to fill progress bar from 0 to 1.0
+    coinDepositIntervalMs: 200,  // Time between each coin deposit animation (ms)
+    coinDepositStartDelayMs: 800, // Initial delay before deposit animation starts (ms) - time to see coin count
+    
+    // Position during idle (before game starts) - top right, matching admin button style
+    idlePosition: {
+      top: 50,
+      right: 50,
+    },
+    
+    // Position during cutscene (after death) - centered on screen
+    cutscenePosition: {
+      top: '50%',
+      left: '50%',
+      transform: [{ translateX: -60 }, { translateY: -60 }], // Center (half of size = 120/2 = 60)
     },
   },
 
