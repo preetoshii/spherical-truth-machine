@@ -4,8 +4,9 @@ import { Feather } from '@expo/vector-icons';
 import { CalendarView } from './CalendarView';
 import { PreviewMode } from './PreviewMode';
 import { Confirmation } from './Confirmation';
-import { fetchMessages, saveMessage as saveMessageToGitHub } from '../../shared/services/githubApi';
+import { fetchMessages, saveMessage as saveMessageToGitHub, saveMessageWithAudio } from '../../shared/services/githubApi';
 import { playSound } from '../../shared/utils/audio';
+import { logger } from '../../shared/utils/logger';
 
 /**
  * AdminPortal - Root component for admin interface
@@ -25,6 +26,10 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
   const [draftWordTimings, setDraftWordTimings] = useState(null);
   const [draftWordAudioSegments, setDraftWordAudioSegments] = useState(null);
 
+  // Audio data for GitHub upload
+  const [draftAudioData, setDraftAudioData] = useState(null);
+  const [selectedVoice, setSelectedVoice] = useState(null); // Track which voice user selected
+
   // Text editor state (for hiding back button)
   const [isTextEditorOpen, setIsTextEditorOpen] = useState(false);
 
@@ -34,7 +39,7 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
       // Use preloaded data to avoid flicker
       setMessagesData(preloadedData);
       setScheduledMessages(preloadedData.messages || {});
-      console.log('Using preloaded messages:', preloadedData);
+      logger.log('ADMIN_UI', 'Using preloaded messages:', preloadedData);
     } else {
       // Fallback: load from GitHub
       loadMessages();
@@ -48,9 +53,9 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
       const data = await fetchMessages();
       setMessagesData(data);
       setScheduledMessages(data.messages || {});
-      console.log('Loaded messages from GitHub:', data);
+      logger.log('ADMIN_UI', 'Loaded messages from GitHub:', data);
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      logger.error('ADMIN_UI', 'Failed to load messages:', error);
       // Use empty messages as fallback
       setScheduledMessages({});
     } finally {
@@ -65,10 +70,25 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
   };
 
   // Navigate to preview mode from edit mode
-  const openPreview = (audioUri, wordTimings, wordAudioSegments) => {
+  const openPreview = (audioUri, wordTimings, wordAudioSegments, messageText) => {
     setDraftAudioUri(audioUri);
     setDraftWordTimings(wordTimings);
     setDraftWordAudioSegments(wordAudioSegments);
+
+    // Update draft message with transcribed text if provided
+    if (messageText) {
+      setDraftMessage(messageText);
+    }
+
+    // Store audio data - we'll determine which voice to upload when user saves
+    // (PreviewMode lets user switch between voices, so we don't pick one yet)
+    setDraftAudioData({
+      originalUri: audioUri,
+      wordAudioSegments: wordAudioSegments, // Contains both voice options
+      wordTimings: wordTimings,
+      words: wordTimings.map(wt => wt.word) // Extract words from timings
+    });
+
     setCurrentView('preview');
   };
 
@@ -84,16 +104,16 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
   };
 
   // Save message (for future dates)
-  const saveMessage = async () => {
+  const saveMessage = async (voiceSelection) => {
     // Validation: Check for empty or invalid data
     if (!editingDate || editingDate === 'null') {
-      console.error('Cannot save: invalid date', editingDate);
+      logger.error('ADMIN_UI', 'Cannot save: invalid date', editingDate);
       alert('Error: Invalid date. Please try again.');
       return;
     }
 
     if (!draftMessage || draftMessage.trim().length === 0) {
-      console.error('Cannot save: empty message');
+      logger.error('ADMIN_UI', 'Cannot save: empty message');
       alert('Error: Message cannot be empty.');
       return;
     }
@@ -102,24 +122,45 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
       const savedDate = editingDate;
       const savedMessage = draftMessage;
 
-      // Save to GitHub (makeCurrent = false for future dates)
-      const updatedData = await saveMessageToGitHub(savedDate, savedMessage, false);
+      let updatedData;
+
+      // Check if we have audio data to save
+      if (draftAudioData && voiceSelection) {
+        logger.log('ADMIN_UI', 'Saving message with audio (voice:', voiceSelection, ')');
+
+        // Build audioData with only the selected voice
+        const audioDataToSave = {
+          originalUri: draftAudioData.originalUri,
+          transformedUri: draftAudioData.wordAudioSegments[voiceSelection], // Pick selected voice
+          wordTimings: draftAudioData.wordTimings,
+          words: draftAudioData.words
+        };
+
+        // Save with audio
+        updatedData = await saveMessageWithAudio(savedDate, savedMessage, audioDataToSave, false);
+      } else {
+        logger.log('ADMIN_UI', 'Saving text-only message');
+        // Save text only (backward compatibility)
+        updatedData = await saveMessageToGitHub(savedDate, savedMessage, false);
+      }
 
       // Update local state
       setMessagesData(updatedData);
       setScheduledMessages(updatedData.messages || {});
 
-      console.log('Saved message for', savedDate);
+      logger.log('ADMIN_UI', 'Saved message for', savedDate);
 
       // Clear editing state AFTER successful save so we return to normal calendar view (not edit mode)
       setScrollToDate(savedDate); // Remember which card to scroll to
       setEditingDate(null);
       setDraftMessage('');
+      setDraftAudioData(null);
+      setSelectedVoice(null);
 
       // Fade back to calendar
       backFromPreview();
     } catch (error) {
-      console.error('Failed to save message:', error);
+      logger.error('ADMIN_UI', 'Failed to save message:', error);
       // TODO: Show error to user
       alert('Failed to save message. Please try again.');
       return; // Don't navigate away on error
@@ -127,7 +168,9 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
   };
 
   // Send now (for active message)
-  const sendNow = () => {
+  const sendNow = (voiceSelection) => {
+    // Store selected voice for confirmation
+    setSelectedVoice(voiceSelection);
     setCurrentView('confirmation');
   };
 
@@ -135,14 +178,14 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
   const confirmSendNow = async () => {
     // Validation: Check for empty or invalid data
     if (!editingDate || editingDate === 'null') {
-      console.error('Cannot send: invalid date', editingDate);
+      logger.error('ADMIN_UI', 'Cannot send: invalid date', editingDate);
       alert('Error: Invalid date. Please try again.');
       setCurrentView('preview'); // Go back to preview
       return;
     }
 
     if (!draftMessage || draftMessage.trim().length === 0) {
-      console.error('Cannot send: empty message');
+      logger.error('ADMIN_UI', 'Cannot send: empty message');
       alert('Error: Message cannot be empty.');
       setCurrentView('preview'); // Go back to preview
       return;
@@ -152,24 +195,45 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
       const savedDate = editingDate;
       const savedMessage = draftMessage;
 
-      // Save to GitHub with makeCurrent = true (updates both message and current pointer)
-      const updatedData = await saveMessageToGitHub(savedDate, savedMessage, true);
+      let updatedData;
+
+      // Check if we have audio data to save
+      if (draftAudioData && selectedVoice) {
+        logger.log('ADMIN_UI', 'Sending message with audio now (voice:', selectedVoice, ')');
+
+        // Build audioData with only the selected voice
+        const audioDataToSave = {
+          originalUri: draftAudioData.originalUri,
+          transformedUri: draftAudioData.wordAudioSegments[selectedVoice], // Use stored selected voice
+          wordTimings: draftAudioData.wordTimings,
+          words: draftAudioData.words
+        };
+
+        // Save with audio and makeCurrent = true
+        updatedData = await saveMessageWithAudio(savedDate, savedMessage, audioDataToSave, true);
+      } else {
+        logger.log('ADMIN_UI', 'Sending text-only message now');
+        // Save text only with makeCurrent = true
+        updatedData = await saveMessageToGitHub(savedDate, savedMessage, true);
+      }
 
       // Update local state
       setMessagesData(updatedData);
       setScheduledMessages(updatedData.messages || {});
 
-      console.log('Sent message now for', savedDate);
+      logger.log('ADMIN_UI', 'Sent message now for', savedDate);
 
       // Clear editing state AFTER successful save
       setScrollToDate(savedDate); // Remember which card to scroll to
       setEditingDate(null);
       setDraftMessage('');
+      setDraftAudioData(null);
+      setSelectedVoice(null);
 
       // Close admin portal and return to game
       onClose();
     } catch (error) {
-      console.error('Failed to send message:', error);
+      logger.error('ADMIN_UI', 'Failed to send message:', error);
       // TODO: Show error to user
       alert('Failed to send message. Please try again.');
       return; // Don't navigate away on error
@@ -186,19 +250,19 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
   // Handle back button - simple and direct
   const handleBack = () => {
     playSound('back-button');
-    console.log('🔙 Back pressed. currentView:', currentView, 'editingDate:', editingDate);
+    logger.log('ADMIN_UI', '🔙 Back pressed. currentView:', currentView, 'editingDate:', editingDate);
 
     if (currentView === 'confirmation') {
-      console.log('→ Going to preview');
+      logger.log('ADMIN_UI', '→ Going to preview');
       setCurrentView('preview');
     } else if (currentView === 'preview') {
-      console.log('→ Going back to calendar from preview');
+      logger.log('ADMIN_UI', '→ Going back to calendar from preview');
       backFromPreview();
     } else if (currentView === 'calendar' && editingDate) {
-      console.log('→ Collapsing card');
+      logger.log('ADMIN_UI', '→ Collapsing card');
       exitEdit();
     } else if (currentView === 'calendar') {
-      console.log('→ Closing portal');
+      logger.log('ADMIN_UI', '→ Closing portal');
       playSound('card-slide');
       onClose();
     }

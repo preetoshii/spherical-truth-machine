@@ -61,7 +61,7 @@ export const config = {
   // === AUDIO ===
   audio: {
     // Audio sync/trimming
-    trimStartMs: 0,         // Trim this many milliseconds from the start of each word slice
+    trimStartMs: 150,         // Trim this many milliseconds from the start of each word slice
                               // Google's timestamps may include leading silence/breath sounds
                               // Increase if audio plays too early, decrease if too late
                               // Try values between 50-150ms
@@ -429,5 +429,33 @@ export const config = {
         enabled: false,                     // DISABLED - Set to true to enable switching
       },
     ],
+  },
+
+  // === GITHUB STORAGE ===
+  github: {
+    audioFolder: 'audio-messages/',         // Folder for audio files in GitHub repo
+  },
+
+  // === LOGGING ===
+  // Feature-based logging toggles
+  // Set to true to enable console logs for specific features
+  // High-frequency logs (disabled by default to reduce noise)
+  logs: {
+    PHYSICS: true,              // Body creation, collisions, updates (very frequent)
+    AUDIO_PLAYBACK: false,       // Word sync, playback events (frequent during gameplay)
+    TOUCH_INPUT: false,          // Touch events, line drawing (very frequent)
+    RENDERING: false,            // Frame rendering, Skia canvas (60fps potential)
+
+    // Medium-frequency logs (enable when debugging specific features)
+    TRANSCRIPTION: false,        // API calls, word detection
+    WORD_ALIGNMENT: false,       // RMS envelope, silence trimming
+    HAPTICS: false,              // Vibration feedback
+
+    // Low-frequency logs (enabled by default for important events)
+    AUDIO_RECORDING: true,       // Recording lifecycle, permissions
+    GITHUB_API: true,            // Fetch/upload operations
+    ADMIN_UI: true,              // Navigation, state transitions
+    VOICE_TRANSFORMATION: true,  // ElevenLabs API, voice switching
+    INITIALIZATION: true,        // Component mounting, engine setup
   },
 };

@@ -4,6 +4,8 @@
  * Works cross-platform (web, iOS, Android)
  */
 
+import { logger } from '../utils/logger';
+
 /**
  * Slice audio blob into individual word segments
  * @param {string} audioBlobUri - The blob URI of the full recording
@@ -11,7 +13,7 @@
  * @returns {Promise<Array>} Array of {word, blobUri} for each word segment
  */
 export async function sliceAudioIntoWords(audioBlobUri, wordTimings) {
-  console.log('Starting audio slicing for', wordTimings.length, 'words');
+  logger.log('WORD_ALIGNMENT', 'Starting audio slicing for', wordTimings.length, 'words');
 
   // Fetch the audio blob
   const response = await fetch(audioBlobUri);
@@ -26,7 +28,7 @@ export async function sliceAudioIntoWords(audioBlobUri, wordTimings) {
   // Decode the audio data
   const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-  console.log('Audio decoded:', {
+  logger.log('WORD_ALIGNMENT', 'Audio decoded:', {
     duration: audioBuffer.duration,
     sampleRate: audioBuffer.sampleRate,
     channels: audioBuffer.numberOfChannels,
@@ -88,10 +90,10 @@ export async function sliceAudioIntoWords(audioBlobUri, wordTimings) {
       blobUri: wordBlobUri,
     });
 
-    console.log(`Sliced word "${timing.word}": ${duration.toFixed(3)}s (${startTime.toFixed(3)}s - ${endTime.toFixed(3)}s)`);
+    logger.log('WORD_ALIGNMENT', `Sliced word "${timing.word}": ${duration.toFixed(3)}s (${startTime.toFixed(3)}s - ${endTime.toFixed(3)}s)`);
   }
 
-  console.log('Audio slicing complete:', wordBlobs.length, 'segments created');
+  logger.log('WORD_ALIGNMENT', 'Audio slicing complete:', wordBlobs.length, 'segments created');
 
   return wordBlobs;
 }

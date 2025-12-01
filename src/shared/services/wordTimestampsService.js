@@ -5,6 +5,8 @@
  * using energy-based audio analysis instead of relying on Google STT timestamps.
  */
 
+import { logger } from '../utils/logger';
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
 /**
@@ -17,8 +19,8 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
  */
 export async function getWordTimestamps(audioUri, sentenceBreaks = [], transformVoice = false, voiceId = null) {
   try {
-    console.log('Calling word-timestamps API...');
-    console.log('Audio URI:', audioUri);
+    logger.log('WORD_ALIGNMENT', 'Calling word-timestamps API...');
+    logger.log('WORD_ALIGNMENT', 'Audio URI:', audioUri);
 
     // Convert blob URI to File object
     const response = await fetch(audioUri);
@@ -35,9 +37,9 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = [], transform
       if (voiceId) {
         formData.append('voiceId', voiceId);
       }
-      console.log('[Frontend] Sending voice transform request. voiceId:', voiceId, 'transformVoice: true');
+      logger.log('VOICE_TRANSFORMATION', '[Frontend] Sending voice transform request. voiceId:', voiceId, 'transformVoice: true');
     } else {
-      console.log('[Frontend] Voice transform disabled');
+      logger.log('VOICE_TRANSFORMATION', '[Frontend] Voice transform disabled');
     }
 
     // Call the API
@@ -51,7 +53,7 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = [], transform
 
       // Handle 422 mismatch error specifically
       if (apiResponse.status === 422) {
-        console.error('Word/segment mismatch:', errorData);
+        logger.error('WORD_ALIGNMENT', 'Word/segment mismatch:', errorData);
         throw new Error(
           `Word count (${errorData.details.words}) doesn't match detected segments (${errorData.details.segments}). ` +
           `Try recording with clearer pauses between words.`
@@ -62,7 +64,7 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = [], transform
     }
 
     const data = await apiResponse.json();
-    console.log('Word timestamps API response:', data);
+    logger.log('WORD_ALIGNMENT', 'Word timestamps API response:', data);
 
     // API now returns the correct format: { word, start, end }
     // where start/end are in milliseconds
@@ -75,12 +77,12 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = [], transform
     const wordsArray = timingsWithBreaks.map(w => w.word);
     const transcript = wordsArray.filter(w => w !== '*').join(' ');
 
-    console.log('Transformed word timings:', timingsWithBreaks);
+    logger.log('WORD_ALIGNMENT', 'Transformed word timings:', timingsWithBreaks);
 
     // Convert transformed audios from base64 to blob URIs (if present)
     let transformedAudioUris = null;
     if (data.transformedAudios) {
-      console.log('Converting transformed audios from base64...');
+      logger.log('VOICE_TRANSFORMATION', 'Converting transformed audios from base64...');
       transformedAudioUris = {};
       
       // Helper to convert base64 to blob URI
@@ -98,11 +100,11 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = [], transform
       // Convert both voices
       if (data.transformedAudios.reboundhi) {
         transformedAudioUris.reboundhi = base64ToBlob(data.transformedAudios.reboundhi);
-        console.log('Reboundhi audio URI created:', transformedAudioUris.reboundhi);
+        logger.log('VOICE_TRANSFORMATION', 'Reboundhi audio URI created:', transformedAudioUris.reboundhi);
       }
       if (data.transformedAudios.reboundhita) {
         transformedAudioUris.reboundhita = base64ToBlob(data.transformedAudios.reboundhita);
-        console.log('Reboundhita audio URI created:', transformedAudioUris.reboundhita);
+        logger.log('VOICE_TRANSFORMATION', 'Reboundhita audio URI created:', transformedAudioUris.reboundhita);
       }
     }
 
@@ -117,7 +119,7 @@ export async function getWordTimestamps(audioUri, sentenceBreaks = [], transform
       meta: data.meta, // Include metadata for debugging
     };
   } catch (error) {
-    console.error('Word timestamps error:', error);
+    logger.error('WORD_ALIGNMENT', 'Word timestamps error:', error);
     throw error;
   }
 }

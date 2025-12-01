@@ -1,6 +1,7 @@
 import { Platform, NativeModules } from 'react-native';
 import * as ExpoHaptics from 'expo-haptics';
 import { config } from '../../config';
+import { logger } from './logger';
 
 const { CustomHaptics } = NativeModules;
 
@@ -39,7 +40,7 @@ export function triggerHaptic(eventName, runtimeConfig = null) {
     const eventConfig = hapticsConfig[eventName];
 
     if (!eventConfig) {
-      console.warn(`Haptic event '${eventName}' not found in config`);
+      logger.warn('HAPTICS', `Haptic event '${eventName}' not found in config`);
       return;
     }
 
@@ -66,7 +67,7 @@ export function triggerHaptic(eventName, runtimeConfig = null) {
     }
   } catch (error) {
     // Silently fail haptics (not critical to gameplay)
-    console.warn('Haptic feedback failed:', error);
+    logger.warn('HAPTICS', 'Haptic feedback failed:', error);
   }
 }
 

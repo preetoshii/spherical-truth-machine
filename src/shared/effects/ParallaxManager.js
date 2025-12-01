@@ -12,6 +12,8 @@
  * - Performance-optimized with in-place updates
  */
 
+import { logger } from '../utils/logger';
+
 export class ParallaxManager {
   /**
    * @param {number} width - Screen width
@@ -63,7 +65,7 @@ export class ParallaxManager {
       });
     });
 
-    console.log(`ParallaxManager: Initialized ${this.allStars.length} stars across ${this.layers.length} layers (density: ${density}x)`);
+    logger.log('INITIALIZATION', `ParallaxManager: Initialized ${this.allStars.length} stars across ${this.layers.length} layers (density: ${density}x)`);
   }
 
   /**

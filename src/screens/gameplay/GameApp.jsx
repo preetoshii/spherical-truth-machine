@@ -11,6 +11,7 @@ import { fetchMessages } from '../../shared/services/githubApi';
 import { Button } from '../../shared/components/Button';
 import { triggerDrawingHaptic, triggerHaptic } from '../../shared/utils/haptics';
 import { DebugMenu } from '../../shared/components/DebugMenu';
+import { logger } from '../../shared/utils/logger';
 
 /**
  * GameApp - Main game component
@@ -366,7 +367,7 @@ export function GameApp() {
   // Touch handlers for drawing lines
   const handleTouchStart = (event) => {
     const touch = event.nativeEvent.touches?.[0] || event.nativeEvent;
-    console.log('🎨 Touch start:', touch.pageX, touch.pageY);
+    logger.log('TOUCH_INPUT', '🎨 Touch start:', touch.pageX, touch.pageY);
     setCurrentPath([{ x: touch.pageX, y: touch.pageY }]);
     lastHapticPos.current = { x: touch.pageX, y: touch.pageY };
     lastHapticTime.current = Date.now();
@@ -437,7 +438,7 @@ export function GameApp() {
       const data = await fetchMessages();
       setPreloadedMessagesData(data);
     } catch (error) {
-      console.error('Failed to preload messages:', error);
+      logger.error('INITIALIZATION', 'Failed to preload messages:', error);
       // Still open admin portal, it will handle the error
     }
 

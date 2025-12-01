@@ -84,6 +84,27 @@ import { Button } from '../../shared/components/Button';
 </Button>
 ```
 
+## Logging
+
+**NEVER use `console.log` directly.** Always use the logger utility:
+
+```js
+import { logger } from '../../shared/utils/logger';
+
+logger.log('CATEGORY', 'Message');      // Conditional on config
+logger.warn('CATEGORY', 'Warning');     // Conditional on config
+logger.error('CATEGORY', 'Error');      // Conditional on config
+logger.always('Critical error');        // Always shows
+```
+
+**Categories** (toggle in `config.js`):
+`PHYSICS`, `AUDIO_PLAYBACK`, `AUDIO_RECORDING`, `TRANSCRIPTION`, `WORD_ALIGNMENT`, `GITHUB_API`, `ADMIN_UI`, `VOICE_TRANSFORMATION`, `TOUCH_INPUT`, `RENDERING`, `HAPTICS`, `INITIALIZATION`
+
+**When adding logs for new features:**
+1. Use existing category if applicable
+2. If new category needed: add to `config.logs` in `src/config.js`
+3. Use `logger.always()` for critical errors only
+
 ## Git
 
 - Main branch: `master`

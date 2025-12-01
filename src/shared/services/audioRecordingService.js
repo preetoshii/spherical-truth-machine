@@ -13,6 +13,7 @@
  */
 
 import { RecordingPresets } from 'expo-audio';
+import { logger } from '../utils/logger';
 
 /**
  * Start recording audio
@@ -20,13 +21,13 @@ import { RecordingPresets } from 'expo-audio';
  */
 export async function startRecording(recorder) {
   try {
-    console.log('Preparing to record...');
+    logger.log('AUDIO_RECORDING', 'Preparing to record...');
     await recorder.prepareToRecordAsync();
-    console.log('Recording started');
+    logger.log('AUDIO_RECORDING', 'Recording started');
     recorder.record();
     return true;
   } catch (error) {
-    console.error('Failed to start recording:', error);
+    logger.error('AUDIO_RECORDING', 'Failed to start recording:', error);
     throw error;
   }
 }
@@ -38,13 +39,13 @@ export async function startRecording(recorder) {
  */
 export async function stopRecording(recorder) {
   try {
-    console.log('Stopping recording...');
+    logger.log('AUDIO_RECORDING', 'Stopping recording...');
     await recorder.stop();
     const uri = recorder.uri;
-    console.log('Recording stopped. File saved at:', uri);
+    logger.log('AUDIO_RECORDING', 'Recording stopped. File saved at:', uri);
     return uri;
   } catch (error) {
-    console.error('Failed to stop recording:', error);
+    logger.error('AUDIO_RECORDING', 'Failed to stop recording:', error);
     throw error;
   }
 }

@@ -3,6 +3,7 @@ import { Platform, View, StyleSheet } from 'react-native';
 import { LoadSkiaWeb } from '@shopify/react-native-skia/lib/module/web';
 import { setupAudio } from './src/shared/utils/audio';
 import { useFonts } from 'expo-font';
+import { logger } from './src/shared/utils/logger';
 
 // Load Skia on web immediately (before any Skia imports)
 let skiaLoadPromise = null;
@@ -29,19 +30,19 @@ export default function App() {
         if (Platform.OS === 'web') {
           // Wait for Skia to load first
           await skiaLoadPromise;
-          console.log('✓ Skia loaded successfully');
+          logger.log('INITIALIZATION', '✓ Skia loaded successfully');
         }
 
         // Setup audio
         await setupAudio();
-        console.log('✓ Audio setup complete');
+        logger.log('INITIALIZATION', '✓ Audio setup complete');
 
         // Now dynamically import GameApp (which imports Skia components)
         const module = await import('./src/screens/gameplay/GameApp');
         setGameAppComponent(() => module.GameApp);
         setLoading(false);
       } catch (err) {
-        console.error('✗ Failed to load:', err);
+        logger.always('✗ Failed to load:', err);
         setError(err.message);
         setLoading(false);
       }

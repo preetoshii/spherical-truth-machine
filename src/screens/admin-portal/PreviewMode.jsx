@@ -6,6 +6,7 @@ import { useGameLoop } from '../gameplay/useGameLoop';
 import { config } from '../../config';
 import { playSound } from '../../shared/utils/audio';
 import { TextEditor } from './TextEditor';
+import { logger } from '../../shared/utils/logger';
 
 /**
  * PreviewMode - Game preview with draft message and overlay controls
@@ -169,7 +170,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
 
           setSelectedVoice(newVoice);
           playSound('click');
-          console.log('🎭 Tapped ball - switched to voice:', newVoice);
+          logger.log('ADMIN_UI', '🎭 Tapped ball - switched to voice:', newVoice);
         }
         setCurrentPath(null);
         return;
@@ -245,14 +246,6 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
           </Pressable>
         )}
         
-        {/* Voice indicator (top-right, below text button) - show current voice */}
-        {hasTransformedVoices && (
-          <View style={styles.voiceIndicator} pointerEvents="none">
-            <Text style={styles.voiceIndicatorText}>
-              {enabledVoices.find(v => v.key === selectedVoice)?.name || selectedVoice}
-            </Text>
-          </View>
-        )}
 
         {/* Save/Send Now button (bottom-center) */}
         <View style={styles.saveButtonContainer} pointerEvents="auto">
@@ -260,7 +253,7 @@ export function PreviewMode({ message, isActive, onSave, audioUri, wordTimings, 
             style={styles.saveButton}
             onPress={() => {
               playSound('click');
-              onSave();
+              onSave(selectedVoice); // Pass selected voice to parent
             }}
           >
             <Text style={styles.saveButtonText}>
@@ -345,22 +338,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  voiceIndicator: {
-    position: 'absolute',
-    top: 110,
-    right: 50,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  voiceIndicatorText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#ffffff',
-    opacity: 0.8,
   },
 });

@@ -3,6 +3,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { writeFile, unlink, readFile } from 'fs/promises';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
+import { logger } from '../src/shared/utils/logger.js';
 
 // Tunable knobs:
 // Think of these like dials you can turn to make the detector more or less picky.
@@ -190,7 +191,7 @@ async function transformVoiceWithElevenLabs(audioBuffer, voiceId) {
     throw new Error('ELEVENLABS_API_KEY environment variable is not set');
   }
 
-  console.log('[ElevenLabs] Transforming voice with ID:', voiceId);
+  logger.log('VOICE_TRANSFORMATION', '[ElevenLabs] Transforming voice with ID:', voiceId);
 
   const elevenlabs = new ElevenLabsClient({
     apiKey: apiKey
@@ -213,7 +214,7 @@ async function transformVoiceWithElevenLabs(audioBuffer, voiceId) {
   }
   const transformedBuffer = Buffer.concat(chunks);
 
-  console.log('[ElevenLabs] Voice transformation complete:', transformedBuffer.length, 'bytes');
+  logger.log('VOICE_TRANSFORMATION', '[ElevenLabs] Voice transformation complete:', transformedBuffer.length, 'bytes');
   return transformedBuffer;
 }
 
@@ -313,10 +314,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'only .m4a accepted' });
     }
 
-    console.log('[API] Received file:', filename);
-    console.log('[API] transformVoice:', transformVoice, 'type:', typeof transformVoice);
-    console.log('[API] voiceId:', voiceId, 'type:', typeof voiceId);
-    console.log('[API] Full formData:', JSON.stringify({
+    logger.log('TRANSCRIPTION', '[API] Received file:', filename);
+    logger.log('TRANSCRIPTION', '[API] transformVoice:', transformVoice, 'type:', typeof transformVoice);
+    logger.log('TRANSCRIPTION', '[API] voiceId:', voiceId, 'type:', typeof voiceId);
+    logger.log('TRANSCRIPTION', '[API] Full formData:', JSON.stringify({
       hasFile: !!file,
       filename,
       transformVoice,
@@ -329,23 +330,23 @@ export default async function handler(req, res) {
     let transformedAudios = {}; // { reboundhi: base64, reboundhita: base64 }
     
     if (transformVoice) {
-      console.log('[Transform] Starting dual voice transformation...');
+      logger.log('VOICE_TRANSFORMATION', '[Transform] Starting dual voice transformation...');
       
       // Voice 1: Reboundhi
       const voice1Id = 'q6bhPxtykZeN8o4aUNuh';
-      console.log('[Transform] Transforming with Reboundhi:', voice1Id);
+      logger.log('VOICE_TRANSFORMATION', '[Transform] Transforming with Reboundhi:', voice1Id);
       const buffer1 = await transformVoiceWithElevenLabs(file, voice1Id);
       transformedAudios.reboundhi = buffer1.toString('base64');
       
       // Voice 2: Reboundhita
       const voice2Id = 'UyE5iFj5Rg2T7GorYAnJ';
-      console.log('[Transform] Transforming with Reboundhita:', voice2Id);
+      logger.log('VOICE_TRANSFORMATION', '[Transform] Transforming with Reboundhita:', voice2Id);
       const buffer2 = await transformVoiceWithElevenLabs(file, voice2Id);
       transformedAudios.reboundhita = buffer2.toString('base64');
       
       // Use first voice for word detection (they should have same timing)
       audioToProcess = buffer1;
-      console.log('[Transform] Dual voice transformation complete');
+      logger.log('VOICE_TRANSFORMATION', '[Transform] Dual voice transformation complete');
     }
 
     // 3) Save audio to temp place so ffmpeg can read it
@@ -363,13 +364,13 @@ export default async function handler(req, res) {
 
       // 5) Find the talky parts (segments) using the loudness bars
       const segs = detectSegments(rms, hopMs);
-      console.log('[Segments detected]', segs.map((s, i) => ({ i, start_ms: s.start_ms, end_ms: s.end_ms })));
+      logger.log('WORD_ALIGNMENT', '[Segments detected]', segs.map((s, i) => ({ i, start_ms: s.start_ms, end_ms: s.end_ms })));
 
       // Ask Google for the words only (no timestamps)
       const resp = await transcribeAudio(pcm, sr);
       const transcript = (resp.results || []).map((r) => r.alternatives?.[0]?.transcript || '').join(' ').trim();
       const tokens = simpleTokenize(transcript);
-      console.log('[STT tokens]', tokens);
+      logger.log('TRANSCRIPTION', '[STT tokens]', tokens);
 
       // If counts don't match, return an error (no auto-reconciliation)
       if (tokens.length !== segs.length) {
@@ -398,7 +399,7 @@ export default async function handler(req, res) {
         start: seg.start_ms,  // Return as 'start' (milliseconds)
         end: seg.end_ms        // Return as 'end' (milliseconds)
       }));
-      console.log('[Alignment preview]', words.map((w, i) => ({
+      logger.log('WORD_ALIGNMENT', '[Alignment preview]', words.map((w, i) => ({
         i, word: w.word, start: w.start, end: w.end,
         center_ms: Math.round((w.start + w.end) / 2)
       })));
@@ -433,7 +434,7 @@ export default async function handler(req, res) {
       await unlink(tmpPath).catch(() => {});
     }
   } catch (e) {
-    console.error('Error processing audio:', e);
+    logger.always('CRITICAL: Error processing audio:', e);
     return res.status(500).json({ error: e?.message || 'internal error' });
   }
 }

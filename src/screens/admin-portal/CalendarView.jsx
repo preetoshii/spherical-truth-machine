@@ -6,6 +6,7 @@ import { playSound } from '../../shared/utils/audio';
 import { Pressable } from 'react-native';
 import { useHorizontalScroll } from '../../shared/utils/useHorizontalScroll';
 import { AudioRecorder } from './AudioRecorder';
+import { logger } from '../../shared/utils/logger';
 
 /**
  * Individual Card Item with Reanimated animations
@@ -345,9 +346,9 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
 
   // Handle recording complete with transcription
   const handleRecordingComplete = (uri, breaks, transcriptionResult) => {
-    console.log('Recording completed:', uri);
-    console.log('Sentence breaks:', breaks);
-    console.log('Transcription result:', transcriptionResult);
+    logger.log('AUDIO_RECORDING', 'Recording completed:', uri);
+    logger.log('AUDIO_RECORDING', 'Sentence breaks:', breaks);
+    logger.log('AUDIO_RECORDING', 'Transcription result:', transcriptionResult);
 
     // Store original recording URI (for fallback)
     setRecordedAudioUri(uri);
@@ -367,7 +368,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
       
       // Store transformed audio URIs if available
       if (transcriptionResult.transformedAudioUris) {
-        console.log('Transformed audio URIs received:', transcriptionResult.transformedAudioUris);
+        logger.log('AUDIO_RECORDING', 'Transformed audio URIs received:', transcriptionResult.transformedAudioUris);
         // Store both transformed audios (these will be passed to preview)
         setWordAudioSegments(transcriptionResult.transformedAudioUris); // Reuse this state for voice URIs
       }
@@ -377,8 +378,8 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
   // Handle preview button press - call onPreview to navigate to preview mode
   const handlePreview = () => {
     playSound('preview');
-    // Pass audio data, word timings, and pre-sliced audio segments to preview
-    onPreview(recordedAudioUri, wordTimings, wordAudioSegments);
+    // Pass audio data, word timings, pre-sliced audio segments, and text to preview
+    onPreview(recordedAudioUri, wordTimings, wordAudioSegments, editingText);
   };
 
   return (

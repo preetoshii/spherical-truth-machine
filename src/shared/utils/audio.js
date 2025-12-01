@@ -1,6 +1,7 @@
 import { createAudioPlayer } from 'expo-audio';
 import { config } from '../../config';
 import { triggerHaptic } from './haptics';
+import { logger } from './logger';
 
 // Sound player cache
 const soundPlayers = {};
@@ -19,7 +20,7 @@ function loadSound(name, source, volume = 1.0) {
     soundPlayers[name] = player;
     return player;
   } catch (error) {
-    console.warn(`Failed to load sound ${name}:`, error);
+    logger.warn('AUDIO_PLAYBACK', `Failed to load sound ${name}:`, error);
     return null;
   }
 }
@@ -49,7 +50,7 @@ export async function playSound(name) {
 
     const source = soundMap[name];
     if (!source) {
-      console.warn(`Sound ${name} not found`);
+      logger.warn('AUDIO_PLAYBACK', `Sound ${name} not found`);
       return;
     }
 
@@ -79,7 +80,7 @@ export async function playSound(name) {
       triggerHaptic(hapticEvent, runtimeConfig);
     }
   } catch (error) {
-    console.warn(`Failed to play sound ${name}:`, error);
+    logger.warn('AUDIO_PLAYBACK', `Failed to play sound ${name}:`, error);
   }
 }
 
@@ -87,5 +88,5 @@ export async function playSound(name) {
 export async function setupAudio() {
   // expo-audio doesn't require manual audio mode setup
   // Configuration happens automatically per platform
-  console.log('Audio system ready (expo-audio)');
+  logger.log('INITIALIZATION', 'Audio system ready (expo-audio)');
 }

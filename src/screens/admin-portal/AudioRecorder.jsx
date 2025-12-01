@@ -6,6 +6,7 @@ import { useAudioRecorder, useAudioRecorderState, RecordingPresets, useAudioPlay
 import { startRecording, stopRecording, formatDuration } from '../../shared/services/audioRecordingService';
 import { getWordTimestamps } from '../../shared/services/wordTimestampsService';
 import { config } from '../../config';
+import { logger } from '../../shared/utils/logger';
 
 /**
  * AudioRecorder Component
@@ -73,7 +74,7 @@ export function AudioRecorder({ onRecordingComplete }) {
     try {
       await startRecording(recorder);
     } catch (error) {
-      console.error('Failed to start recording:', error);
+      logger.error('AUDIO_RECORDING', 'Failed to start recording:', error);
       alert('Could not start recording. Please check microphone permissions.');
     }
   };
@@ -81,21 +82,21 @@ export function AudioRecorder({ onRecordingComplete }) {
   const handleStopRecording = async () => {
     try {
       const uri = await stopRecording(recorder);
-      console.log('Recording saved at:', uri);
-      console.log('Sentence breaks at:', sentenceBreaks);
+      logger.log('AUDIO_RECORDING', 'Recording saved at:', uri);
+      logger.log('AUDIO_RECORDING', 'Sentence breaks at:', sentenceBreaks);
 
       // Enter review mode instead of immediately notifying parent
       setRecordedUri(uri);
       setIsReviewMode(true);
     } catch (error) {
-      console.error('Failed to stop recording:', error);
+      logger.error('AUDIO_RECORDING', 'Failed to stop recording:', error);
       alert('Could not stop recording.');
     }
   };
 
   const handleRedo = () => {
     // Discard recording and reset to idle
-    console.log('Redo: discarding recording');
+    logger.log('AUDIO_RECORDING', 'Redo: discarding recording');
     setRecordedUri(null);
     setIsReviewMode(false);
     setSentenceBreaks([]);
@@ -103,8 +104,8 @@ export function AudioRecorder({ onRecordingComplete }) {
 
   const handleComplete = async () => {
     // Start transcription process
-    console.log('Complete: starting transcription...');
-    console.log('Transform voice:', transformVoice);
+    logger.log('AUDIO_RECORDING', 'Complete: starting transcription...');
+    logger.log('AUDIO_RECORDING', 'Transform voice:', transformVoice);
     setIsTranscribing(true);
 
     try {
@@ -117,15 +118,15 @@ export function AudioRecorder({ onRecordingComplete }) {
         config.voiceTransform.voiceId
       );
 
-      console.log('Word timestamps retrieved successfully!');
-      console.log('Result:', result);
+      logger.log('AUDIO_RECORDING', 'Word timestamps retrieved successfully!');
+      logger.log('AUDIO_RECORDING', 'Result:', result);
 
       // Notify parent with transcription result
       if (onRecordingComplete && recordedUri) {
         onRecordingComplete(recordedUri, sentenceBreaks, result);
       }
     } catch (error) {
-      console.error('Transcription failed:', error);
+      logger.error('AUDIO_RECORDING', 'Transcription failed:', error);
       alert(`Transcription error: ${error.message}\n\nPlease try recording again.`);
       // Reset to review mode on error
       setIsTranscribing(false);
@@ -134,7 +135,7 @@ export function AudioRecorder({ onRecordingComplete }) {
 
   const handlePlayAudio = () => {
     if (player && recordedUri) {
-      console.log('Playing audio:', recordedUri);
+      logger.log('AUDIO_RECORDING', 'Playing audio:', recordedUri);
       player.play();
     }
   };
@@ -143,7 +144,7 @@ export function AudioRecorder({ onRecordingComplete }) {
     // Record current timestamp
     const timestamp = state.durationMillis;
     setSentenceBreaks(prev => [...prev, timestamp]);
-    console.log(`Sentence break marked at ${timestamp}ms`);
+    logger.log('AUDIO_RECORDING', `Sentence break marked at ${timestamp}ms`);
   };
 
   const handleButtonPress = () => {

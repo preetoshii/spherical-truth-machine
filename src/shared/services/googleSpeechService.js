@@ -7,6 +7,8 @@
  * API Docs: https://cloud.google.com/speech-to-text/docs/sync-recognize
  */
 
+import { logger } from '../utils/logger';
+
 const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY;
 const API_ENDPOINT = 'https://speech.googleapis.com/v1/speech:recognize';
 
@@ -99,13 +101,13 @@ function insertSentenceBreaks(words, breakTimestamps) {
  */
 export async function transcribeAudio(audioUri, sentenceBreaks = []) {
   try {
-    console.log('Starting transcription...');
-    console.log('Audio URI:', audioUri);
-    console.log('Sentence breaks:', sentenceBreaks);
+    logger.log('TRANSCRIPTION', 'Starting transcription...');
+    logger.log('TRANSCRIPTION', 'Audio URI:', audioUri);
+    logger.log('TRANSCRIPTION', 'Sentence breaks:', sentenceBreaks);
 
     // Convert blob to base64
     const audioContent = await blobToBase64(audioUri);
-    console.log('Audio converted to base64, length:', audioContent.length);
+    logger.log('TRANSCRIPTION', 'Audio converted to base64, length:', audioContent.length);
 
     // Prepare API request
     const requestBody = {
@@ -136,7 +138,7 @@ export async function transcribeAudio(audioUri, sentenceBreaks = []) {
     }
 
     const data = await response.json();
-    console.log('Transcription response:', data);
+    logger.log('TRANSCRIPTION', 'Transcription response:', data);
 
     // Extract results
     if (!data.results || data.results.length === 0) {
@@ -158,13 +160,13 @@ export async function transcribeAudio(audioUri, sentenceBreaks = []) {
       end: parseTimeOffset(w.endTime),
     }));
 
-    console.log('Transcription complete!');
-    console.log('Text:', transcript);
-    console.log('Words:', wordsArray);
-    console.log('Word timings:', wordTimings);
+    logger.log('TRANSCRIPTION', 'Transcription complete!');
+    logger.log('TRANSCRIPTION', 'Text:', transcript);
+    logger.log('TRANSCRIPTION', 'Words:', wordsArray);
+    logger.log('TRANSCRIPTION', 'Word timings:', wordTimings);
 
     // Slice audio into individual word segments
-    console.log('Slicing audio into word segments...');
+    logger.log('TRANSCRIPTION', 'Slicing audio into word segments...');
     const { sliceAudioIntoWords } = await import('./audioSlicingService');
     const wordAudioSegments = await sliceAudioIntoWords(audioUri, wordTimings);
 
@@ -175,7 +177,7 @@ export async function transcribeAudio(audioUri, sentenceBreaks = []) {
       wordAudioSegments, // Array of {word, blobUri} for each word
     };
   } catch (error) {
-    console.error('Transcription error:', error);
+    logger.error('TRANSCRIPTION', 'Transcription error:', error);
     throw error;
   }
 }

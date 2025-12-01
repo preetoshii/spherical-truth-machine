@@ -3,6 +3,7 @@ import { config } from '../../config';
 import { playSound } from '../../shared/utils/audio';
 import { createAudioPlayer } from 'expo-audio';
 import { ParallaxManager } from '../../shared/effects/ParallaxManager';
+import { logger } from '../../shared/utils/logger';
 
 /**
  * GameCore - Physics engine using Matter.js
@@ -42,9 +43,9 @@ export class GameCore {
         if (this.audioPlayer && config.audio && config.audio.voiceVolume !== undefined) {
           this.audioPlayer.volume = config.audio.voiceVolume;
         }
-        console.log('Expo-audio player created for full recording');
+        logger.log('AUDIO_PLAYBACK', 'Expo-audio player created for full recording');
       } catch (error) {
-        console.error('Failed to create audio player:', error);
+        logger.error('AUDIO_PLAYBACK', 'Failed to create audio player:', error);
       }
     }
 
@@ -171,7 +172,7 @@ export class GameCore {
       this.message = wordTimings.map(t =>
         t.word.toLowerCase().replace(/[.,!?;:'"]/g, '')
       );
-      console.log('Using transcribed words for message:', this.message);
+      logger.log('INITIALIZATION', 'Using transcribed words for message:', this.message);
     } else if (customMessage) {
       // Fall back to splitting custom message text
       this.message = customMessage.toLowerCase().split(/\s+/);
@@ -410,7 +411,7 @@ export class GameCore {
     this.timeScale = start + (end - start) * progress;
 
     // Log difficulty changes for debugging
-    console.log(`Bounce ${this.bounceCount}: timeScale = ${this.timeScale.toFixed(2)}x (${(this.timeScale * 100).toFixed(0)}% speed)`);
+    logger.log('PHYSICS', `Bounce ${this.bounceCount}: timeScale = ${this.timeScale.toFixed(2)}x (${(this.timeScale * 100).toFixed(0)}% speed)`);
   }
 
   /**
@@ -440,7 +441,7 @@ export class GameCore {
     if (config.colors.mode === 'bounce' && config.colors.bouncesPerColorChange === 'quote') {
       this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
       this.primaryColor = config.colors.palette[this.currentColorIndex];
-      console.log('🎨 Quote complete - color changed to:', this.primaryColor, 'index:', this.currentColorIndex);
+      logger.log('RENDERING', '🎨 Quote complete - color changed to:', this.primaryColor, 'index:', this.currentColorIndex);
     }
 
     // Remove any existing gelato
@@ -864,7 +865,7 @@ export class GameCore {
 
       // Skip sentence break markers (*)
       if (timing.word === '*') {
-        console.log('Skipping sentence break marker at word index', this.wordIndex);
+        logger.log('AUDIO_PLAYBACK', 'Skipping sentence break marker at word index', this.wordIndex);
       } else {
         try {
           // Seek to word start time (convert ms to seconds)
@@ -876,7 +877,7 @@ export class GameCore {
           this.audioPlayer.seekTo(startSeconds);
           this.audioPlayer.play();
 
-          console.log(`🎵 "${timing.word}" (${startSeconds.toFixed(2)}s - ${endSeconds.toFixed(2)}s, ${(duration * 1000).toFixed(0)}ms)`);
+          logger.log('AUDIO_PLAYBACK', `🎵 "${timing.word}" (${startSeconds.toFixed(2)}s - ${endSeconds.toFixed(2)}s, ${(duration * 1000).toFixed(0)}ms)`);
 
           // Stop playback at word end
           setTimeout(() => {
@@ -885,7 +886,7 @@ export class GameCore {
             }
           }, duration * 1000);
         } catch (error) {
-          console.error('Audio playback failed:', error);
+          logger.error('AUDIO_PLAYBACK', 'Audio playback failed:', error);
         }
       }
     }
@@ -1019,7 +1020,7 @@ export class GameCore {
       const response = await fetch(url, { headers });
 
       if (!response.ok) {
-        console.warn('Could not load messages.json from GitHub API, using fallback');
+        logger.warn('GITHUB_API', 'Could not load messages.json from GitHub API, using fallback');
         return;
       }
 
@@ -1034,13 +1035,44 @@ export class GameCore {
 
       if (currentMessage && currentMessage.words) {
         this.message = currentMessage.words;
-        console.log('✅ Loaded fresh message from GitHub:', this.message);
+        logger.log('GITHUB_API', '✅ Loaded fresh message from GitHub:', this.message);
+
+        // Load audio if available
+        if (currentMessage.audio) {
+          // Build GitHub raw URLs for audio files
+          const audioFolder = config.github.audioFolder;
+          const baseUrl = 'https://raw.githubusercontent.com/preetoshii/spherical-truth-machine/master/';
+
+          // Prefer transformed audio, fallback to original
+          let audioFilename = currentMessage.audio.transformed || currentMessage.audio.original;
+          if (audioFilename) {
+            this.audioUri = `${baseUrl}${audioFolder}${audioFilename}?t=${cacheBuster}`;
+            logger.log('AUDIO_PLAYBACK', '✅ Loaded audio URI:', this.audioUri);
+
+            // Create audio player
+            try {
+              this.audioPlayer = createAudioPlayer({ uri: this.audioUri });
+              if (this.audioPlayer && config.audio && config.audio.voiceVolume !== undefined) {
+                this.audioPlayer.volume = config.audio.voiceVolume;
+              }
+              logger.log('AUDIO_PLAYBACK', '✅ Created audio player from GitHub URL');
+            } catch (error) {
+              logger.error('AUDIO_PLAYBACK', 'Failed to create audio player:', error);
+            }
+          }
+
+          // Load word timings if available
+          if (currentMessage.wordTimings) {
+            this.wordTimings = currentMessage.wordTimings;
+            logger.log('AUDIO_PLAYBACK', '✅ Loaded word timings:', this.wordTimings.length, 'words');
+          }
+        }
       } else {
-        console.warn('No message found for current date:', currentDate);
+        logger.warn('GITHUB_API', 'No message found for current date:', currentDate);
       }
     } catch (error) {
-      console.warn('Failed to load current message from GitHub:', error);
-      console.warn('Using fallback message');
+      logger.warn('GITHUB_API', 'Failed to load current message from GitHub:', error);
+      logger.warn('GITHUB_API', 'Using fallback message');
       // Keep using the fallback message set in constructor
     }
   }
@@ -1178,7 +1210,7 @@ export class GameCore {
         this.audioPlayer.pause();
         this.audioPlayer = null;
       } catch (error) {
-        console.error('Failed to cleanup audio:', error);
+        logger.error('AUDIO_PLAYBACK', 'Failed to cleanup audio:', error);
       }
     }
 
