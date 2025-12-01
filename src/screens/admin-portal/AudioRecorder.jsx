@@ -17,13 +17,11 @@ import { logger } from '../../shared/utils/logger';
  * Sentence Break button (✂️) appears to the left while recording
  *
  * States:
- */
-export function AudioRecorder({ onRecordingComplete, primaryColor = '#FFFFFF' }) {
  * - Idle: Shows red "🎤 Record" button
  * - Recording: Main button (gray "⏹ Stop") + Sentence Break button (left)
  * - Review: Redo button (left) + Complete button (right)
  */
-export function AudioRecorder({ onRecordingComplete }) {
+export function AudioRecorder({ onRecordingComplete, primaryColor = '#FFFFFF' }) {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const state = useAudioRecorderState(recorder);
 
