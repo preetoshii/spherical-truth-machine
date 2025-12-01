@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TextInput, Animated as RNAnimated } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, withDelay } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, withDelay, withRepeat, Easing } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { playSound } from '../../shared/utils/audio';
 import { Pressable } from 'react-native';
@@ -27,6 +27,7 @@ function CardItem({
   handleBackFromEdit,
   onSelectDate,
   formatDate,
+  getCountdownText,
   cardIndex,
   todayIndex,
   onRecordingComplete,
@@ -36,6 +37,7 @@ function CardItem({
 }) {
   // Shared values for animations
   const scale = useSharedValue(1);
+  const pulseScale = useSharedValue(1); // Separate scale for active card pulse
   const opacity = useSharedValue(1); // Start visible so we see them rise
   const translateY = useSharedValue(500); // Start below screen
   const borderOpacity = useSharedValue(1); // Border starts visible
@@ -73,6 +75,24 @@ function CardItem({
     }
   }, [isExiting]);
 
+  // Pulsing animation for active card (only when not editing)
+  useEffect(() => {
+    if (slot.isToday && !isEditing && !isOtherCardEditing) {
+      // Continuous pulse animation: scale from 1 to 1.05 and back
+      pulseScale.value = withRepeat(
+        withTiming(1.05, {
+          duration: 1000, // Faster pulse (1 second instead of 1.5)
+          easing: Easing.inOut(Easing.ease),
+        }),
+        -1, // Infinite repeat
+        true // Reverse on each repeat (ping-pong)
+      );
+    } else {
+      // Stop pulsing and return to normal scale
+      pulseScale.value = withTiming(1, { duration: 300 });
+    }
+  }, [slot.isToday, isEditing, isOtherCardEditing]);
+
   // Animate when editing state changes
   useEffect(() => {
     if (isEditing) {
@@ -98,7 +118,7 @@ function CardItem({
   // Animated style for wrapper
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { scale: scale.value },
+      { scale: scale.value * pulseScale.value }, // Combine base scale with pulse scale
       { translateY: translateY.value }
     ],
     opacity: opacity.value * dimOpacity.value, // Apply dimming
@@ -180,6 +200,38 @@ function CardItem({
               <Text style={styles.activeBadgeText}>ACTIVE</Text>
             </View>
           )}
+          {hasMessage && !slot.isToday && !slot.isPast && (
+            <View style={[
+              styles.scheduledBadge,
+              hasMessage && !isEditing && { borderColor: '#0a0a0a' } // Black border for white cards
+            ]}>
+              <Text style={[
+                styles.scheduledBadgeText,
+                hasMessage && !isEditing && { color: '#0a0a0a' } // Black text for white cards
+              ]}>
+                SCHEDULED
+              </Text>
+              <Text style={[
+                styles.scheduledCountdown,
+                hasMessage && !isEditing && { color: '#0a0a0a' } // Black text for white cards
+              ]}>
+                {getCountdownText(slot.date)}
+              </Text>
+            </View>
+          )}
+          {slot.isPast && (
+            <View style={[
+              styles.archivedBadge,
+              hasMessage && !isEditing && { borderColor: '#0a0a0a' } // Black border for white cards
+            ]}>
+              <Text style={[
+                styles.archivedBadgeText,
+                hasMessage && !isEditing && { color: '#0a0a0a' } // Black text for white cards
+              ]}>
+                ARCHIVED
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Message input/display or Audio Recorder */}
@@ -188,14 +240,25 @@ function CardItem({
             // Edit mode: Show Audio Recorder
             <AudioRecorder onRecordingComplete={onRecordingComplete} />
           ) : (
-            // Display mode: Show existing message
-            <Text style={[
-              styles.messageInput,
-              hasMessage && { color: '#0a0a0a' }, // Black text for populated cards
-              !hasMessage && { color: primaryColor }, // Dynamic color for empty cards
-            ]}>
-              {message?.text || ''}
-            </Text>
+            // Display mode: Show existing message or "+" button for empty cards (not past)
+            hasMessage ? (
+              <Text style={[
+                styles.messageInput,
+                { color: '#0a0a0a' }, // Black text for populated cards
+              ]}>
+                {message.text}
+              </Text>
+            ) : !slot.isPast ? (
+              // Show "+" button only for empty, non-past cards
+              <View style={styles.emptyCardCTA}>
+                <View style={styles.emptyCardCTARow}>
+                  <Feather name="plus" size={24} color={primaryColor} style={{ opacity: 0.6, marginRight: 8 }} />
+                  <Text style={[styles.emptyCardCTAText, { color: primaryColor }]}>
+                    Add a message
+                  </Text>
+                </View>
+              </View>
+            ) : null // Past cards show nothing when empty
           )}
         </View>
         </Animated.View>
@@ -389,6 +452,40 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
     return `${weekday}, ${monthDay}`.toUpperCase();
   };
 
+  // State to force re-render for countdown updates
+  const [countdownTick, setCountdownTick] = useState(0);
+
+  // Update countdown every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdownTick(prev => prev + 1);
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getCountdownText = (dateStr) => {
+    const scheduledDate = new Date(dateStr + 'T00:00:00');
+    const now = new Date();
+    const diffMs = scheduledDate.getTime() - now.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    // Use countdownTick to ensure function runs on each render
+    void countdownTick;
+
+    if (diffDays > 0) {
+      return `${diffDays} ${diffDays === 1 ? 'day' : 'days'}`;
+    } else if (diffHours > 0) {
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'}`;
+    } else if (diffMinutes > 0) {
+      return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'}`;
+    } else {
+      return 'Soon';
+    }
+  };
+
   const getMessageForDate = (dateStr) => {
     return scheduledMessages[dateStr] || null;
   };
@@ -519,6 +616,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
                 handleBackFromEdit={handleBackFromEdit}
                 onSelectDate={onSelectDate}
                 formatDate={formatDate}
+                getCountdownText={getCountdownText}
                 cardIndex={index}
                 todayIndex={todayIndex}
                 onRecordingComplete={handleRecordingComplete}
@@ -627,10 +725,65 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 1,
   },
+  scheduledBadge: {
+    borderWidth: 1,
+    borderColor: '#4a9eff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    alignSelf: 'center',
+    marginTop: 4,
+    alignItems: 'center',
+  },
+  scheduledBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#4a9eff',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  scheduledCountdown: {
+    fontSize: 9,
+    fontWeight: '400',
+    color: '#4a9eff',
+    opacity: 0.8,
+    letterSpacing: 0.5,
+  },
+  archivedBadge: {
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    alignSelf: 'center',
+    marginTop: 4,
+    alignItems: 'center',
+  },
+  archivedBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+  },
   cardContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyCardCTA: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyCardCTARow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyCardCTAText: {
+    fontSize: 18,
+    fontWeight: '300',
+    opacity: 0.6,
+    letterSpacing: 0.5,
   },
   messageInput: {
     fontSize: 32,
