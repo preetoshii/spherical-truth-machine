@@ -229,7 +229,7 @@ export function AudioRecorder({ onRecordingComplete, primaryColor = '#FFFFFF' })
                 size={16} 
                 color={transformVoice ? '#38a169' : '#666'} 
               />
-              <Text style={[styles.voiceToggleText, transformVoice && styles.voiceToggleTextActive]}>
+              <Text style={[styles.voiceToggleText, transformVoice && { color: primaryColor }]}>
                 Voice Transform
               </Text>
               <View style={[styles.toggleSwitch, transformVoice && styles.toggleSwitchActive]}>
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   voiceToggleTextActive: {
-    color: primaryColor,
+    // color set inline with primaryColor
   },
   toggleSwitch: {
     width: 44,
