@@ -4,7 +4,6 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, wit
 import { Feather } from '@expo/vector-icons';
 import { playSound } from '../../shared/utils/audio';
 import { Pressable } from 'react-native';
-import { useHorizontalScroll } from '../../shared/utils/useHorizontalScroll';
 import { AudioRecorder } from './AudioRecorder';
 import { logger } from '../../shared/utils/logger';
 
@@ -97,7 +96,8 @@ function CardItem({
       { translateY: translateY.value }
     ],
     opacity: opacity.value,
-    width: isEditing ? editCardWidth : cardSize + cardSpacing, // Expand wrapper when editing
+    width: isEditing ? editCardWidth : cardSize, // Full card width
+    height: isEditing ? editCardHeight : cardSize + cardSpacing, // Card height + spacing
     scrollSnapAlign: 'center', // CSS scroll snap for web
   }));
 
@@ -117,7 +117,7 @@ function CardItem({
       // Empty card or editing: dark background, white text
       return {
         borderColor: `rgba(255, 255, 255, ${borderOpacity.value})`,
-        backgroundColor: `rgba(17, 17, 17, ${backgroundOpacity.value})`,
+        backgroundColor: `rgba(0, 0, 0, ${backgroundOpacity.value})`,
         transform: [{ scale: scale.value }],
       };
     }
@@ -193,12 +193,11 @@ function CardItem({
 }
 
 /**
- * CalendarView - Horizontal scrolling card-based calendar
+ * CalendarView - Vertical scrolling card-based calendar
  */
 export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initialEditingDate, initialEditingText, scrollToDate, onScrollComplete, primaryColor = '#FFFFFF', isExiting = false, onExitComplete }) {
   const { width, height } = Dimensions.get('window');
   const scrollViewRef = useRef(null);
-  useHorizontalScroll(scrollViewRef); // Hook for vertical-to-horizontal scroll translation
   const textInputRefs = useRef({}).current;
   const [editingDate, setEditingDate] = useState(initialEditingDate || null);
   const [editingText, setEditingText] = useState(initialEditingText || '');
@@ -287,18 +286,18 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
   const cardSize = Math.min(width * 0.75, height * 0.6);
   const cardSpacing = 64;
   const snapInterval = cardSize + cardSpacing;
-  const editCardWidth = width - 100; // Full width minus left/right padding
-  const editCardHeight = height - 100; // Full height minus top/bottom padding
+  const editCardWidth = width; // Full width
+  const editCardHeight = height; // Full height
 
   // Calculate initial scroll position to today's card
-  const initialScrollX = todayIndex !== -1 ? todayIndex * snapInterval : 0;
+  const initialScrollY = todayIndex !== -1 ? todayIndex * snapInterval : 0;
 
   // Scroll to today's card immediately on mount
   useEffect(() => {
     if (scrollViewRef.current && todayIndex !== -1) {
       // Use requestAnimationFrame to ensure DOM is ready, but no visible delay
       requestAnimationFrame(() => {
-        scrollViewRef.current?.scrollTo({ x: initialScrollX, animated: false });
+        scrollViewRef.current?.scrollTo({ y: initialScrollY, animated: false });
       });
     }
   }, []);
@@ -308,9 +307,9 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
     if (scrollToDate && scrollViewRef.current) {
       const dateIndex = slots.findIndex(slot => slot.date === scrollToDate);
       if (dateIndex !== -1) {
-        const scrollX = dateIndex * snapInterval;
+        const scrollY = dateIndex * snapInterval;
         setTimeout(() => {
-          scrollViewRef.current?.scrollTo({ x: scrollX, animated: true });
+          scrollViewRef.current?.scrollTo({ y: scrollY, animated: true });
           if (onScrollComplete) {
             setTimeout(onScrollComplete, 300); // Call after scroll animation
           }
@@ -364,8 +363,8 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
 
     // Scroll to the clicked card (happens simultaneously with expansion)
     if (scrollViewRef.current && cardIndex !== undefined) {
-      const scrollX = cardIndex * snapInterval;
-      scrollViewRef.current.scrollTo({ x: scrollX, animated: true });
+      const scrollY = cardIndex * snapInterval;
+      scrollViewRef.current.scrollTo({ y: scrollY, animated: true });
     }
 
     setTimeout(() => {
@@ -422,7 +421,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
 
   return (
     <View style={styles.container}>
-      {/* Horizontal scrolling cards */}
+      {/* Vertical scrolling cards */}
       <TouchableOpacity
         style={styles.scrollView}
         activeOpacity={1}
@@ -432,14 +431,17 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
       >
         <ScrollView
           ref={scrollViewRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
           scrollEnabled={!editingDate}
           snapToInterval={snapInterval}
           decelerationRate="fast"
           snapToAlignment="center"
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingLeft: (width - cardSize) / 2, paddingRight: (width - cardSize) / 2 }]}
+          contentContainerStyle={[styles.scrollContent, { 
+            paddingTop: editingDate ? 0 : (height - cardSize) / 2, 
+            paddingBottom: editingDate ? 0 : (height - cardSize) / 2, 
+            paddingHorizontal: editingDate ? 0 : (width - cardSize) / 2 
+          }]}
         >
           {slots.map((slot, index) => {
             const message = getMessageForDate(slot.date);
@@ -514,7 +516,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#000000',
   },
   headerTitle: {
     position: 'absolute',
@@ -527,14 +529,13 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    scrollSnapType: 'x mandatory', // CSS scroll snap for web
+    scrollSnapType: 'y mandatory', // CSS scroll snap for web
   },
   scrollContent: {
     alignItems: 'center',
-    paddingVertical: 40,
   },
   card: {
-    backgroundColor: '#111',
+    backgroundColor: '#000000',
     borderRadius: 16,
     borderWidth: 2,
     // borderColor set inline with primaryColor

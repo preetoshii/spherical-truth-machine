@@ -277,18 +277,43 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
     return editingDate === today;
   };
 
-  // Exit animation state
+  // Entrance and exit animation state
   const [isExiting, setIsExiting] = useState(false);
-  const portalOpacity = useRef(new Animated.Value(1)).current;
+  const portalOpacity = useRef(new Animated.Value(0)).current; // Start invisible for entrance
+  const portalTranslateY = useRef(new Animated.Value(50)).current; // Start slightly below for slide-up
+
+  // Entrance animation - fade in and slide up
+  useEffect(() => {
+    // Animate in on mount
+    Animated.parallel([
+      Animated.timing(portalOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(portalTranslateY, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   // Handle exit animation - fade out overlay (matches card animation duration)
   useEffect(() => {
     if (isExiting) {
-      Animated.timing(portalOpacity, {
-        toValue: 0,
-        duration: 500, // Match card exit animation duration
-        useNativeDriver: true,
-      }).start(() => {
+      Animated.parallel([
+        Animated.timing(portalOpacity, {
+          toValue: 0,
+          duration: 500, // Match card exit animation duration
+          useNativeDriver: true,
+        }),
+        Animated.timing(portalTranslateY, {
+          toValue: 50,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
         setIsExiting(false);
         onClose();
       });
@@ -317,7 +342,10 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
   };
 
   return (
-    <Animated.View style={[styles.container, { opacity: portalOpacity }]}>
+    <Animated.View style={[styles.container, { 
+      opacity: portalOpacity,
+      transform: [{ translateY: portalTranslateY }],
+    }]}>
       {/* Single persistent back button - hide when text editor is open */}
       {!isTextEditorOpen && (
         <Pressable

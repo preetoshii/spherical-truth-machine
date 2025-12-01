@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   card: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#000000',
     borderRadius: 12,
     padding: 32,
     width: '80%',
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   progressCard: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#000000',
     borderRadius: 12,
     padding: 32,
     borderWidth: 1,

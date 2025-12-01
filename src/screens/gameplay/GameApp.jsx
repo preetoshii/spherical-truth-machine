@@ -212,13 +212,19 @@ export function GameApp() {
   // Pause/resume animation when admin portal opens/closes
   useEffect(() => {
     if (showAdmin) {
-      // Pause animation loop when admin opens
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-        animationFrameId.current = null;
-      }
-      // Reset accumulator to prevent time buildup while paused
-      accumulator.current = 0;
+      // Delay pausing game until entrance animation completes (400ms)
+      // This keeps the game visible and running while admin portal slides in
+      const pauseDelay = setTimeout(() => {
+        // Pause animation loop after entrance animation
+        if (animationFrameId.current) {
+          cancelAnimationFrame(animationFrameId.current);
+          animationFrameId.current = null;
+        }
+        // Reset accumulator to prevent time buildup while paused
+        accumulator.current = 0;
+      }, 400); // Match AdminPortal entrance animation duration
+
+      return () => clearTimeout(pauseDelay);
     } else {
       // Resume animation loop when admin closes (if not already running)
       if (!animationFrameId.current && gameCore.current) {
