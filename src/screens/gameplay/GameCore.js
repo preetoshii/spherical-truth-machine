@@ -553,11 +553,16 @@ export class GameCore {
         // IMPORTANT: Must happen AFTER quantization to override it
         if (config.gelato.preventDownwardBounce) {
           const vel = mascotBody.velocity;
+          logger.always(`BEFORE FLIP CHECK: vy=${vel.y.toFixed(2)}`);
           if (vel.y > 0) { // Moving downward (positive Y is down in screen coordinates)
+            logger.always(`FLIPPING from vy=${vel.y.toFixed(2)} to vy=${(-vel.y).toFixed(2)}`);
             Matter.Body.setVelocity(mascotBody, {
               x: vel.x,
               y: -vel.y, // Flip to upward
             });
+            // Verify the flip actually stuck
+            const afterVel = mascotBody.velocity;
+            logger.always(`VERIFY AFTER FLIP: vy is now ${afterVel.y.toFixed(2)}`);
           }
         }
 
@@ -757,7 +762,23 @@ export class GameCore {
     // Calculate center point and angle
     const centerX = (startX + endX) / 2;
     const centerY = (startY + endY) / 2;
-    const angle = Math.atan2(endY - startY, endX - startX);
+
+    // Normalize draw direction: always treat line as left-to-right
+    // This ensures the normal always points in a consistent direction
+    let normalizedStartX = startX;
+    let normalizedStartY = startY;
+    let normalizedEndX = endX;
+    let normalizedEndY = endY;
+
+    if (endX < startX) {
+      // Line was drawn right-to-left, swap endpoints
+      normalizedStartX = endX;
+      normalizedStartY = endY;
+      normalizedEndX = startX;
+      normalizedEndY = startY;
+    }
+
+    const angle = Math.atan2(normalizedEndY - normalizedStartY, normalizedEndX - normalizedStartX);
     const gelatoLength = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
 
     // Calculate responsive thickness (scale with mascot radius)
