@@ -138,9 +138,12 @@ function CardItem({
             handleCardPress(slot.date, message?.text || '', isEditable, cardIndex);
           }
         }}
-        disabled={slot.isPast}
+        disabled={slot.isPast || isEditing}
         activeOpacity={1}
-        style={{ width: '100%', height: '100%' }}
+        style={[
+          { width: '100%', height: '100%' },
+          isEditing && { cursor: 'default' } // Disable pointer cursor in edit mode (web)
+        ]}
       >
         <Animated.View
           style={[
@@ -150,14 +153,17 @@ function CardItem({
               width: isEditing ? editCardWidth : cardSize,
               height: isEditing ? editCardHeight : cardSize,
               padding: isEditing ? 100 : 64, // More padding when expanded
+              paddingTop: isEditing ? 120 : 64, // Extra top padding when editing to keep date visible
               borderColor: hasMessage && !isEditing ? '#0a0a0a' : primaryColor, // Dynamic border
+              cursor: isEditing ? 'default' : 'pointer', // Disable pointer cursor in edit mode (web)
             },
             slot.isPast && styles.cardPast,
             slot.isToday && styles.cardToday,
           ]}
+          pointerEvents={isEditing ? 'box-none' : 'auto'} // Allow touches to pass through card in edit mode
         >
-          {/* Date header */}
-          <View style={styles.cardHeader}>
+          {/* Date header - adjust position when editing to keep it visible */}
+          <View style={[styles.cardHeader, isEditing && { marginTop: 0, paddingTop: 20 }]}>
           <Text style={[
             styles.cardDate,
             slot.isPast && styles.textMuted,
@@ -402,8 +408,11 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
     onSelectDate(dateStr, messageText || '');
 
     // Scroll to the clicked card (happens simultaneously with expansion)
+    // When editing, scroll to show the top of the card so date header is visible
     if (scrollViewRef.current && cardIndex !== undefined) {
-      const scrollY = cardIndex * snapInterval;
+      const paddingTop = (height - cardSize) / 2;
+      // Scroll to show the top of the card when editing (account for padding)
+      const scrollY = paddingTop + (cardIndex * snapInterval);
       scrollViewRef.current.scrollTo({ y: scrollY, animated: true });
     }
 
