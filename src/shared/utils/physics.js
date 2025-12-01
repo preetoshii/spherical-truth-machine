@@ -10,9 +10,13 @@
  * @param {number} vx - X component of velocity
  * @param {number} vy - Y component of velocity
  * @param {number} numDirections - Number of discrete directions (e.g., 32)
+ * @param {Object} options - Optional configuration
+ * @param {boolean} options.preventStraightUp - Never allow perfectly vertical (90°) bounces
+ * @param {number} options.ballX - Ball X position (required if preventStraightUp)
+ * @param {number} options.screenWidth - Screen width (required if preventStraightUp)
  * @returns {{x: number, y: number}} - Quantized velocity vector
  */
-export function quantizeVelocityAngle(vx, vy, numDirections) {
+export function quantizeVelocityAngle(vx, vy, numDirections, options = {}) {
   // Calculate current speed (magnitude) - we'll preserve this
   const speed = Math.sqrt(vx * vx + vy * vy);
 
@@ -31,7 +35,31 @@ export function quantizeVelocityAngle(vx, vy, numDirections) {
 
   // Snap to nearest discrete angle
   // Round to nearest multiple of angleStep
-  const quantizedAngle = Math.round(currentAngle / angleStep) * angleStep;
+  let quantizedAngle = Math.round(currentAngle / angleStep) * angleStep;
+
+  // Prevent straight up bounces if enabled
+  if (options.preventStraightUp) {
+    const straightUp = Math.PI / 2; // 90° in radians
+    const tolerance = angleStep / 2; // Half of one angle step
+
+    // Check if quantized angle is very close to straight up (90°)
+    if (Math.abs(quantizedAngle - straightUp) < tolerance) {
+      // Determine which direction to bias based on ball position
+      const screenCenter = options.screenWidth / 2;
+      const ballIsLeftOfCenter = options.ballX < screenCenter;
+
+      // Bias toward screen center
+      // If ball is left of center, angle should be toward right (less than 90°)
+      // If ball is right of center, angle should be toward left (more than 90°)
+      if (ballIsLeftOfCenter) {
+        // Angle toward right: 90° - angleStep
+        quantizedAngle = straightUp - angleStep;
+      } else {
+        // Angle toward left: 90° + angleStep
+        quantizedAngle = straightUp + angleStep;
+      }
+    }
+  }
 
   // Convert back to velocity components
   // Preserve original speed magnitude

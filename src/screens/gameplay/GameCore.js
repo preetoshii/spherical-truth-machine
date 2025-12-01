@@ -529,7 +529,12 @@ export class GameCore {
           const quantized = quantizeVelocityAngle(
             vel.x,
             vel.y,
-            config.physics.mascot.angleQuantization.numDirections
+            config.physics.mascot.angleQuantization.numDirections,
+            {
+              preventStraightUp: config.physics.mascot.angleQuantization.preventStraightUp,
+              ballX: mascotBody.position.x,
+              screenWidth: this.width,
+            }
           );
 
           Matter.Body.setVelocity(mascotBody, quantized);
@@ -538,7 +543,8 @@ export class GameCore {
           if (config.logs.PHYSICS) {
             const oldAngle = (Math.atan2(vel.y, vel.x) * 180 / Math.PI).toFixed(1);
             const newAngle = (Math.atan2(quantized.y, quantized.x) * 180 / Math.PI).toFixed(1);
-            logger.log('PHYSICS', `Quantized bounce: ${oldAngle}° → ${newAngle}°`);
+            const preventedStraightUp = Math.abs(Math.atan2(vel.y, vel.x) - Math.PI/2) < 0.1 && Math.abs(Math.atan2(quantized.y, quantized.x) - Math.PI/2) >= 0.1;
+            logger.log('PHYSICS', `Quantized bounce: ${oldAngle}° → ${newAngle}°${preventedStraightUp ? ' [prevented straight up]' : ''}`);
           }
         }
 
