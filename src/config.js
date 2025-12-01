@@ -127,6 +127,24 @@ export const config = {
         numDirections: 32,       // Number of discrete angles (32 = 11.25° steps, 16 = 22.5°, 8 = 45°)
         preventStraightUp: true, // Rotate angle grid so 90° is never allowed (prevents easy or awkward straight-up bouncing)
       },
+
+      // Gelato bounce juice (visual feedback on bounce)
+      bounceJuice: {
+        // Radial ripple effect
+        ripple: {
+          enabled: true,          // Toggle ripple effect
+          duration: 500,          // How long ripple expands (ms)
+          maxRadius: 80,          // Maximum ripple radius (pixels from mascot center)
+          opacity: 0.3,           // Starting opacity
+          strokeWidth: 3,         // Ripple line thickness
+        },
+        // Mascot scale pulse
+        scale: {
+          enabled: true,          // Toggle scale pulse
+          amount: 1.3,            // Scale multiplier (1.3 = 30% larger)
+          duration: 150,          // Duration of scale animation (ms)
+        },
+      },
     },
 
     // Entrance animation (ball dropping from top)

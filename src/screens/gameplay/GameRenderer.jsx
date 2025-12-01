@@ -328,7 +328,7 @@ function ZogChanFace({ x, y, color, isSpeaking, radius }) {
  */
 const GameRendererComponent = ({ width, height, gameState, frame, lines = [], currentPath = null }) => {
   // Extract values from shared state object (read directly, no React reconciliation)
-  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [], wallGlows = [], deathFadeProgress = 0 } = gameState;
+  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [], wallGlows = [], bounceRipples = [], lastBounceScale = null, deathFadeProgress = 0 } = gameState;
   const mascotX = mascotPos.x;
   const mascotY = mascotPos.y;
 
@@ -864,27 +864,75 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
         );
       })}
 
-      {/* Mascot circle */}
-      <Group>
-        <Circle
-          cx={mascotX}
-          cy={mascotY}
-          r={mascotRadius}
-          color={primaryColor}
-          style="stroke"
-          strokeWidth={config.gelato.thickness}
-        />
+      {/* Bounce ripple effects */}
+      {config.physics.mascot.bounceJuice.ripple.enabled && bounceRipples.map((ripple, index) => {
+        const rippleConfig = config.physics.mascot.bounceJuice.ripple;
+        const currentTime = Date.now();
+        const age = currentTime - ripple.timestamp;
+        const progress = Math.min(age / rippleConfig.duration, 1);
 
-        {/* ZogChan Face */}
-        {config.physics.mascot.face.enabled && (
-          <ZogChanFace
-            x={mascotX}
-            y={mascotY}
+        // Expand from 0 to maxRadius
+        const currentRadius = mascotRadius + (rippleConfig.maxRadius - mascotRadius) * progress;
+
+        // Fade out as it expands
+        const rippleOpacity = rippleConfig.opacity * (1 - progress);
+
+        return (
+          <Circle
+            key={`ripple-${index}`}
+            cx={ripple.x}
+            cy={ripple.y}
+            r={currentRadius}
             color={primaryColor}
-            isSpeaking={currentWord !== null}
-            radius={mascotRadius}
+            opacity={rippleOpacity}
+            style="stroke"
+            strokeWidth={rippleConfig.strokeWidth}
           />
-        )}
+        );
+      })}
+
+      {/* Mascot circle with scale animation */}
+      <Group>
+        {(() => {
+          // Calculate scale animation
+          let scale = 1.0;
+          if (config.physics.mascot.bounceJuice.scale.enabled && lastBounceScale) {
+            const scaleConfig = config.physics.mascot.bounceJuice.scale;
+            const currentTime = Date.now();
+            const age = currentTime - lastBounceScale.timestamp;
+
+            if (age < scaleConfig.duration) {
+              const progress = age / scaleConfig.duration;
+              // Ease out: quick scale up, then ease back to normal
+              const easeOut = 1 - Math.pow(progress, 3);
+              scale = 1.0 + (scaleConfig.amount - 1.0) * easeOut;
+            }
+          }
+
+          return (
+            <>
+              <Circle
+                cx={mascotX}
+                cy={mascotY}
+                r={mascotRadius * scale}
+                color={primaryColor}
+                style="stroke"
+                strokeWidth={config.gelato.thickness}
+              />
+
+              {/* ZogChan Face */}
+              {config.physics.mascot.face.enabled && (
+                <ZogChanFace
+                  x={mascotX}
+                  y={mascotY}
+                  color={primaryColor}
+                  isSpeaking={currentWord !== null}
+                  radius={mascotRadius * scale}
+                />
+              )}
+            </>
+          );
+        })()}
       </Group>
       </Group>
       </Canvas>

@@ -158,6 +158,10 @@ export class GameCore {
     this.lastWallBumpSound = null; // Track last played sound to prevent consecutive repeats
     this.lastGelatoBounceSound = null; // Track last played gelato bounce sound to prevent consecutive repeats
 
+    // Bounce juice effects (Gelato bounce feedback)
+    this.bounceRipples = []; // Array of { x, y, timestamp }
+    this.lastBounceScale = null; // { timestamp } for mascot scale animation
+
     // Color system - now managed by primaryColorManager
     // Color updates are handled externally for universal access
 
@@ -551,6 +555,18 @@ export class GameCore {
         const randomBounceVariant = availableBounceVariants[Math.floor(Math.random() * availableBounceVariants.length)];
         this.lastGelatoBounceSound = randomBounceVariant;
         playSound(randomBounceVariant);
+
+        // Bounce juice effects (radial ripple + mascot scale pulse)
+        if (config.physics.mascot.bounceJuice.ripple.enabled) {
+          this.bounceRipples.push({
+            x: mascotBody.position.x,
+            y: mascotBody.position.y,
+            timestamp: currentTime,
+          });
+        }
+        if (config.physics.mascot.bounceJuice.scale.enabled) {
+          this.lastBounceScale = { timestamp: currentTime };
+        }
 
         // Store impact data for visual deformation
         this.bounceImpact = {
@@ -1144,6 +1160,13 @@ export class GameCore {
       const age = currentTime - glow.timestamp;
       return age < glowConfig.fadeOutMs;
     });
+
+    // Remove old bounce ripples
+    const rippleDuration = config.physics.mascot.bounceJuice.ripple.duration;
+    this.bounceRipples = this.bounceRipples.filter(ripple => {
+      const age = currentTime - ripple.timestamp;
+      return age < rippleDuration;
+    });
   }
 
   /**
@@ -1158,6 +1181,20 @@ export class GameCore {
    */
   getWallGlows() {
     return this.wallGlows;
+  }
+
+  /**
+   * Get bounce ripples for rendering
+   */
+  getBounceRipples() {
+    return this.bounceRipples;
+  }
+
+  /**
+   * Get last bounce scale timestamp
+   */
+  getLastBounceScale() {
+    return this.lastBounceScale;
   }
 
   /**

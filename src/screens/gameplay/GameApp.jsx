@@ -179,6 +179,8 @@ export function GameApp() {
       state.primaryColor = gameCore.current.getPrimaryColor();
       state.particles = gameCore.current.getParticles();
       state.wallGlows = gameCore.current.getWallGlows();
+      state.bounceRipples = gameCore.current.getBounceRipples();
+      state.lastBounceScale = gameCore.current.getLastBounceScale();
       state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
       
       // Minimal React update - just a number, triggers Skia re-render without full reconciliation
@@ -278,6 +280,8 @@ export function GameApp() {
           state.primaryColor = getPrimaryColor();
           state.particles = gameCore.current.getParticles();
           state.wallGlows = gameCore.current.getWallGlows();
+          state.bounceRipples = gameCore.current.getBounceRipples();
+          state.lastBounceScale = gameCore.current.getLastBounceScale();
           state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
           
           setFrame(prev => prev + 1);
