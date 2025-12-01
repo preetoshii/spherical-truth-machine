@@ -40,9 +40,10 @@ export function quantizeVelocityAngle(vx, vy, numDirections, options = {}) {
   // Prevent straight up bounces if enabled
   if (options.preventStraightUp) {
     const straightUp = Math.PI / 2; // 90° in radians
-    const tolerance = angleStep / 2; // Half of one angle step
+    const tolerance = 0.001; // Very small tolerance for floating point comparison
 
-    // Check if quantized angle is very close to straight up (90°)
+    // Check if quantized angle IS straight up (90°)
+    // We need a tight tolerance because we're checking the exact quantized value
     if (Math.abs(quantizedAngle - straightUp) < tolerance) {
       // Determine which direction to bias based on ball position
       const screenCenter = options.screenWidth / 2;
