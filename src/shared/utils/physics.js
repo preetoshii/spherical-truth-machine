@@ -31,8 +31,9 @@ export function quantizeVelocityAngle(vx, vy, numDirections, options = {}) {
   // For 32 directions: 2π / 32 = 0.196 radians ≈ 11.25°
   const angleStep = (Math.PI * 2) / numDirections;
 
-  // If preventing straight up bounces, offset the grid by half a step
-  // This ensures 90° falls BETWEEN two allowed angles instead of ON an angle
+  // Rotate angle grid to prevent straight-up (90°) bounces
+  // When enabled, shifts grid by half step so 90° falls between two allowed angles
+  // Example with 32 dirs: normal grid has 90° as allowed angle, rotated grid has 84.375° and 95.625° instead
   const angleOffset = options.preventStraightUp ? angleStep / 2 : 0;
 
   // Snap to nearest discrete angle

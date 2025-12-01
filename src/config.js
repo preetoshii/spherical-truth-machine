@@ -125,7 +125,7 @@ export const config = {
       angleQuantization: {
         enabled: true,           // Toggle for easy testing
         numDirections: 32,       // Number of discrete angles (32 = 11.25° steps, 16 = 22.5°, 8 = 45°)
-        preventStraightUp: true, // Never allow perfectly vertical (90°) bounces - biases toward screen center
+        preventStraightUp: true, // Rotate angle grid so 90° is never allowed (prevents easy or awkward straight-up bouncing)
       },
     },
 
