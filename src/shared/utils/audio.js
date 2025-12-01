@@ -84,6 +84,18 @@ export async function playSound(name) {
   }
 }
 
+// Play a downward arpeggio using wall-bump chord tones (C5 → G4 → E4 → C4)
+export async function playDeathArpeggio() {
+  const notes = ['wall-bump-C5', 'wall-bump-G4', 'wall-bump-E4', 'wall-bump-C4'];
+  const delayMs = 80; // Milliseconds between each note
+
+  for (let i = 0; i < notes.length; i++) {
+    setTimeout(() => {
+      playSound(notes[i]);
+    }, i * delayMs);
+  }
+}
+
 // Setup audio (expo-audio handles configuration automatically)
 export async function setupAudio() {
   // expo-audio doesn't require manual audio mode setup

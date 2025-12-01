@@ -1,6 +1,6 @@
 import Matter from 'matter-js';
 import { config } from '../../config';
-import { playSound } from '../../shared/utils/audio';
+import { playSound, playDeathArpeggio } from '../../shared/utils/audio';
 import { createAudioPlayer } from 'expo-audio';
 import { ParallaxManager } from '../../shared/effects/ParallaxManager';
 import { logger } from '../../shared/utils/logger';
@@ -423,8 +423,8 @@ export class GameCore {
   handleLoss() {
     this.hasLost = true;
 
-    // Play loss sound
-    playSound('loss');
+    // Play death arpeggio (downward C major chord: C5 → G4 → E4 → C4)
+    playDeathArpeggio();
 
     // Start death fade-out animation
     this.deathFadeStartTime = Date.now();
