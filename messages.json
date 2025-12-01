@@ -149,6 +149,41 @@
           "end": 3880
         }
       ]
+    },
+    "2025-12-01": {
+      "text": "bring the mother home",
+      "words": [
+        "bring",
+        "the",
+        "mother",
+        "home"
+      ],
+      "audio": {
+        "original": "30-11-2025-bring-the-mother-original.m4a",
+        "transformed": "30-11-2025-bring-the-mother-transformed.mp3"
+      },
+      "wordTimings": [
+        {
+          "word": "bring",
+          "start": 965,
+          "end": 1595
+        },
+        {
+          "word": "the",
+          "start": 1835,
+          "end": 2415
+        },
+        {
+          "word": "mother",
+          "start": 2550,
+          "end": 3160
+        },
+        {
+          "word": "home",
+          "start": 3520,
+          "end": 3910
+        }
+      ]
     }
   }
 }
