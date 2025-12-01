@@ -6,7 +6,7 @@ import { playSound } from '../../shared/utils/audio';
  * Confirmation - Send Now confirmation dialog
  * Only shown when updating the ACTIVE message
  */
-export function Confirmation({ onCancel, onConfirm }) {
+export function Confirmation({ onCancel, onConfirm, uploadProgress }) {
   return (
     <View style={styles.container}>
       {/* Semi-transparent overlay */}
@@ -26,6 +26,7 @@ export function Confirmation({ onCancel, onConfirm }) {
               playSound('click');
               onCancel();
             }}
+            disabled={uploadProgress !== null}
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </Pressable>
@@ -36,11 +37,29 @@ export function Confirmation({ onCancel, onConfirm }) {
               playSound('click');
               onConfirm();
             }}
+            disabled={uploadProgress !== null}
           >
             <Text style={styles.confirmButtonText}>Confirm</Text>
           </Pressable>
         </View>
       </View>
+
+      {/* Upload progress overlay */}
+      {uploadProgress === 'uploading' && (
+        <View style={styles.progressOverlay}>
+          <View style={styles.progressCard}>
+            <Text style={styles.progressText}>Uploading audio...</Text>
+          </View>
+        </View>
+      )}
+
+      {uploadProgress === 'success' && (
+        <View style={styles.progressOverlay}>
+          <View style={styles.progressCard}>
+            <Text style={styles.progressText}>✓ Message sent!</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -110,5 +129,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#0a0a0a',
+  },
+  progressOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressCard: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  progressText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
   },
 });

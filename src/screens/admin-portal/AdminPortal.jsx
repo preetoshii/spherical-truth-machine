@@ -30,6 +30,9 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
   const [draftAudioData, setDraftAudioData] = useState(null);
   const [selectedVoice, setSelectedVoice] = useState(null); // Track which voice user selected
 
+  // Upload progress state: null | 'uploading' | 'success'
+  const [uploadProgress, setUploadProgress] = useState(null);
+
   // Text editor state (for hiding back button)
   const [isTextEditorOpen, setIsTextEditorOpen] = useState(false);
 
@@ -119,6 +122,8 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
     }
 
     try {
+      setUploadProgress('uploading'); // Show upload progress
+
       const savedDate = editingDate;
       const savedMessage = draftMessage;
 
@@ -150,6 +155,9 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
 
       logger.log('ADMIN_UI', 'Saved message for', savedDate);
 
+      // Show success message
+      setUploadProgress('success');
+
       // Clear editing state AFTER successful save so we return to normal calendar view (not edit mode)
       setScrollToDate(savedDate); // Remember which card to scroll to
       setEditingDate(null);
@@ -157,11 +165,15 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
       setDraftAudioData(null);
       setSelectedVoice(null);
 
-      // Fade back to calendar
-      backFromPreview();
+      // Wait 1 second to show success message, then return to calendar
+      setTimeout(() => {
+        setUploadProgress(null); // Reset progress state
+        backFromPreview(); // Fade back to calendar
+      }, 1000);
+
     } catch (error) {
+      setUploadProgress(null); // Reset progress on error
       logger.error('ADMIN_UI', 'Failed to save message:', error);
-      // TODO: Show error to user
       alert('Failed to save message. Please try again.');
       return; // Don't navigate away on error
     }
@@ -192,6 +204,8 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
     }
 
     try {
+      setUploadProgress('uploading'); // Show upload progress
+
       const savedDate = editingDate;
       const savedMessage = draftMessage;
 
@@ -223,6 +237,9 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
 
       logger.log('ADMIN_UI', 'Sent message now for', savedDate);
 
+      // Show success message
+      setUploadProgress('success');
+
       // Clear editing state AFTER successful save
       setScrollToDate(savedDate); // Remember which card to scroll to
       setEditingDate(null);
@@ -230,11 +247,16 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
       setDraftAudioData(null);
       setSelectedVoice(null);
 
-      // Close admin portal and return to game
-      onClose();
+      // Wait 1.5 seconds to show success message, then close portal
+      // This also gives GitHub time to commit before game reloads
+      setTimeout(() => {
+        setUploadProgress(null); // Reset progress state
+        onClose(); // Close admin portal and return to game
+      }, 1500);
+
     } catch (error) {
+      setUploadProgress(null); // Reset progress on error
       logger.error('ADMIN_UI', 'Failed to send message:', error);
-      // TODO: Show error to user
       alert('Failed to send message. Please try again.');
       return; // Don't navigate away on error
     }
@@ -322,6 +344,7 @@ export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }
         <Confirmation
           onCancel={() => setCurrentView('preview')}
           onConfirm={confirmSendNow}
+          uploadProgress={uploadProgress}
         />
       )}
     </View>

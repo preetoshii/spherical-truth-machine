@@ -310,10 +310,14 @@ async function generateAudioFilename(text, audioType) {
 
       if (!response.ok) {
         // File doesn't exist - we can use this filename
+        if (response.status === 404) {
+          logger.log('GITHUB_API', `✓ Filename available: ${filename}`);
+        }
         break;
       }
 
       // File exists - try next counter
+      logger.log('GITHUB_API', `File exists, trying alternate: ${filename}`);
       filename = `${dateStr}-${wordsStr}-${counter}-${audioType}.${ext}`;
       counter++;
     } catch (error) {
@@ -356,9 +360,13 @@ async function uploadAudioFile(filename, audioBlob) {
     if (checkResponse.ok) {
       const data = await checkResponse.json();
       existingSha = data.sha;
+      logger.log('GITHUB_API', `File exists, will overwrite: ${filename}`);
+    } else if (checkResponse.status === 404) {
+      logger.log('GITHUB_API', `Creating new file: ${filename}`);
     }
   } catch (e) {
     // File doesn't exist yet
+    logger.log('GITHUB_API', `Creating new file: ${filename}`);
   }
 
   // Convert blob to base64
