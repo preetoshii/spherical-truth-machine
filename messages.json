@@ -116,37 +116,43 @@
       ]
     },
     "2025-11-30": {
-      "text": "I have big penis",
+      "text": "I have very big dreams",
       "words": [
         "I",
         "have",
+        "very",
         "big",
-        "penis"
+        "dreams"
       ],
       "audio": {
-        "original": "30-11-2025-i-have-big-original.m4a",
-        "transformed": "30-11-2025-i-have-big-transformed.mp3"
+        "original": "30-11-2025-i-have-very-original.m4a",
+        "transformed": "30-11-2025-i-have-very-transformed.mp3"
       },
       "wordTimings": [
         {
           "word": "I",
-          "start": 1055,
-          "end": 1605
+          "start": 635,
+          "end": 1100
         },
         {
           "word": "have",
-          "start": 1915,
-          "end": 2470
+          "start": 1445,
+          "end": 1835
+        },
+        {
+          "word": "very",
+          "start": 2300,
+          "end": 2850
         },
         {
           "word": "big",
-          "start": 2845,
-          "end": 3295
+          "start": 3070,
+          "end": 3560
         },
         {
-          "word": "penis",
-          "start": 3630,
-          "end": 4330
+          "word": "dreams",
+          "start": 3900,
+          "end": 4535
         }
       ]
     }
