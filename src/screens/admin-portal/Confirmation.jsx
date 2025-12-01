@@ -6,7 +6,7 @@ import { playSound } from '../../shared/utils/audio';
  * Confirmation - Send Now confirmation dialog
  * Only shown when updating the ACTIVE message
  */
-export function Confirmation({ onCancel, onConfirm, uploadProgress }) {
+export function Confirmation({ onCancel, onConfirm, uploadProgress, primaryColor = '#FFFFFF' }) {
   return (
     <View style={styles.container}>
       {/* Semi-transparent overlay */}
@@ -14,7 +14,7 @@ export function Confirmation({ onCancel, onConfirm, uploadProgress }) {
 
       {/* Confirmation card */}
       <View style={styles.card}>
-        <Text style={styles.title}>Send this message now?</Text>
+        <Text style={[styles.title, { color: primaryColor }]}>Send this message now?</Text>
         <Text style={styles.subtitle}>
           This will update immediately for all users.
         </Text>
@@ -28,11 +28,11 @@ export function Confirmation({ onCancel, onConfirm, uploadProgress }) {
             }}
             disabled={uploadProgress !== null}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={[styles.cancelButtonText, { color: primaryColor }]}>Cancel</Text>
           </Pressable>
 
           <Pressable
-            style={styles.confirmButton}
+            style={[styles.confirmButton, { backgroundColor: primaryColor }]}
             onPress={() => {
               playSound('click');
               onConfirm();
@@ -116,13 +116,13 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    // color set inline with primaryColor
   },
   confirmButton: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 8,
-    backgroundColor: '#ffffff',
+    // backgroundColor set inline with primaryColor
     alignItems: 'center',
   },
   confirmButtonText: {
@@ -150,6 +150,6 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#ffffff',
+    // color set inline with primaryColor
   },
 });

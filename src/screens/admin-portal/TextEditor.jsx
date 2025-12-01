@@ -94,7 +94,7 @@ export function TextEditor({ wordTimings, onSave, onCancel, primaryColor = '#FFF
           <Pressable style={[styles.cancelButton, { borderColor: primaryColor }]} onPress={handleCancel}>
             <Text style={[styles.cancelButtonText, { color: primaryColor }]}>Cancel</Text>
           </Pressable>
-          <Pressable style={styles.saveButton} onPress={handleSave}>
+          <Pressable style={[styles.saveButton, { backgroundColor: primaryColor }]} onPress={handleSave}>
             <Text style={styles.saveButtonText}>Save Changes</Text>
           </Pressable>
         </View>
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#ffffff',
+    // borderColor set inline with primaryColor
     padding: 30,
     width: '100%',
     maxWidth: 800,
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   editingContainer: {
-    backgroundColor: '#ffffff',
+    // backgroundColor set inline with primaryColor
     borderRadius: 8,
     borderWidth: 2,
     borderColor: '#0066ff',
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    // backgroundColor set inline with primaryColor
     paddingVertical: 16,
     borderRadius: 999,
     borderWidth: 2,

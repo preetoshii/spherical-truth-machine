@@ -146,9 +146,14 @@ function CardItem({
         transform: [{ scale: scale.value }],
       };
     } else {
-      // Empty card or editing: dark background, white text
+      // Empty card or editing: dark background, primary color text/border
+      // Convert primaryColor to rgba for opacity control
+      const hex = primaryColor.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
       return {
-        borderColor: `rgba(255, 255, 255, ${borderOpacity.value})`,
+        borderColor: `rgba(${r}, ${g}, ${b}, ${borderOpacity.value})`,
         backgroundColor: `rgba(0, 0, 0, ${backgroundOpacity.value})`,
         transform: [{ scale: scale.value }],
       };
@@ -244,7 +249,7 @@ function CardItem({
         <View style={styles.cardContent} pointerEvents={isEditing ? 'auto' : 'none'}>
           {isEditing ? (
             // Edit mode: Show Audio Recorder
-            <AudioRecorder onRecordingComplete={onRecordingComplete} />
+            <AudioRecorder onRecordingComplete={onRecordingComplete} primaryColor={primaryColor} />
           ) : (
             // Display mode: Show existing message or "+" button for empty cards (not past)
             hasMessage ? (
@@ -680,7 +685,7 @@ const styles = StyleSheet.create({
     left: 50,
     fontSize: 24,
     fontWeight: '300',
-    color: '#ffffff',
+    // color set inline with primaryColor
     zIndex: 100,
   },
   scrollView: {
@@ -757,7 +762,7 @@ const styles = StyleSheet.create({
   },
   archivedBadge: {
     borderWidth: 1,
-    borderColor: '#FFFFFF',
+    // borderColor set inline with primaryColor
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
@@ -768,7 +773,7 @@ const styles = StyleSheet.create({
   archivedBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#FFFFFF',
+    // color set inline with primaryColor
     letterSpacing: 1,
   },
   cardContent: {

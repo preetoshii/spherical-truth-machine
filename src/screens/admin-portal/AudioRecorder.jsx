@@ -17,6 +17,8 @@ import { logger } from '../../shared/utils/logger';
  * Sentence Break button (✂️) appears to the left while recording
  *
  * States:
+ */
+export function AudioRecorder({ onRecordingComplete, primaryColor = '#FFFFFF' }) {
  * - Idle: Shows red "🎤 Record" button
  * - Recording: Main button (gray "⏹ Stop") + Sentence Break button (left)
  * - Review: Redo button (left) + Complete button (right)
@@ -181,8 +183,8 @@ export function AudioRecorder({ onRecordingComplete }) {
       {isTranscribing ? (
         // Transcribing state: Show loading spinner
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4a9eff" />
-          <Text style={styles.loadingText}>Transcribing...</Text>
+          <ActivityIndicator size="large" color={primaryColor} />
+          <Text style={[styles.loadingText, { color: primaryColor }]}>Transcribing...</Text>
         </View>
       ) : isReviewMode ? (
         // Review mode: Redo + Play + Voice Toggle + Complete
@@ -194,7 +196,7 @@ export function AudioRecorder({ onRecordingComplete }) {
               activeOpacity={0.7}
             >
               <Feather name="rotate-ccw" size={20} color="#fff" />
-              <Text style={styles.reviewButtonText}>Redo</Text>
+              <Text style={[styles.reviewButtonText, { color: '#fff' }]}>Redo</Text>
             </TouchableOpacity>
 
             {/* Center Play button */}
@@ -204,7 +206,7 @@ export function AudioRecorder({ onRecordingComplete }) {
               activeOpacity={0.8}
             >
               <Feather name="play" size={32} color="#fff" style={styles.icon} />
-              <Text style={styles.buttonText}>Play</Text>
+              <Text style={[styles.buttonText, { color: '#fff' }]}>Play</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -213,7 +215,7 @@ export function AudioRecorder({ onRecordingComplete }) {
               activeOpacity={0.7}
             >
               <Feather name="check" size={20} color="#fff" />
-              <Text style={styles.reviewButtonText}>Complete</Text>
+              <Text style={[styles.reviewButtonText, { color: '#fff' }]}>Complete</Text>
             </TouchableOpacity>
           </View>
 
@@ -248,8 +250,8 @@ export function AudioRecorder({ onRecordingComplete }) {
               onPress={handleSentenceBreak}
               activeOpacity={0.7}
             >
-              <Text style={styles.breakButtonIcon}>*</Text>
-              <Text style={styles.breakButtonText}>Break</Text>
+              <Text style={[styles.breakButtonIcon, { color: primaryColor }]}>*</Text>
+              <Text style={[styles.breakButtonText, { color: primaryColor }]}>Break</Text>
             </TouchableOpacity>
           </Animated.View>
 
@@ -270,13 +272,13 @@ export function AudioRecorder({ onRecordingComplete }) {
                     </Text>
                   </View>
                   <Feather name="square" size={28} color="#fff" style={styles.icon} />
-                  <Text style={styles.buttonText}>Stop</Text>
+                  <Text style={[styles.buttonText, { color: '#fff' }]}>Stop</Text>
                 </>
               ) : (
                 // Idle state: Show Record icon
                 <>
                   <Feather name="mic" size={32} color="#fff" style={styles.icon} />
-                  <Text style={styles.buttonText}>Record</Text>
+                  <Text style={[styles.buttonText, { color: '#fff' }]}>Record</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -320,12 +322,12 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   breakButtonIcon: {
-    color: '#fff',
+    // color set inline with primaryColor
     fontSize: 32,
     fontWeight: '600',
   },
   breakButtonText: {
-    color: '#fff',
+    // color set inline with primaryColor
     fontSize: 12,
     fontWeight: '600',
     marginTop: 4,
@@ -362,10 +364,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#fff',
+    // backgroundColor set inline with primaryColor
   },
   timerText: {
-    color: '#fff',
+    // color set inline with primaryColor
     fontSize: 20,
     fontWeight: '600',
     fontFamily: 'Courier', // Monospace for stable width
@@ -378,7 +380,7 @@ const styles = StyleSheet.create({
 
   // Button label
   buttonText: {
-    color: '#fff',
+    // color set inline with primaryColor (but stays white on colored buttons for contrast)
     fontSize: 16,
     fontWeight: '600',
     marginTop: 4,
@@ -414,7 +416,7 @@ const styles = StyleSheet.create({
     shadowColor: '#38a169',
   },
   reviewButtonText: {
-    color: '#fff',
+    // color set inline (stays white on colored buttons for contrast)
     fontSize: 13,
     fontWeight: '600',
     marginTop: 6,
@@ -426,7 +428,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   loadingText: {
-    color: '#fff',
+    // color set inline with primaryColor
     fontSize: 18,
     fontWeight: '500',
   },
@@ -452,7 +454,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   voiceToggleTextActive: {
-    color: '#fff',
+    color: primaryColor,
   },
   toggleSwitch: {
     width: 44,

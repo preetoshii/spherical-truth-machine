@@ -926,7 +926,7 @@ const styles = StyleSheet.create({
   word: {
     fontFamily: 'FinlandRounded',
     // fontSize is now set dynamically per letter
-    color: config.visuals.wordColor,
+    // color is set inline with primaryColor (see WaveText component)
     letterSpacing: 1,
   },
 });

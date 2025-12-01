@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 50,
   },
   saveButton: {
-    backgroundColor: '#ffffff',
+    // backgroundColor set inline with primaryColor
     borderWidth: 2,
     borderColor: '#000000',
     paddingHorizontal: 40,

@@ -413,6 +413,7 @@ export function AdminPortal({ onClose, preloadedData, primaryColor: initialPrima
           onCancel={() => setCurrentView('preview')}
           onConfirm={confirmSendNow}
           uploadProgress={uploadProgress}
+          primaryColor={primaryColor}
         />
       )}
     </Animated.View>

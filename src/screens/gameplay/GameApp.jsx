@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
   fpsButton: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    // backgroundColor set inline with primaryColor (with opacity)
     borderRadius: 6,
     marginBottom: 4,
   },
