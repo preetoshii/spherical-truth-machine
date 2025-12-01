@@ -116,43 +116,37 @@
       ]
     },
     "2025-11-30": {
-      "text": "I have very big dreams",
+      "text": "the road is clear",
       "words": [
-        "I",
-        "have",
-        "very",
-        "big",
-        "dreams"
+        "the",
+        "road",
+        "is",
+        "clear"
       ],
       "audio": {
-        "original": "30-11-2025-i-have-very-original.m4a",
-        "transformed": "30-11-2025-i-have-very-transformed.mp3"
+        "original": "30-11-2025-the-road-is-original.m4a",
+        "transformed": "30-11-2025-the-road-is-transformed.mp3"
       },
       "wordTimings": [
         {
-          "word": "I",
-          "start": 635,
-          "end": 1100
+          "word": "the",
+          "start": 1270,
+          "end": 1895
         },
         {
-          "word": "have",
-          "start": 1445,
-          "end": 1835
+          "word": "road",
+          "start": 2000,
+          "end": 2665
         },
         {
-          "word": "very",
-          "start": 2300,
-          "end": 2850
+          "word": "is",
+          "start": 2825,
+          "end": 3230
         },
         {
-          "word": "big",
-          "start": 3070,
-          "end": 3560
-        },
-        {
-          "word": "dreams",
-          "start": 3900,
-          "end": 4535
+          "word": "clear",
+          "start": 3380,
+          "end": 3880
         }
       ]
     }
