@@ -131,12 +131,18 @@ function CardItem({
   const hasMessage = message && message.text;
 
   // Animated style for card border and background
+  // Convert primaryColor to rgba - must be recalculated when primaryColor changes
   const cardAnimatedStyle = useAnimatedStyle(() => {
     if (hasMessage && !isEditing) {
-      // Populated card: white background, black text
+      // Populated card: primary color background, black text
+      // Convert hex color to rgba for opacity control
+      const hex = primaryColor.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
       return {
-        borderColor: `rgba(255, 255, 255, ${borderOpacity.value})`,
-        backgroundColor: `rgba(255, 255, 255, ${backgroundOpacity.value})`,
+        borderColor: `rgba(${r}, ${g}, ${b}, ${borderOpacity.value})`,
+        backgroundColor: `rgba(${r}, ${g}, ${b}, ${backgroundOpacity.value})`,
         transform: [{ scale: scale.value }],
       };
     } else {
@@ -147,7 +153,7 @@ function CardItem({
         transform: [{ scale: scale.value }],
       };
     }
-  });
+  }, [primaryColor, hasMessage, isEditing]); // React to primaryColor changes
 
   return (
     <Animated.View style={[animatedStyle, { alignItems: 'center' }]}>
@@ -174,7 +180,7 @@ function CardItem({
               height: isEditing ? editCardHeight : cardSize,
               padding: isEditing ? 100 : 64, // More padding when expanded
               paddingTop: isEditing ? 120 : 64, // Extra top padding when editing to keep date visible
-              borderColor: hasMessage && !isEditing ? '#0a0a0a' : primaryColor, // Dynamic border
+              borderColor: hasMessage && !isEditing ? primaryColor : primaryColor, // Dynamic border using primary color
               cursor: isEditing ? 'default' : 'pointer', // Disable pointer cursor in edit mode (web)
             },
             slot.isPast && styles.cardPast,
@@ -187,7 +193,7 @@ function CardItem({
           <Text style={[
             styles.cardDate,
             slot.isPast && styles.textMuted,
-            hasMessage && !isEditing && { color: '#0a0a0a' }, // Black text for populated cards
+            hasMessage && !isEditing && { color: '#000000' }, // Black text for populated cards
             !hasMessage && { color: primaryColor }, // Dynamic color for empty cards
           ]}>
             {formatDate(slot.date, slot.isToday)}
@@ -203,17 +209,17 @@ function CardItem({
           {hasMessage && !slot.isToday && !slot.isPast && (
             <View style={[
               styles.scheduledBadge,
-              hasMessage && !isEditing && { borderColor: '#0a0a0a' } // Black border for white cards
+              hasMessage && !isEditing && { borderColor: '#000000' } // Black border for colored cards
             ]}>
               <Text style={[
                 styles.scheduledBadgeText,
-                hasMessage && !isEditing && { color: '#0a0a0a' } // Black text for white cards
+                hasMessage && !isEditing && { color: '#000000' } // Black text for colored cards
               ]}>
                 SCHEDULED
               </Text>
               <Text style={[
                 styles.scheduledCountdown,
-                hasMessage && !isEditing && { color: '#0a0a0a' } // Black text for white cards
+                hasMessage && !isEditing && { color: '#000000' } // Black text for colored cards
               ]}>
                 {getCountdownText(slot.date)}
               </Text>
@@ -222,7 +228,7 @@ function CardItem({
           {slot.isPast && (
             <View style={[
               styles.archivedBadge,
-              hasMessage && !isEditing && { borderColor: '#0a0a0a' } // Black border for white cards
+              hasMessage && !isEditing && { borderColor: '#000000' } // Black border for colored cards
             ]}>
               <Text style={[
                 styles.archivedBadgeText,

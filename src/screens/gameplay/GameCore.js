@@ -4,6 +4,7 @@ import { playSound } from '../../shared/utils/audio';
 import { createAudioPlayer } from 'expo-audio';
 import { ParallaxManager } from '../../shared/effects/ParallaxManager';
 import { logger } from '../../shared/utils/logger';
+import { notifyBounce, notifyMessageRestart } from '../../shared/services/primaryColorManager';
 
 /**
  * GameCore - Physics engine using Matter.js
@@ -156,13 +157,8 @@ export class GameCore {
     this.lastWallBumpSound = null; // Track last played sound to prevent consecutive repeats
     this.lastGelatoBounceSound = null; // Track last played gelato bounce sound to prevent consecutive repeats
 
-    // Color system
-    this.currentColorIndex = 0;
-    this.primaryColor = config.colors.mode === 'static' 
-      ? config.colors.staticColor 
-      : config.colors.palette[0];
-    this.colorTransitionStart = Date.now();
-    this.bouncesSinceColorChange = 0; // Track bounces for color change timing
+    // Color system - now managed by primaryColorManager
+    // Color updates are handled externally for universal access
 
     // Message system (Milestone 3)
     // Use custom message if provided (for preview mode), otherwise use default
@@ -297,24 +293,7 @@ export class GameCore {
     // Update wall glows
     this.updateWallGlows();
 
-    // Update color if mode is 'time' (gradual fade)
-    if (config.colors.mode === 'time') {
-      const currentTime = Date.now();
-      const elapsed = currentTime - this.colorTransitionStart;
-      const duration = config.colors.timeFadeDuration;
-      
-      if (elapsed >= duration) {
-        // Move to next color
-        this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
-        this.colorTransitionStart = currentTime;
-      }
-      
-      // Interpolate between current and next color
-      const progress = (elapsed % duration) / duration;
-      const currentColor = config.colors.palette[this.currentColorIndex];
-      const nextColor = config.colors.palette[(this.currentColorIndex + 1) % config.colors.palette.length];
-      this.primaryColor = this.interpolateColor(currentColor, nextColor, progress);
-    }
+    // Color updates are now handled by primaryColorManager (runs independently)
     
     // Update motion trail (supports multiple overlapping trails)
     if (config.physics.mascot.trail.enabled && this.gameStarted) {
@@ -437,11 +416,9 @@ export class GameCore {
     this.wordIndex = 0;
     this.currentWord = null;
 
-    // Change color on quote restart if mode is 'bounce' and bouncesPerColorChange is 'quote'
+    // Notify color manager of message restart (for bounce mode with 'quote' setting)
     if (config.colors.mode === 'bounce' && config.colors.bouncesPerColorChange === 'quote') {
-      this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
-      this.primaryColor = config.colors.palette[this.currentColorIndex];
-      logger.log('RENDERING', '🎨 Quote complete - color changed to:', this.primaryColor, 'index:', this.currentColorIndex);
+      notifyMessageRestart();
     }
 
     // Remove any existing gelato
@@ -518,21 +495,9 @@ export class GameCore {
         this.lastBounceForTrail = currentTime;
         this.currentTrail = []; // Start fresh trail
         
-        // Change color on bounce if mode is 'bounce'
+        // Notify color manager of bounce (for bounce mode)
         if (config.colors.mode === 'bounce') {
-          const bouncesPerChange = config.colors.bouncesPerColorChange;
-          
-          // Only change if bouncesPerColorChange is not 'quote' (quote mode changes on message restart)
-          if (bouncesPerChange !== 'quote') {
-            this.bouncesSinceColorChange++;
-            
-            // Check if enough bounces have occurred
-            if (this.bouncesSinceColorChange >= bouncesPerChange) {
-              this.currentColorIndex = (this.currentColorIndex + 1) % config.colors.palette.length;
-              this.primaryColor = config.colors.palette[this.currentColorIndex];
-              this.bouncesSinceColorChange = 0; // Reset counter
-            }
-          }
+          notifyBounce();
         }
         
         // Apply spring boost perpendicular to Gelato
@@ -650,32 +615,11 @@ export class GameCore {
   }
 
   /**
-   * Interpolate between two hex colors
-   */
-  interpolateColor(color1, color2, progress) {
-    const c1 = parseInt(color1.substring(1), 16);
-    const c2 = parseInt(color2.substring(1), 16);
-    
-    const r1 = (c1 >> 16) & 255;
-    const g1 = (c1 >> 8) & 255;
-    const b1 = c1 & 255;
-    
-    const r2 = (c2 >> 16) & 255;
-    const g2 = (c2 >> 8) & 255;
-    const b2 = c2 & 255;
-    
-    const r = Math.round(r1 + (r2 - r1) * progress);
-    const g = Math.round(g1 + (g2 - g1) * progress);
-    const b = Math.round(b1 + (b2 - b1) * progress);
-    
-    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-  }
-
-  /**
-   * Get current primary color
+   * Get current primary color (now reads from universal color manager)
    */
   getPrimaryColor() {
-    return this.primaryColor;
+    const { getPrimaryColor } = require('../../shared/services/primaryColorManager');
+    return getPrimaryColor();
   }
 
   /**

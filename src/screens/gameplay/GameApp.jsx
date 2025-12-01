@@ -8,6 +8,7 @@ import { config, getResponsiveConfig } from '../../config';
 import { AdminPortal } from '../admin-portal/AdminPortal';
 import { playSound } from '../../shared/utils/audio';
 import { fetchMessages } from '../../shared/services/githubApi';
+import { startColorManager, getPrimaryColor } from '../../shared/services/primaryColorManager';
 import { Button } from '../../shared/components/Button';
 import { triggerDrawingHaptic, triggerHaptic } from '../../shared/utils/haptics';
 import { DebugMenu } from '../../shared/components/DebugMenu';
@@ -111,6 +112,11 @@ export function GameApp() {
     }, 500); // 500ms delay before fade starts
 
     return () => clearTimeout(timer);
+  }, []);
+
+  // Initialize color manager once on mount
+  useEffect(() => {
+    startColorManager();
   }, []);
 
   // Initialize physics once on mount
@@ -268,7 +274,8 @@ export function GameApp() {
           state.parallaxStars = gameCore.current.getParallaxStars();
           const trailData = gameCore.current.getTrail();
           state.trails = trailData.trails;
-          state.primaryColor = gameCore.current.getPrimaryColor();
+          // Read color from universal color manager (zero React overhead)
+          state.primaryColor = getPrimaryColor();
           state.particles = gameCore.current.getParticles();
           state.wallGlows = gameCore.current.getWallGlows();
           state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
@@ -524,7 +531,12 @@ export function GameApp() {
       {/* Admin portal - overlay on top of game */}
       {showAdmin && (
         <View style={[styles.fullScreen, { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }]}>
-          <AdminPortal onClose={closeAdmin} preloadedData={preloadedMessagesData} primaryColor={gameState.current.primaryColor} />
+          <AdminPortal 
+            onClose={closeAdmin} 
+            preloadedData={preloadedMessagesData} 
+            primaryColor={gameState.current.primaryColor}
+            getPrimaryColor={() => gameState.current.primaryColor}
+          />
         </View>
       )}
 

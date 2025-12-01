@@ -7,12 +7,32 @@ import { Confirmation } from './Confirmation';
 import { fetchMessages, saveMessage as saveMessageToGitHub, saveMessageWithAudio } from '../../shared/services/githubApi';
 import { playSound } from '../../shared/utils/audio';
 import { logger } from '../../shared/utils/logger';
+import { getPrimaryColor } from '../../shared/services/primaryColorManager';
 
 /**
  * AdminPortal - Root component for admin interface
  * Manages view state and transitions between calendar, preview, and confirmation views
  */
-export function AdminPortal({ onClose, preloadedData, primaryColor = '#FFFFFF' }) {
+export function AdminPortal({ onClose, preloadedData, primaryColor: initialPrimaryColor = '#FFFFFF' }) {
+  // Track primary color state to allow updates from universal color manager
+  const [primaryColor, setPrimaryColor] = useState(initialPrimaryColor);
+  
+  // Update primary color when prop changes (in case it updates from parent)
+  useEffect(() => {
+    setPrimaryColor(initialPrimaryColor);
+  }, [initialPrimaryColor]);
+
+  // Poll universal color manager for updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentColor = getPrimaryColor();
+      if (currentColor && currentColor !== primaryColor) {
+        setPrimaryColor(currentColor);
+      }
+    }, 100); // Update every 100ms for smooth color transitions
+
+    return () => clearInterval(interval);
+  }, [primaryColor]);
   const [currentView, setCurrentView] = useState('calendar'); // 'calendar' | 'preview' | 'confirmation'
   const [editingDate, setEditingDate] = useState(null); // Date being edited (when set, card is in edit mode)
   const [draftMessage, setDraftMessage] = useState(''); // Message being composed

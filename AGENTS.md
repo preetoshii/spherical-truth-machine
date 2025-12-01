@@ -66,6 +66,16 @@ player.play();
 - `src/screens/gameplay/GameApp.jsx` - Main game
 - `src/screens/admin-portal/AdminPortal.jsx` - Admin interface
 
+## Visual Design
+
+**Dynamic Primary Color:** The app often uses a dynamic primary color that changes over time (configurable in `config.js`). This color is used throughout the UI:
+- Game elements (ball, trail, gelato)
+- Admin portal UI (borders, icons, text)
+- Cards with messages use this color as their background
+- Color transitions smoothly between palette colors based on time or bounces
+
+The primary color is passed from the game loop to UI components and updates dynamically.
+
 ## Code Style
 
 Functional components:
