@@ -32,6 +32,7 @@ function CardItem({
   onRecordingComplete,
   primaryColor = '#FFFFFF',
   isExiting = false,
+  isCentered = false,
 }) {
   // Shared values for animations
   const scale = useSharedValue(1);
@@ -39,6 +40,7 @@ function CardItem({
   const translateY = useSharedValue(500); // Start below screen
   const borderOpacity = useSharedValue(1); // Border starts visible
   const backgroundOpacity = useSharedValue(1); // Background starts visible
+  const dimOpacity = useSharedValue(1); // Dimming opacity for non-centered cards
 
   // Calculate delay relative to today's card (so today starts immediately)
   const relativeIndex = cardIndex - todayIndex;
@@ -78,16 +80,20 @@ function CardItem({
       opacity.value = withTiming(1, { duration: 200 });
       borderOpacity.value = withTiming(0, { duration: 300 }); // Fade out border
       backgroundOpacity.value = withTiming(0, { duration: 300 }); // Fade out background
+      dimOpacity.value = withTiming(1, { duration: 200 }); // Full brightness when editing
     } else if (isOtherCardEditing) {
       scale.value = withTiming(1, { duration: 200 });
       opacity.value = withTiming(0, { duration: 200 }); // Completely disappear
+      dimOpacity.value = withTiming(0, { duration: 200 });
     } else {
       scale.value = withSpring(1, { damping: 25, stiffness: 400, mass: 0.5 });
       opacity.value = withTiming(1, { duration: 200 });
       borderOpacity.value = withTiming(1, { duration: 300 }); // Fade in border
       backgroundOpacity.value = withTiming(1, { duration: 300 }); // Fade in background
+      // Dim non-centered cards
+      dimOpacity.value = withTiming(isCentered ? 1 : 0.15, { duration: 300 });
     }
-  }, [isEditing, isOtherCardEditing]);
+  }, [isEditing, isOtherCardEditing, isCentered]);
 
   // Animated style for wrapper
   const animatedStyle = useAnimatedStyle(() => ({
@@ -95,7 +101,7 @@ function CardItem({
       { scale: scale.value },
       { translateY: translateY.value }
     ],
-    opacity: opacity.value,
+    opacity: opacity.value * dimOpacity.value, // Apply dimming
     width: isEditing ? editCardWidth : cardSize, // Full card width
     height: isEditing ? editCardHeight : cardSize + cardSpacing, // Card height + spacing
     scrollSnapAlign: 'center', // CSS scroll snap for web
@@ -281,6 +287,12 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
 
   // Find today's index for scrolling
   const todayIndex = slots.findIndex(slot => slot.isToday);
+  
+  // Initialize centered card to today's card
+  const [centeredCardIndex, setCenteredCardIndex] = useState(() => {
+    const todayIdx = slots.findIndex(slot => slot.isToday);
+    return todayIdx !== -1 ? todayIdx : 0;
+  });
 
   // Card dimensions - square aspect ratio
   const cardSize = Math.min(width * 0.75, height * 0.6);
@@ -331,6 +343,34 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
       }
     }
   }, [isExiting, onExitComplete]);
+
+  // Track which card is centered for dimming effect (trigger early for immediate feedback)
+  const handleScroll = (event) => {
+    const scrollY = event.nativeEvent.contentOffset.y;
+    const paddingTop = editingDate ? 0 : (height - cardSize) / 2;
+    // Calculate which card's center is closest to viewport center
+    // This makes dimming trigger immediately and symmetrically in both directions
+    const viewportCenter = scrollY + height / 2;
+    const firstCardCenter = paddingTop + cardSize / 2;
+    
+    // Find the card whose center is closest to viewport center
+    // This works symmetrically for both up and down scrolling
+    let closestIndex = 0;
+    let minDistance = Infinity;
+    
+    for (let i = 0; i < slots.length; i++) {
+      const cardCenter = firstCardCenter + (i * snapInterval);
+      const distance = Math.abs(viewportCenter - cardCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = i;
+      }
+    }
+    
+    if (closestIndex !== centeredCardIndex) {
+      setCenteredCardIndex(closestIndex);
+    }
+  };
 
   const formatDate = (dateStr, isToday) => {
     const date = new Date(dateStr + 'T00:00:00');
@@ -436,6 +476,8 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
           snapToInterval={snapInterval}
           decelerationRate="fast"
           snapToAlignment="center"
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           style={styles.scrollView}
           contentContainerStyle={[styles.scrollContent, { 
             paddingTop: editingDate ? 0 : (height - cardSize) / 2, 
@@ -473,6 +515,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
                 onRecordingComplete={handleRecordingComplete}
                 primaryColor={primaryColor}
                 isExiting={isExiting}
+                isCentered={index === centeredCardIndex && !editingDate}
               />
             );
           })}
