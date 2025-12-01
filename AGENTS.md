@@ -105,6 +105,33 @@ logger.always('Critical error');        // Always shows
 2. If new category needed: add to `config.logs` in `src/config.js`
 3. Use `logger.always()` for critical errors only
 
+## Debug UI
+
+**Master switch for all debug UI elements:** `config.debugMode` in `src/config.js`
+
+When `debugMode: false` (default), all debug UI is hidden:
+- Debug menu button
+- FPS counter
+- Debug menu overlay
+- Any other debug overlays/buttons
+
+**When adding new debug UI elements:**
+1. Wrap with `{config.debugMode && <DebugComponent />}`
+2. This ensures debug UI can be instantly hidden for production
+3. Debug UI is separate from logging - you can have logs without UI
+
+**Example:**
+```js
+import { config } from '../../config';
+
+// Only show debug button when debugMode is enabled
+{config.debugMode && (
+  <Pressable onPress={openDebugMenu}>
+    <Text>Debug</Text>
+  </Pressable>
+)}
+```
+
 ## Git
 
 - Main branch: `master`

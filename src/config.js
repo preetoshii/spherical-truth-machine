@@ -437,6 +437,11 @@ export const config = {
   },
 
   // === LOGGING ===
+  // === DEBUG MODE ===
+  // Master switch for all debug UI elements (debug menu, FPS counter, etc.)
+  // Set to false to hide all debug UI for a clean production look
+  debugMode: false,
+
   // Feature-based logging toggles
   // Set to true to enable console logs for specific features
   // High-frequency logs (disabled by default to reduce noise)

@@ -79,9 +79,9 @@ export function GameApp() {
   const [fpsCap, setFpsCap] = useState(null); // null = uncapped, or 10-120
   const fpsCapRef = useRef(fpsCap); // Use ref to avoid remounting effect
 
-  // Debug menu (DEV ONLY)
+  // Debug menu (DEV ONLY - only enabled when config.debugMode is true)
   const [showDebugMenu, setShowDebugMenu] = useState(false);
-  const [showFps, setShowFps] = useState(config.performance.showFps);
+  const [showFps, setShowFps] = useState(config.debugMode && config.performance.showFps);
   const [hapticsConfig, setHapticsConfig] = useState({
     gelatoCreation: config.haptics.gelatoCreation,
     gelatoBounce: config.haptics.gelatoBounce,
@@ -185,12 +185,15 @@ export function GameApp() {
         setLines(currentGelatoData ? [currentGelatoData] : []);
       }
 
-      fpsCounter.current.frames++;
-      const now = performance.now();
-      if (now >= fpsCounter.current.lastTime + 1000) {
-        setFps(Math.round((fpsCounter.current.frames * 1000) / (now - fpsCounter.current.lastTime)));
-        fpsCounter.current.frames = 0;
-        fpsCounter.current.lastTime = now;
+      // Only track FPS if debugMode is enabled
+      if (config.debugMode) {
+        fpsCounter.current.frames++;
+        const now = performance.now();
+        if (now >= fpsCounter.current.lastTime + 1000) {
+          setFps(Math.round((fpsCounter.current.frames * 1000) / (now - fpsCounter.current.lastTime)));
+          fpsCounter.current.frames = 0;
+          fpsCounter.current.lastTime = now;
+        }
       }
 
       // Schedule next frame at the end
@@ -278,12 +281,15 @@ export function GameApp() {
             setLines(currentGelatoData ? [currentGelatoData] : []);
           }
 
-          fpsCounter.current.frames++;
-          const now = performance.now();
-          if (now >= fpsCounter.current.lastTime + 1000) {
-            setFps(Math.round((fpsCounter.current.frames * 1000) / (now - fpsCounter.current.lastTime)));
-            fpsCounter.current.frames = 0;
-            fpsCounter.current.lastTime = now;
+          // Only track FPS if debugMode is enabled
+          if (config.debugMode) {
+            fpsCounter.current.frames++;
+            const now = performance.now();
+            if (now >= fpsCounter.current.lastTime + 1000) {
+              setFps(Math.round((fpsCounter.current.frames * 1000) / (now - fpsCounter.current.lastTime)));
+              fpsCounter.current.frames = 0;
+              fpsCounter.current.lastTime = now;
+            }
           }
 
           // Schedule next frame at the end
@@ -490,25 +496,29 @@ export function GameApp() {
           <Feather name="feather" size={20} color={gameState.current.primaryColor} style={{ opacity: 0.6 }} />
         </Pressable>
 
-        {/* Debug Button (always visible) with optional FPS Counter */}
-        <Pressable onPress={() => setShowDebugMenu(true)} style={styles.debugButton}>
-          <Text style={[styles.debugButtonText, { color: gameState.current.primaryColor }]}>
-            {config.performance.showFps ? `⚙️ ${fps} FPS` : '⚙️'}
-          </Text>
-        </Pressable>
+        {/* Debug Button (only visible when debugMode is enabled) */}
+        {config.debugMode && (
+          <>
+            <Pressable onPress={() => setShowDebugMenu(true)} style={styles.debugButton}>
+              <Text style={[styles.debugButtonText, { color: gameState.current.primaryColor }]}>
+                {config.performance.showFps ? `⚙️ ${fps} FPS` : '⚙️'}
+              </Text>
+            </Pressable>
 
-        {/* Debug Menu Overlay */}
-        <DebugMenu
-          visible={showDebugMenu}
-          onClose={() => setShowDebugMenu(false)}
-          hapticsConfig={hapticsConfig}
-          setHapticsConfig={setHapticsConfig}
-          fpsCap={fpsCap}
-          setFpsCap={setFpsCap}
-          showFps={showFps}
-          setShowFps={setShowFps}
-          primaryColor={gameState.current.primaryColor}
-        />
+            {/* Debug Menu Overlay */}
+            <DebugMenu
+              visible={showDebugMenu}
+              onClose={() => setShowDebugMenu(false)}
+              hapticsConfig={hapticsConfig}
+              setHapticsConfig={setHapticsConfig}
+              fpsCap={fpsCap}
+              setFpsCap={setFpsCap}
+              showFps={showFps}
+              setShowFps={setShowFps}
+              primaryColor={gameState.current.primaryColor}
+            />
+          </>
+        )}
       </View>
 
       {/* Admin portal - overlay on top of game */}
