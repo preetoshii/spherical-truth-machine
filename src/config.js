@@ -120,6 +120,12 @@ export const config = {
         heightFadeStart: 0.0, // Start fading at top of screen (0% down)
         heightFadeEnd: 0.75,  // Full opacity at 75% down screen
       },
+
+      // Angle quantization (snap ball trajectory to discrete directions)
+      angleQuantization: {
+        enabled: true,        // Toggle for easy testing
+        numDirections: 32,    // Number of discrete angles (32 = 11.25° steps, 16 = 22.5°, 8 = 45°)
+      },
     },
 
     // Entrance animation (ball dropping from top)

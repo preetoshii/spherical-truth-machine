@@ -5,6 +5,7 @@ import { createAudioPlayer } from 'expo-audio';
 import { ParallaxManager } from '../../shared/effects/ParallaxManager';
 import { logger } from '../../shared/utils/logger';
 import { notifyBounce, notifyMessageRestart } from '../../shared/services/primaryColorManager';
+import { quantizeVelocityAngle } from '../../shared/utils/physics';
 
 /**
  * GameCore - Physics engine using Matter.js
@@ -521,6 +522,25 @@ export class GameCore {
           x: currentVelocity.x + normalX * boostVelocity,
           y: currentVelocity.y + normalY * boostVelocity,
         });
+
+        // Quantize bounce angle to discrete directions
+        if (config.physics.mascot.angleQuantization.enabled) {
+          const vel = mascotBody.velocity;
+          const quantized = quantizeVelocityAngle(
+            vel.x,
+            vel.y,
+            config.physics.mascot.angleQuantization.numDirections
+          );
+
+          Matter.Body.setVelocity(mascotBody, quantized);
+
+          // Optional: Debug logging
+          if (config.logs.PHYSICS) {
+            const oldAngle = (Math.atan2(vel.y, vel.x) * 180 / Math.PI).toFixed(1);
+            const newAngle = (Math.atan2(quantized.y, quantized.x) * 180 / Math.PI).toFixed(1);
+            logger.log('PHYSICS', `Quantized bounce: ${oldAngle}° → ${newAngle}°`);
+          }
+        }
 
         // Randomly pick one of the deep bass chord tones for musical variety (but prevent consecutive repeats)
         const gelatoBounceVariants = ['gelato-bounce-C2', 'gelato-bounce-E2', 'gelato-bounce-G2', 'gelato-bounce-C3'];
