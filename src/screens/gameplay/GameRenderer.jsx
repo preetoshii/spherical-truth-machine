@@ -326,7 +326,7 @@ function ZogChanFace({ x, y, color, isSpeaking, radius }) {
  * Uses shared gameState object for direct mutation without React reconciliation overhead.
  * Frame prop triggers re-render when game state updates (minimal React reconciliation).
  */
-const GameRendererComponent = ({ width, height, gameState, frame, lines = [], currentPath = null }) => {
+const GameRendererComponent = ({ width, height, gameState, frame, lines = [], currentPath = null, debugMode = false }) => {
   // Extract values from shared state object (read directly, no React reconciliation)
   const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [], wallGlows = [], bounceRipples = [], lastBounceScale = null, deathFadeProgress = 0 } = gameState;
   const mascotX = mascotPos.x;
@@ -689,6 +689,25 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
           />
         );
       })}
+
+      {/* Debug visualization: Show actual physics hitbox for gelato forgiveness */}
+      {debugMode && gameState.gelato && (() => {
+        const gelato = gameState.gelato;
+        // Draw semi-transparent red rectangle showing actual physics hitbox
+        return (
+          <Rect
+            x={gelato.x - gelato.width / 2}
+            y={gelato.y - gelato.height / 2}
+            width={gelato.width}
+            height={gelato.height}
+            color="#FF000040"
+            style="stroke"
+            strokeWidth={2}
+            transform={[{ rotate: gelato.angle }]}
+            origin={vec(gelato.x, gelato.y)}
+          />
+        );
+      })()}
 
       {/* Motion trails behind ball - supports multiple overlapping trails */}
       {trails.map((trailData, trailIdx) => {

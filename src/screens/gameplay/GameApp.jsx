@@ -80,9 +80,12 @@ export function GameApp() {
   const [fpsCap, setFpsCap] = useState(null); // null = uncapped, or 10-120
   const fpsCapRef = useRef(fpsCap); // Use ref to avoid remounting effect
 
-  // Debug menu (DEV ONLY - only enabled when config.debugMode is true)
+  // Debug mode toggle (can be toggled with backslash key)
+  const [debugMode, setDebugMode] = useState(config.debugMode);
+
+  // Debug menu (DEV ONLY - only enabled when debugMode is true)
   const [showDebugMenu, setShowDebugMenu] = useState(false);
-  const [showFps, setShowFps] = useState(config.debugMode && config.performance.showFps);
+  const [showFps, setShowFps] = useState(debugMode && config.performance.showFps);
   const [hapticsConfig, setHapticsConfig] = useState({
     gelatoCreation: config.haptics.gelatoCreation,
     gelatoBounce: config.haptics.gelatoBounce,
@@ -117,6 +120,20 @@ export function GameApp() {
   // Initialize color manager once on mount
   useEffect(() => {
     startColorManager();
+  }, []);
+
+  // Keyboard listener for debug mode toggle (backslash key)
+  useEffect(() => {
+    if (Platform.OS !== 'web') return; // Only on web
+
+    const handleKeyDown = (e) => {
+      if (e.key === '\\' || e.key === 'Backslash') {
+        setDebugMode(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Initialize physics once on mount
@@ -182,6 +199,7 @@ export function GameApp() {
       state.bounceRipples = gameCore.current.getBounceRipples();
       state.lastBounceScale = gameCore.current.getLastBounceScale();
       state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
+      state.gelato = gameCore.current.getGelato(); // For debug visualization
       
       // Minimal React update - just a number, triggers Skia re-render without full reconciliation
       setFrame(prev => prev + 1);
@@ -194,7 +212,7 @@ export function GameApp() {
       }
 
       // Only track FPS if debugMode is enabled
-      if (config.debugMode) {
+      if (debugMode) {
         fpsCounter.current.frames++;
         const now = performance.now();
         if (now >= fpsCounter.current.lastTime + 1000) {
@@ -293,7 +311,7 @@ export function GameApp() {
           }
 
           // Only track FPS if debugMode is enabled
-          if (config.debugMode) {
+          if (debugMode) {
             fpsCounter.current.frames++;
             const now = performance.now();
             if (now >= fpsCounter.current.lastTime + 1000) {
@@ -500,6 +518,7 @@ export function GameApp() {
           frame={frame}
           lines={lines}
           currentPath={currentPath}
+          debugMode={debugMode}
         />
 
         {/* Admin Button - Feather Icon */}
@@ -507,8 +526,15 @@ export function GameApp() {
           <Feather name="feather" size={20} color={gameState.current.primaryColor} style={{ opacity: 0.6 }} />
         </Pressable>
 
+        {/* Debug Mode Indicator Frame */}
+        {debugMode && (
+          <View style={styles.debugFrame} pointerEvents="none">
+            <Text style={styles.debugLabel}>DEBUG</Text>
+          </View>
+        )}
+
         {/* Debug Button (only visible when debugMode is enabled) */}
-        {config.debugMode && (
+        {debugMode && (
           <>
             <Pressable onPress={() => setShowDebugMenu(true)} style={styles.debugButton}>
               <Text style={[styles.debugButtonText, { color: gameState.current.primaryColor }]}>
@@ -620,6 +646,27 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     zIndex: 1000,
+  },
+  debugFrame: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
+    bottom: 10,
+    borderWidth: 2,
+    borderColor: '#ff0000',
+    borderRadius: 4,
+    zIndex: 999,
+  },
+  debugLabel: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
+    fontSize: 10,
+    color: '#ff0000',
+    fontWeight: 'bold',
+    letterSpacing: 2,
   },
   debugButtonText: {
     fontFamily: 'monospace',

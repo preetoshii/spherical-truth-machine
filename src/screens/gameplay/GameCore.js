@@ -754,12 +754,31 @@ export class GameCore {
     const baseRadius = 30;
     const responsiveThickness = (baseThickness / baseRadius) * this.mascotRadius;
 
+    // Apply forgiveness extensions (invisible hitbox buffers)
+    // Horizontal: extend length on both ends for left/right forgiveness
+    const forgivenessExtension = this.gelatoMaxLength * config.gelato.forgiveness.extensionPercent;
+    const physicsLength = gelatoLength + (forgivenessExtension * 2);
+
+    // Vertical: add thickness multiplier for "late draw" forgiveness (ONLY BELOW)
+    // Makes physics body thicker than visual line, but only extends downward
+    const forgivenessThickness = this.mascotRadius * config.gelato.forgiveness.thicknessMultiplier;
+    const physicsThickness = responsiveThickness + forgivenessThickness;
+
+    // Offset center downward so extra thickness is only below the line
+    // Calculate perpendicular direction (downward relative to line angle)
+    const normalX = -Math.sin(angle); // Perpendicular to line
+    const normalY = Math.cos(angle);
+    const offsetDistance = forgivenessThickness / 2; // Half the extra thickness
+    const offsetCenterX = centerX + normalX * offsetDistance;
+    const offsetCenterY = centerY + normalY * offsetDistance;
+
     // Create static rectangular body for the Gelato
+    // Note: physics body is longer AND thicker (below only) than visual line for easier collision
     this.gelato = Matter.Bodies.rectangle(
-      centerX,
-      centerY,
-      gelatoLength,
-      responsiveThickness,
+      offsetCenterX,
+      offsetCenterY,
+      physicsLength,
+      physicsThickness,
       {
         isStatic: true,
         angle: angle,

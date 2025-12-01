@@ -235,6 +235,18 @@ export const config = {
       frequency: 2.5,         // Oscillation frequency (higher = more bouncy)
       damping: 0.6,           // Spring damping (how quickly it settles)
     },
+
+    // Collision forgiveness (makes Gelato easier to hit)
+    forgiveness: {
+      extensionPercent: 0.15,   // Extend hitbox horizontally as percentage of max line length (0.15 = 15% on each side)
+                                // The physics body is longer than what you see
+                                // Example: max=300px, 0.15 = 45px extension on each end for all lines
+
+      thicknessMultiplier: 2.0, // Extend hitbox vertically as multiplier of mascot radius (2.0 = 2x radius)
+                                // Makes the line "thicker" than it appears for easier collision
+                                // Example: 30px radius, 2.0 = 60px invisible buffer (30px above + 30px below)
+                                // Higher = more "late draw" forgiveness, 0 = exact visual match
+    },
   },
 
   // === BOUNCING ===
