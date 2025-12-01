@@ -43,6 +43,8 @@ export function GameApp() {
     particles: [],
     wallGlows: [],
     deathFadeProgress: 0,
+    coins: [],
+    coinCount: 0,
   });
   
   // Frame counter for minimal React re-render trigger (just a number, not full reconciliation)
@@ -199,6 +201,8 @@ export function GameApp() {
       state.bounceRipples = gameCore.current.getBounceRipples();
       state.lastBounceScale = gameCore.current.getLastBounceScale();
       state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
+      state.coins = gameCore.current.getCoins();
+      state.coinCount = gameCore.current.getCoinCount();
       state.gelato = gameCore.current.getGelato(); // For debug visualization
       
       // Minimal React update - just a number, triggers Skia re-render without full reconciliation
@@ -301,6 +305,8 @@ export function GameApp() {
           state.bounceRipples = gameCore.current.getBounceRipples();
           state.lastBounceScale = gameCore.current.getLastBounceScale();
           state.deathFadeProgress = gameCore.current.getDeathFadeProgress();
+          state.coins = gameCore.current.getCoins();
+          state.coinCount = gameCore.current.getCoinCount();
           
           setFrame(prev => prev + 1);
 

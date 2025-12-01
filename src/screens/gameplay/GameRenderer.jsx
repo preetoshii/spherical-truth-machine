@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, memo } from 'react';
-import { Canvas, Circle, Fill, Line, Rect, vec, DashPathEffect, Path, Skia, Group, Oval, Blur, LinearGradient } from '@shopify/react-native-skia';
+import { Canvas, Circle, Fill, Line, Rect, RoundedRect, vec, DashPathEffect, Path, Skia, Group, Oval, Blur, LinearGradient } from '@shopify/react-native-skia';
 import { Text, View, StyleSheet, Animated } from 'react-native';
 import { config } from '../../config';
 // Wall glow feature added
@@ -328,7 +328,7 @@ function ZogChanFace({ x, y, color, isSpeaking, radius }) {
  */
 const GameRendererComponent = ({ width, height, gameState, frame, lines = [], currentPath = null, debugMode = false }) => {
   // Extract values from shared state object (read directly, no React reconciliation)
-  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [], wallGlows = [], bounceRipples = [], lastBounceScale = null, deathFadeProgress = 0 } = gameState;
+  const { mascotPos, obstacles = [], bounceImpact, gelatoCreationTime, currentWord, mascotVelocityY = 0, mascotRadius = 45, parallaxStars = [], trails = [], primaryColor = '#FFFFFF', particles = [], wallGlows = [], bounceRipples = [], lastBounceScale = null, deathFadeProgress = 0, coins = [], coinCount = 0 } = gameState;
   const mascotX = mascotPos.x;
   const mascotY = mascotPos.y;
 
@@ -952,12 +952,57 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
                   radius={mascotRadius * scale}
                 />
               )}
+
+              {/* Coin animations */}
+              {config.coins.enabled && coins.map((coin, index) => {
+                const coinColor = config.coins.useDynamicColor ? primaryColor : config.coins.staticColor;
+
+                // Apply horizontal scale transform for rotation effect
+                const transform = [
+                  { translateX: coin.x },
+                  { translateY: coin.y },
+                  { scaleX: coin.scaleX },
+                  { translateX: -coin.x },
+                  { translateY: -coin.y },
+                ];
+
+                return (
+                  <Group key={`coin-${index}`} transform={transform}>
+                    <RoundedRect
+                      x={coin.x - config.coins.width / 2}
+                      y={coin.y - config.coins.height / 2}
+                      width={config.coins.width}
+                      height={config.coins.height}
+                      r={config.coins.cornerRadius}
+                      color={coinColor}
+                      opacity={coin.opacity}
+                    />
+                  </Group>
+                );
+              })}
             </>
           );
         })()}
       </Group>
       </Group>
       </Canvas>
+
+      {/* Coin count display on death screen */}
+      {config.coins.enabled && config.coins.deathScreen.show && deathFadeProgress > 0 && (() => {
+        const countColor = config.coins.deathScreen.useDynamicColor ? primaryColor : config.coins.deathScreen.staticColor;
+        return (
+          <View style={styles.coinCountContainer} pointerEvents="none">
+            <Text style={[styles.coinCountText, {
+              opacity: deathFadeProgress,
+              color: countColor,
+              fontSize: config.coins.deathScreen.fontSize,
+              top: `${config.coins.deathScreen.yPosition * 100}%`,
+            }]}>
+              {coinCount}
+            </Text>
+          </View>
+        );
+      })()}
 
       {/* Word overlay with Mexican wave animation */}
       {currentWord && wordOpacity > 0 && (
@@ -998,5 +1043,21 @@ const styles = StyleSheet.create({
     // fontSize is now set dynamically per letter
     // color is set inline with primaryColor (see WaveText component)
     letterSpacing: 1,
+  },
+  coinCountContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  coinCountText: {
+    position: 'absolute',
+    fontFamily: 'Inter',
+    fontWeight: '300',
+    textAlign: 'center',
+    // fontSize, color, opacity, top are set inline from config
   },
 });

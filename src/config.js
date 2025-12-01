@@ -253,6 +253,47 @@ export const config = {
                                  // When enabled, any bounce with downward velocity gets flipped upward
   },
 
+  // === COINS ===
+  coins: {
+    enabled: true,            // Enable/disable coin collection system
+
+    // Visual properties (rounded rectangle pill shape)
+    width: 8,                 // Coin width in pixels (small pill)
+    height: 12,               // Coin height in pixels
+    cornerRadius: 4,          // Border radius for rounded corners
+    useDynamicColor: true,    // Use dynamic primary color (true) or static color (false)
+    staticColor: '#FFD700',   // Static gold color (only used if useDynamicColor is false)
+
+    // Physics animation (coin pops out and falls with gravity)
+    physics: {
+      enabled: true,          // Use physics simulation
+      velocityX: 0,           // Initial horizontal velocity (pixels/frame)
+      velocityY: -12,         // Initial vertical velocity (negative = upward pop, pixels/frame) - stronger pop!
+      gravity: 0.3,           // Gravity acceleration (pixels/frame²) - lighter gravity for longer hang time
+      lifetime: 1000,         // How long coin exists before fading (ms)
+      fadeDuration: 300,      // Fade-out duration at end (ms)
+      fadeOnDescent: true,    // Start fading as soon as coin starts falling down
+      fadeSpeed: 0.08,        // How quickly to fade on descent (higher = faster fade, multiplied by downward velocity)
+    },
+
+    // Rotation animation (horizontal scale oscillation to simulate spinning)
+    rotation: {
+      enabled: true,          // Enable rotation effect
+      speed: 0.08,            // Rotation speed (higher = faster spin)
+      minScale: 0.2,          // Minimum horizontal scale (how thin coin gets)
+      maxScale: 1.0,          // Maximum horizontal scale (full width)
+    },
+
+    // Death screen display
+    deathScreen: {
+      show: true,             // Show coin count on death
+      fontSize: 48,           // Font size for coin count
+      useDynamicColor: true,  // Use dynamic primary color for count text
+      staticColor: '#FFD700', // Static gold color (only used if useDynamicColor is false)
+      yPosition: 0.4,         // Vertical position (0.4 = 40% from top)
+    },
+  },
+
   // === BOUNCING ===
   bounce: {
     minIntervalMs: 100,       // Debounce timer in milliseconds to prevent double-bouncing on same Gelato

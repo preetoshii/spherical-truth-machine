@@ -46,6 +46,7 @@ export async function playSound(name) {
       'wall-bump-C5': require('../../assets/sfx/wall/wall-bump-C5.wav'),
       'click': require('../../assets/sfx/click.wav'),
       'expand-card': require('../../assets/sfx/expand-card.wav'),
+      'pickup-coin': require('../../assets/sfx/pickupCoin.wav'),
     };
 
     const source = soundMap[name];
@@ -84,15 +85,63 @@ export async function playSound(name) {
   }
 }
 
-// Play a downward arpeggio using wall-bump chord tones (C5 → G4 → E4 → C4)
-export async function playDeathArpeggio() {
-  const notes = ['wall-bump-C5', 'wall-bump-G4', 'wall-bump-E4', 'wall-bump-C4'];
-  const delayMs = 80; // Milliseconds between each note
+/**
+ * Play a downward arpeggio death sound that completes the chord from the last bounce
+ *
+ * This creates musical continuity by finishing the chord descent from wherever
+ * the last bounce note was, making death feel like a natural musical resolution.
+ *
+ * @param {string|null} lastBounceSound - The last bounce sound that was played
+ *                                        (e.g., 'wall-bump-G4' or 'gelato-bounce-E2')
+ *
+ * Examples:
+ * - Last bounce: 'wall-bump-G4'    → Plays: G4 → E4 → C4
+ * - Last bounce: 'gelato-bounce-E2' → Plays: E2 → C2
+ * - Last bounce: 'wall-bump-C5'    → Plays: C5 → G4 → E4 → C4 (full chord)
+ * - No last bounce (null)          → Plays: C5 → G4 → E4 → C4 (default)
+ *
+ * Musical structure:
+ * - Wall chord:   C5 (523Hz) → G4 (392Hz) → E4 (330Hz) → C4 (262Hz)  [C major, octave 4-5]
+ * - Gelato chord: C3 (131Hz) → G2 (98Hz)  → E2 (82Hz)  → C2 (65Hz)   [C major, octave 2-3, bass]
+ */
+export async function playDeathArpeggio(lastBounceSound = null) {
+  const delayMs = 80; // Milliseconds between each note (creates cascading arpeggio effect)
 
-  for (let i = 0; i < notes.length; i++) {
+  // Define full C major chord progressions from high to low
+  const wallChord = ['wall-bump-C5', 'wall-bump-G4', 'wall-bump-E4', 'wall-bump-C4'];
+  const gelatoChord = ['gelato-bounce-C3', 'gelato-bounce-G2', 'gelato-bounce-E2', 'gelato-bounce-C2'];
+
+  // Determine which chord to use and where to start
+  let notes = wallChord; // Default to wall chord (mid-range)
+  let startIndex = 0;    // Default to playing full chord from top
+
+  if (lastBounceSound) {
+    // Gelato bounces use bass chord (lower octave)
+    if (lastBounceSound.startsWith('gelato-bounce-')) {
+      notes = gelatoChord;
+      startIndex = gelatoChord.indexOf(lastBounceSound);
+    }
+    // Wall bumps use mid-range chord
+    else if (lastBounceSound.startsWith('wall-bump-')) {
+      notes = wallChord;
+      startIndex = wallChord.indexOf(lastBounceSound);
+    }
+
+    // Safety check: if note not found or already at the bottom, play full chord
+    if (startIndex === -1 || startIndex === notes.length - 1) {
+      startIndex = 0;
+    }
+  }
+
+  // Extract the arpeggio starting from the last played note
+  // Example: if last note was G4 (index 1), slice gives [G4, E4, C4]
+  const arpeggioNotes = notes.slice(startIndex);
+
+  // Play each note with a delay to create cascading effect
+  for (let i = 0; i < arpeggioNotes.length; i++) {
     setTimeout(() => {
-      playSound(notes[i]);
-    }, i * delayMs);
+      playSound(arpeggioNotes[i]);
+    }, i * delayMs); // 0ms, 80ms, 160ms, 240ms...
   }
 }
 

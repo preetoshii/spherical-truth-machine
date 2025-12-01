@@ -91,6 +91,10 @@ export class GameCore {
     // Track bounce count for difficulty progression
     this.bounceCount = 0;
 
+    // Track coins collected
+    this.coinCount = 0;
+    this.coins = []; // Array of coin animations: { x, y, timestamp }
+
     // Store current time scale for difficulty (time dilation approach)
     this.timeScale = 1.0;
 
@@ -157,6 +161,7 @@ export class GameCore {
     this.wallGlows = []; // Array of { side, y, timestamp }
     this.lastWallBumpSound = null; // Track last played sound to prevent consecutive repeats
     this.lastGelatoBounceSound = null; // Track last played gelato bounce sound to prevent consecutive repeats
+    this.lastBounceSound = null; // Track the very last bounce sound (wall or gelato) for death arpeggio
 
     // Bounce juice effects (Gelato bounce feedback)
     this.bounceRipples = []; // Array of { x, y, timestamp }
@@ -314,6 +319,9 @@ export class GameCore {
     // Update particles
     this.updateParticles(deltaMs);
 
+    // Update coins
+    this.updateCoins();
+
     // Update wall glows
     this.updateWallGlows();
 
@@ -423,8 +431,9 @@ export class GameCore {
   handleLoss() {
     this.hasLost = true;
 
-    // Play death arpeggio (downward C major chord: C5 → G4 → E4 → C4)
-    playDeathArpeggio();
+    // Play death arpeggio starting from the last bounce note
+    // Completes the chord descent from wherever the last note was
+    playDeathArpeggio(this.lastBounceSound);
 
     // Start death fade-out animation
     this.deathFadeStartTime = Date.now();
@@ -583,6 +592,7 @@ export class GameCore {
         const availableBounceVariants = gelatoBounceVariants.filter(v => v !== this.lastGelatoBounceSound);
         const randomBounceVariant = availableBounceVariants[Math.floor(Math.random() * availableBounceVariants.length)];
         this.lastGelatoBounceSound = randomBounceVariant;
+        this.lastBounceSound = randomBounceVariant; // Track for death arpeggio
         playSound(randomBounceVariant);
 
         // Bounce juice effects (radial ripple + mascot scale pulse + collision glow)
@@ -595,6 +605,20 @@ export class GameCore {
         }
         if (config.physics.mascot.bounceJuice.scale.enabled) {
           this.lastBounceScale = { timestamp: currentTime };
+        }
+
+        // Spawn coin on gelato bounce with physics
+        if (config.coins.enabled) {
+          this.coinCount++;
+          this.coins.push({
+            x: mascotBody.position.x,
+            y: mascotBody.position.y,
+            vx: config.coins.physics.velocityX,
+            vy: config.coins.physics.velocityY,
+            timestamp: currentTime,
+            rotationPhase: Math.random() * Math.PI * 2, // Random initial rotation phase
+          });
+          playSound('pickup-coin');
         }
 
         // Store impact data for visual deformation
@@ -621,6 +645,7 @@ export class GameCore {
         const availableVariants = wallBumpVariants.filter(v => v !== this.lastWallBumpSound);
         const randomVariant = availableVariants[Math.floor(Math.random() * availableVariants.length)];
         this.lastWallBumpSound = randomVariant;
+        this.lastBounceSound = randomVariant; // Track for death arpeggio
         playSound(randomVariant);
 
         // Spawn wall glow
@@ -1235,10 +1260,92 @@ export class GameCore {
   }
 
   /**
+   * Update coin physics (apply gravity and remove expired)
+   */
+  updateCoins() {
+    if (!config.coins.enabled) return;
+
+    const currentTime = Date.now();
+    const totalDuration = config.coins.physics.lifetime + config.coins.physics.fadeDuration;
+    const gravity = config.coins.physics.gravity;
+
+    // Update physics and remove expired coins
+    this.coins = this.coins.filter(coin => {
+      const age = currentTime - coin.timestamp;
+
+      // Apply gravity to velocity
+      coin.vy += gravity;
+
+      // Update position based on velocity
+      coin.x += coin.vx;
+      coin.y += coin.vy;
+
+      // Keep coin if not expired
+      return age < totalDuration;
+    });
+  }
+
+  /**
    * Get particles for rendering
    */
   getParticles() {
     return this.particles;
+  }
+
+  /**
+   * Get coins for rendering with physics-based position and fade
+   */
+  getCoins() {
+    if (!config.coins.enabled) return [];
+
+    const currentTime = Date.now();
+    return this.coins.map(coin => {
+      const age = currentTime - coin.timestamp;
+      let opacity = 1.0;
+
+      // Fade on descent: start fading as soon as coin starts falling (vy > 0)
+      if (config.coins.physics.fadeOnDescent && coin.vy > 0) {
+        // Fade based on how far into descent we are
+        // Map velocity from 0 (peak) to positive (falling) to opacity 1.0 -> 0.0
+        opacity = Math.max(0, 1.0 - (coin.vy * config.coins.physics.fadeSpeed));
+      }
+
+      // Also apply lifetime-based fade at the end
+      const fadeStart = config.coins.physics.lifetime;
+      if (age > fadeStart) {
+        const fadeProgress = (age - fadeStart) / config.coins.physics.fadeDuration;
+        const lifetimeFade = Math.max(0, 1.0 - fadeProgress);
+        opacity = Math.min(opacity, lifetimeFade); // Use the lower opacity
+      }
+
+      // Calculate horizontal scale for rotation effect (oscillates using sine wave)
+      let scaleX = 1.0;
+      if (config.coins.rotation.enabled) {
+        // Use time-based rotation phase
+        const rotationSpeed = config.coins.rotation.speed;
+        const currentPhase = coin.rotationPhase + (age * rotationSpeed);
+
+        // Map sine wave (-1 to 1) to scale range (minScale to maxScale)
+        const { minScale, maxScale } = config.coins.rotation;
+        const normalizedSine = (Math.sin(currentPhase) + 1) / 2; // 0 to 1
+        scaleX = minScale + (normalizedSine * (maxScale - minScale));
+      }
+
+      // Position is already updated by physics in updateCoins()
+      return {
+        x: coin.x,
+        y: coin.y,
+        opacity: opacity,
+        scaleX: scaleX,
+      };
+    });
+  }
+
+  /**
+   * Get coin count
+   */
+  getCoinCount() {
+    return this.coinCount;
   }
 
   /**
