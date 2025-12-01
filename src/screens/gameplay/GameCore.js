@@ -556,7 +556,7 @@ export class GameCore {
         this.lastGelatoBounceSound = randomBounceVariant;
         playSound(randomBounceVariant);
 
-        // Bounce juice effects (radial ripple + mascot scale pulse)
+        // Bounce juice effects (radial ripple + mascot scale pulse + collision glow)
         if (config.physics.mascot.bounceJuice.ripple.enabled) {
           this.bounceRipples.push({
             x: mascotBody.position.x,
@@ -774,10 +774,10 @@ export class GameCore {
     playSound('gelato-create');
 
     // Store line data for rendering (including original path for morphing animation)
-    this.gelatoLineData = { 
-      startX, 
-      startY, 
-      endX, 
+    this.gelatoLineData = {
+      startX,
+      startY,
+      endX,
       endY,
       originalPath: originalPath || null, // Store original drawn path
     };
@@ -1167,6 +1167,7 @@ export class GameCore {
       const age = currentTime - ripple.timestamp;
       return age < rippleDuration;
     });
+
   }
 
   /**

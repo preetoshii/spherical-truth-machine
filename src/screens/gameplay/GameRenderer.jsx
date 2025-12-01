@@ -871,17 +871,20 @@ const GameRendererComponent = ({ width, height, gameState, frame, lines = [], cu
         const age = currentTime - ripple.timestamp;
         const progress = Math.min(age / rippleConfig.duration, 1);
 
-        // Expand from 0 to maxRadius
-        const currentRadius = mascotRadius + (rippleConfig.maxRadius - mascotRadius) * progress;
+        // Ease out: starts fast, slows down as it expands
+        const easeOut = 1 - Math.pow(1 - progress, 3);
 
-        // Fade out as it expands
-        const rippleOpacity = rippleConfig.opacity * (1 - progress);
+        // Expand from mascot radius to maxRadius with ease-out
+        const currentRadius = mascotRadius + (rippleConfig.maxRadius - mascotRadius) * easeOut;
+
+        // Fade out with same ease-out curve for smooth visual consistency
+        const rippleOpacity = rippleConfig.opacity * (1 - easeOut);
 
         return (
           <Circle
             key={`ripple-${index}`}
-            cx={ripple.x}
-            cy={ripple.y}
+            cx={mascotX}
+            cy={mascotY}
             r={currentRadius}
             color={primaryColor}
             opacity={rippleOpacity}

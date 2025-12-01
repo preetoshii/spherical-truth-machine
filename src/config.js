@@ -133,15 +133,15 @@ export const config = {
         // Radial ripple effect
         ripple: {
           enabled: true,          // Toggle ripple effect
-          duration: 500,          // How long ripple expands (ms)
-          maxRadius: 80,          // Maximum ripple radius (pixels from mascot center)
-          opacity: 0.3,           // Starting opacity
+          duration: 1000,          // How long ripple expands (ms)
+          maxRadius: 200,          // Maximum ripple radius (pixels from mascot center)
+          opacity: 0.5,           // Starting opacity
           strokeWidth: 3,         // Ripple line thickness
         },
         // Mascot scale pulse
         scale: {
           enabled: true,          // Toggle scale pulse
-          amount: 1.3,            // Scale multiplier (1.3 = 30% larger)
+          amount: 1.1,            // Scale multiplier (1.3 = 30% larger)
           duration: 150,          // Duration of scale animation (ms)
         },
       },
