@@ -247,6 +247,10 @@ export const config = {
                                 // Example: 30px radius, 2.0 = 60px invisible buffer (30px above + 30px below)
                                 // Higher = more "late draw" forgiveness, 0 = exact visual match
     },
+
+    preventDownwardBounce: true, // Prevent bouncing mascot downward (flip to upward instead)
+                                 // Downward bounces accelerate death and are usually accidental
+                                 // When enabled, any bounce with downward velocity gets flipped upward
   },
 
   // === BOUNCING ===

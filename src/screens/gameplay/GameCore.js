@@ -513,7 +513,7 @@ export class GameCore {
         // Calculate how hard the ball is hitting the Gelato (dot product)
         const currentVelocity = mascotBody.velocity;
         const impactSpeed = currentVelocity.x * normalX + currentVelocity.y * normalY;
-        
+
         // Scale springBoost inversely with timeScale to maintain consistent bounce height
         // When time runs faster, ball hits harder, so we need less boost to reach same height
         const effectiveSpringBoost = config.gelato.springBoost / this.timeScale;
@@ -546,6 +546,18 @@ export class GameCore {
             const oldAngle = (Math.atan2(vel.y, vel.x) * 180 / Math.PI).toFixed(1);
             const newAngle = (Math.atan2(quantized.y, quantized.x) * 180 / Math.PI).toFixed(1);
             logger.log('PHYSICS', `Quantized bounce: ${oldAngle}° → ${newAngle}°`);
+          }
+        }
+
+        // Prevent downward bounces (flip to upward if moving down)
+        // IMPORTANT: Must happen AFTER quantization to override it
+        if (config.gelato.preventDownwardBounce) {
+          const vel = mascotBody.velocity;
+          if (vel.y > 0) { // Moving downward (positive Y is down in screen coordinates)
+            Matter.Body.setVelocity(mascotBody, {
+              x: vel.x,
+              y: -vel.y, // Flip to upward
+            });
           }
         }
 
