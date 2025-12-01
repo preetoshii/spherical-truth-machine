@@ -334,8 +334,13 @@ export const config = {
   // Stars move downward as ball travels upward (cumulative upward distance only)
   parallax: {
     enabled: false,                // Toggle parallax background on/off
-    density: 0.5,                 // Density multiplier (0.5 = half as many stars, 1.0 = default, 2.0 = double)
+    density: 0.1,                 // Density multiplier (0.5 = half as many stars, 1.0 = default, 2.0 = double)
     opacity: 0.5,                 // Global opacity multiplier (0.3 = subtle, 0.5 = half brightness, 1.0 = full)
+
+    speedMultiplier: 2.0,         // Global speed multiplier for parallax effect (1.0 = 1:1, 2.0 = 2x more impact)
+                                  // Makes stars move faster relative to ball's upward movement
+
+    easing: 0,                    // Easing factor (0 = instant, disabled for now)
 
     // Multiple layers for depth effect (back to front)
     // Each layer moves at different speed relative to ball's upward movement
@@ -346,15 +351,15 @@ export const config = {
       {
         speed: 0.15,              // 15% of ball's upward speed (slow parallax)
         starCount: 20,            // Base number of stars (multiplied by density)
-        sizeMin: 1,               // Minimum star radius in pixels
+        sizeMin: 2,               // Minimum star radius in pixels
         sizeMax: 1.5,             // Maximum star radius in pixels
       },
       // Middle layer - medium speed
       {
         speed: 0.4,               // 40% of ball's upward speed
         starCount: 30,            // Base number of stars (multiplied by density)
-        sizeMin: 1.5,
-        sizeMax: 2.5,
+        sizeMin: 2,
+        sizeMax: 3.5,
       },
       // Foreground layer - fast, large (close stars)
       {

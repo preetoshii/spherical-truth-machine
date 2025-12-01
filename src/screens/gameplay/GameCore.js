@@ -162,6 +162,9 @@ export class GameCore {
     this.bounceRipples = []; // Array of { x, y, timestamp }
     this.lastBounceScale = null; // { timestamp } for mascot scale animation
 
+    // Downward bounce prevention (needs to be applied AFTER Matter.js collision resolution)
+    this.needsVelocityFlip = false; // Flag to flip velocity after Engine.update()
+
     // Color system - now managed by primaryColorManager
     // Color updates are handled externally for universal access
 
@@ -289,8 +292,24 @@ export class GameCore {
     const scaledDelta = deltaMs * this.timeScale;
     Matter.Engine.update(this.engine, scaledDelta);
 
-    // Update parallax background based on ball's Y position
-    this.parallaxManager.update(this.mascot.position.y);
+    // Apply velocity flip AFTER Matter.js collision resolution
+    // This ensures our change isn't overwritten by Matter.js's internal solver
+    if (this.needsVelocityFlip) {
+      const vel = this.mascot.velocity;
+      if (vel.y > 0) { // Still moving downward after resolution
+        Matter.Body.setVelocity(this.mascot, {
+          x: vel.x,
+          y: -vel.y, // Flip to upward
+        });
+        logger.always(`FLIPPED after Engine.update: vy=${vel.y.toFixed(2)} → ${(-vel.y).toFixed(2)}`);
+      }
+      this.needsVelocityFlip = false; // Reset flag
+    }
+
+    // Update parallax background based on ball's Y position (only when game started)
+    if (this.gameStarted) {
+      this.parallaxManager.update(this.mascot.position.y);
+    }
 
     // Update particles
     this.updateParticles(deltaMs);
@@ -550,19 +569,12 @@ export class GameCore {
         }
 
         // Prevent downward bounces (flip to upward if moving down)
-        // IMPORTANT: Must happen AFTER quantization to override it
+        // Mark for flipping AFTER Matter.js collision resolution completes
         if (config.gelato.preventDownwardBounce) {
           const vel = mascotBody.velocity;
-          logger.always(`BEFORE FLIP CHECK: vy=${vel.y.toFixed(2)}`);
           if (vel.y > 0) { // Moving downward (positive Y is down in screen coordinates)
-            logger.always(`FLIPPING from vy=${vel.y.toFixed(2)} to vy=${(-vel.y).toFixed(2)}`);
-            Matter.Body.setVelocity(mascotBody, {
-              x: vel.x,
-              y: -vel.y, // Flip to upward
-            });
-            // Verify the flip actually stuck
-            const afterVel = mascotBody.velocity;
-            logger.always(`VERIFY AFTER FLIP: vy is now ${afterVel.y.toFixed(2)}`);
+            this.needsVelocityFlip = true;
+            logger.always(`Marking for velocity flip: vy=${vel.y.toFixed(2)} will be flipped AFTER Engine.update()`);
           }
         }
 

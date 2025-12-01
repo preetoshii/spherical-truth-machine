@@ -27,6 +27,7 @@ export class ParallaxManager {
 
     // Track cumulative upward distance traveled
     this.cumulativeUpwardDistance = 0;
+    this.targetDistance = 0; // Target distance for easing
     this.lastBallY = null;
 
     // Star layers (each layer has different parallax speed)
@@ -115,16 +116,34 @@ export class ParallaxManager {
   update(ballY) {
     if (!this.config.enabled) return;
 
-    // Track cumulative upward movement
+    // Track target position based on ball movement
     if (this.lastBallY !== null) {
       // In Matter.js, Y increases downward, so upward movement = ballY < lastBallY
       if (ballY < this.lastBallY) {
         const upwardDelta = this.lastBallY - ballY;
-        this.cumulativeUpwardDistance += upwardDelta;
+        // Apply speed multiplier to amplify parallax effect
+        const speedMultiplier = this.config.speedMultiplier || 1.0;
+        const deltaDistance = upwardDelta * speedMultiplier;
+
+        // Pulse target forward immediately (instant response)
+        this.targetDistance += deltaDistance;
+
+        // Cumulative lags behind slightly (will ease towards target)
+        // Don't move cumulative here - let the easing below catch it up
       }
     }
 
     this.lastBallY = ballY;
+
+    // Always ease towards target (creates smooth catch-up effect)
+    const easingFactor = this.config.easing || 0;
+    if (easingFactor > 0) {
+      // Lerp towards target - stars ease forward to catch up
+      this.cumulativeUpwardDistance += (this.targetDistance - this.cumulativeUpwardDistance) * easingFactor;
+    } else {
+      // No easing, instant update
+      this.cumulativeUpwardDistance = this.targetDistance;
+    }
 
     // Update all star positions based on cumulative distance and layer speed
     this.updateStarPositions();
