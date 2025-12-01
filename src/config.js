@@ -441,7 +441,7 @@ export const config = {
   // Set to true to enable console logs for specific features
   // High-frequency logs (disabled by default to reduce noise)
   logs: {
-    PHYSICS: true,              // Body creation, collisions, updates (very frequent)
+    PHYSICS: false,              // Body creation, collisions, updates (very frequent)
     AUDIO_PLAYBACK: false,       // Word sync, playback events (frequent during gameplay)
     TOUCH_INPUT: false,          // Touch events, line drawing (very frequent)
     RENDERING: false,            // Frame rendering, Skia canvas (60fps potential)

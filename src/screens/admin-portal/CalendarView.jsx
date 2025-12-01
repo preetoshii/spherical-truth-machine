@@ -217,6 +217,14 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
     }
   }, [recordedAudioUri]);
 
+  // Helper to get local date string in YYYY-MM-DD format (not UTC)
+  const getLocalDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Generate date slots (past 7 days, today, next 30 days)
   const generateDateSlots = () => {
     const slots = [];
@@ -227,7 +235,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       slots.push({
-        date: date.toISOString().split('T')[0],
+        date: getLocalDateString(date),
         isPast: true,
         isToday: false,
       });
@@ -235,7 +243,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
 
     // Today (active)
     slots.push({
-      date: today.toISOString().split('T')[0],
+      date: getLocalDateString(today),
       isPast: false,
       isToday: true,
     });
@@ -245,7 +253,7 @@ export function CalendarView({ scheduledMessages, onSelectDate, onPreview, initi
       const date = new Date(today);
       date.setDate(date.getDate() + i);
       slots.push({
-        date: date.toISOString().split('T')[0],
+        date: getLocalDateString(date),
         isPast: false,
         isToday: false,
       });
