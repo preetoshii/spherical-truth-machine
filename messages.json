@@ -151,43 +151,37 @@
       ]
     },
     "2025-12-01": {
-      "text": "Tom is inspiring human being",
+      "text": "sexy is amazing person",
       "words": [
-        "Tom",
+        "sexy",
         "is",
-        "inspiring",
-        "human",
-        "being"
+        "amazing",
+        "person"
       ],
       "audio": {
-        "original": "01-12-2025-tom-is-inspiring-original.m4a",
-        "transformed": "01-12-2025-tom-is-inspiring-transformed.mp3"
+        "original": "01-12-2025-sexy-is-amazing-original.m4a",
+        "transformed": "01-12-2025-sexy-is-amazing-transformed.mp3"
       },
       "wordTimings": [
         {
-          "word": "Tom",
-          "start": 1390,
-          "end": 1960
+          "word": "sexy",
+          "start": 1495,
+          "end": 2215
         },
         {
           "word": "is",
-          "start": 2345,
-          "end": 2895
+          "start": 2825,
+          "end": 3340
         },
         {
-          "word": "inspiring",
-          "start": 3385,
-          "end": 4405
+          "word": "amazing",
+          "start": 3915,
+          "end": 4660
         },
         {
-          "word": "human",
-          "start": 5025,
-          "end": 5710
-        },
-        {
-          "word": "being",
-          "start": 6205,
-          "end": 6595
+          "word": "person",
+          "start": 5160,
+          "end": 5755
         }
       ]
     }
