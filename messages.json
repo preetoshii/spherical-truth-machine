@@ -1,5 +1,5 @@
 {
-  "current": "2025-12-01",
+  "current": "2025-12-03",
   "messages": {
     "2025-10-18": {
       "text": "you are braver than you believe",
@@ -182,6 +182,41 @@
           "word": "person",
           "start": 5160,
           "end": 5755
+        }
+      ]
+    },
+    "2025-12-03": {
+      "text": "where am I going",
+      "words": [
+        "where",
+        "am",
+        "I",
+        "going"
+      ],
+      "audio": {
+        "original": "03-12-2025-where-am-i-original.m4a",
+        "transformed": "03-12-2025-where-am-i-transformed.mp3"
+      },
+      "wordTimings": [
+        {
+          "word": "where",
+          "start": 1050,
+          "end": 1765
+        },
+        {
+          "word": "am",
+          "start": 2170,
+          "end": 2675
+        },
+        {
+          "word": "I",
+          "start": 3085,
+          "end": 3615
+        },
+        {
+          "word": "going",
+          "start": 3935,
+          "end": 4610
         }
       ]
     }
